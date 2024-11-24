@@ -9,5 +9,5 @@ public class GoGymApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(GoGymApplication.class, args);
 	}
-
+	//커밋테스트
 }
