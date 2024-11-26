@@ -18,8 +18,8 @@ public class CheckNicknameController {
   public ResponseEntity<ApplicationResponse<Boolean>> checkNickname(
     @RequestParam("nickname") String nickname
   ) {
-    boolean isAvailable = checkNicknameService.checkNickname(nickname);
-    return ResponseEntity.ok(
+    boolean isAvailable = checkNicknameService.checkNickname(nickname); // 닉네임 중복 여부 확인
+    return ResponseEntity.ok( // 중복 여부에 따라 적절한 성공 응답 반환
       ApplicationResponse.ok(
         isAvailable,
         isAvailable ? SuccessCode.NICKNAME_AVAILABLE : SuccessCode.DUPLICATE_NICKNAME

@@ -11,26 +11,26 @@ import lombok.Setter;
 public class SignUpRequest {
 
   @NotBlank
-  private String name;
+  private String name; //이름
 
   @Email
   @NotBlank
-  private String email;
+  private String email; //이메일
 
   @NotBlank
-  private String nickname;
+  private String nickname; //닉네임
 
   @NotBlank
-  private String phone;
+  private String phone; //핸드폰
 
   @NotBlank
-  private String password;
+  private String password; //비밀번호
 
   @NotBlank
   @Pattern(regexp = "^(USER|ADMIN)$")
-  private String role;
+  private String role; //역할
 
-  private String profileImageUrl;
-  private String interestArea1;
+  private String profileImageUrl; //프로필 이미지
+  private String interestArea1; //관심지역 1 and 2
   private String interestArea2;
 }

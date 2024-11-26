@@ -10,9 +10,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class LoginResponse {
-  private Long userId;
-  private String nickname;
-  private String email;
-  private String token;
-  private String role;
+  private Long userId; //유저id
+  private String nickname; //닉네임    
+  private String email; //이메일
+  private String token; //토큰
+  private String role; //역할, 어드민인지 회원인지
 }

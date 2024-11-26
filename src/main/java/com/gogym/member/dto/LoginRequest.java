@@ -9,8 +9,8 @@ public class LoginRequest {
 
   @Email
   @NotBlank
-  private String email;
+  private String email; //이메일
 
   @NotBlank
-  private String password;
+  private String password; //패스워드
 }

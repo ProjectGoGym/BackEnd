@@ -11,6 +11,6 @@ public class CheckNicknameService {
   private final MemberRepository memberRepository;
 
   public boolean checkNickname(String nickname) {
-    return !memberRepository.existsByNickname(nickname); // true if nickname is available
+    return !memberRepository.existsByNickname(nickname); // true 면 닉네임 사용 가능
   }
 }

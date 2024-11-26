@@ -23,25 +23,14 @@ public class JwtTokenProvider {
   private final SecretKey secretKey;
   private final long validityInMilliseconds;
 
-  /**
-   * JwtTokenProvider 생성자
-   *
-   * @param secret 비밀 키
-   * @param validityInMilliseconds 토큰 유효 시간 (밀리초)
-   */
+  // JwtTokenProvider 생성자
   public JwtTokenProvider(@Value("${jwt.secret}") String secret,
                           @Value("${jwt.validity}") long validityInMilliseconds) {
     this.secretKey = Keys.hmacShaKeyFor(secret.getBytes());
     this.validityInMilliseconds = validityInMilliseconds;
   }
 
-  /**
-   * JWT 생성
-   *
-   * @param username 사용자 이름 (혹은 이메일)
-   * @param roles 사용자 권한 목록
-   * @return 생성된 JWT 문자열
-   */
+  // JWT 생성
   public String createToken(String username, List<String> roles) {
     Claims claims = Jwts.claims().setSubject(username); // 사용자 이름 설정
     claims.put("roles", roles); // 사용자 권한 정보 추가
@@ -57,12 +46,7 @@ public class JwtTokenProvider {
         .compact();
   }
 
-  /**
-   * JWT에서 인증 정보 추출
-   *
-   * @param token JWT 토큰
-   * @return Authentication 객체
-   */
+  // JWT에서 인증 정보 추출
   public Authentication getAuthentication(String token) {
     Claims claims = getClaims(token); // 토큰에서 클레임 추출
 
@@ -78,12 +62,7 @@ public class JwtTokenProvider {
     return new UsernamePasswordAuthenticationToken(principal, null, authorities);
   }
 
-  /**
-   * 토큰에서 클레임 추출
-   *
-   * @param token JWT 토큰
-   * @return Claims 객체
-   */
+  // 토큰에서 클레임 추출
   private Claims getClaims(String token) {
     return Jwts.parserBuilder()
         .setSigningKey(secretKey) // 서명 키 설정
@@ -92,12 +71,7 @@ public class JwtTokenProvider {
         .getBody();
   }
 
-  /**
-   * JWT 유효성 검증
-   *
-   * @param token 검증할 JWT
-   * @return 유효하면 true, 그렇지 않으면 false
-   */
+  // 유효성 검증
   public boolean validateToken(String token) {
     try {
       Jwts.parserBuilder()
@@ -110,16 +84,11 @@ public class JwtTokenProvider {
     }
   }
 
-  /**
-   * 요청 헤더에서 JWT 추출
-   *
-   * @param request HttpServletRequest 객체
-   * @return JWT 문자열 (Bearer 제외)
-   */
+  // 요청 헤더에서 JWT 추출
   public String resolveToken(HttpServletRequest request) {
     String bearerToken = request.getHeader("Authorization");
     if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-      return bearerToken.substring(7); // "Bearer " 이후의 토큰 반환
+      return bearerToken.substring(7);
     }
     return null;
   }

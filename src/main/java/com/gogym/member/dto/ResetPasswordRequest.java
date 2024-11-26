@@ -9,11 +9,11 @@ public class ResetPasswordRequest {
 
   @Email
   @NotBlank
-  private String email;
+  private String email; //이메일
 
   @NotBlank
-  private String newPassword;
+  private String newPassword; //새 비밀번호
 
   @NotBlank
-  private String confirmPassword;
+  private String confirmPassword; //새 비밀번호 확인
 }

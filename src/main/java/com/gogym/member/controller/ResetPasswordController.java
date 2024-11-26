@@ -13,14 +13,14 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/members/reset-password")
 @RequiredArgsConstructor
 public class ResetPasswordController {
-
+  //비밀번호 재설정 비즈니스 로직을 처리하는 서비스
   private final ResetPasswordService resetPasswordService;
 
   @PostMapping
   public ResponseEntity<ApplicationResponse<Void>> resetPassword(
-    @RequestBody @Valid ResetPasswordRequest request
+    @RequestBody @Valid ResetPasswordRequest request // 요청 데이터 검증 및 전달
   ) {
-    resetPasswordService.resetPassword(request);
-    return ResponseEntity.ok(ApplicationResponse.noData(SuccessCode.PASSWORD_RESET_SUCCESS));
+    resetPasswordService.resetPassword(request); // 비밀번호 재설정 처리
+    return ResponseEntity.ok(ApplicationResponse.noData(SuccessCode.PASSWORD_RESET_SUCCESS)); // 성공 응답 반환
   }
 }

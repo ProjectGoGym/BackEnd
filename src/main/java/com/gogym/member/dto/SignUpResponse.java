@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class SignUpResponse {
-  private Long userId;
-  private String nickname;
-  private String email;
+  private Long userId; //유저id
+  private String nickname; //닉네임
+  private String email; //이메일
 }

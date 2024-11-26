@@ -11,6 +11,6 @@ public class CheckEmailService {
   private final MemberRepository memberRepository;
 
   public boolean checkEmail(String email) {
-    return !memberRepository.existsByEmail(email); // true if email is available
+    return !memberRepository.existsByEmail(email); // true 면 email 사용가능
   }
 }
