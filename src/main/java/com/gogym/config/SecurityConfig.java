@@ -15,47 +15,24 @@ public class SecurityConfig {
 
   private final JwtTokenProvider jwtTokenProvider;
 
-  /**
-   * SecurityConfig 생성자
-   *
-   * @param jwtTokenProvider JWT 관련 기능 제공 클래스
-   */
+  //SecurityConfig 생성자
   public SecurityConfig(JwtTokenProvider jwtTokenProvider) {
     this.jwtTokenProvider = jwtTokenProvider;
   }
 
-  /**
-   * 비밀번호 암호화를 위한 PasswordEncoder Bean 등록
-   *
-   * @return BCryptPasswordEncoder 객체
-   */
+  //비밀번호 암호화를 위한 PasswordEncoder Bean 등록
   @Bean
   public PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
   }
 
-  /**
-   * AuthenticationManager Bean 등록
-   *
-   * @param configuration AuthenticationConfiguration 객체
-   * @return AuthenticationManager 객체
-   * @throws Exception 예외 발생 시
-   */
+  //AuthenticationManager Bean 등록
   @Bean
   public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
     return configuration.getAuthenticationManager();
   }
 
-  /**
-   * Spring Security 설정 및 SecurityFilterChain Bean 등록
-   *
-   * - 특정 URL 접근 허용 설정
-   * - JWT 인증 필터 추가
-   *
-   * @param http HttpSecurity 객체
-   * @return SecurityFilterChain 객체
-   * @throws Exception 예외 발생 시
-   */
+  //SecurityFilterChain Bean 등록
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
