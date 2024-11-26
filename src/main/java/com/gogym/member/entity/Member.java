@@ -11,9 +11,8 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-/**
- * 회원 엔티티
- */
+
+//회원 엔티티
 public class Member extends BaseEntity {
 
   @Column(nullable = false)
