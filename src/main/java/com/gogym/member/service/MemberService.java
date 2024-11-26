@@ -163,10 +163,3 @@ public class MemberService {
     return !memberRepository.existsByNickname(nickname);
   }
 }
-
-
-
-
-
-
-
