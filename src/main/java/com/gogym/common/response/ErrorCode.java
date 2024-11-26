@@ -14,6 +14,10 @@ import org.springframework.http.HttpStatus;
 public enum ErrorCode {
   // 400 Bad Request
   REQUEST_VALIDATION_FAIL(BAD_REQUEST, "400", "잘못된 요청 값입니다."),
+  DUPLICATE_EMAIL(HttpStatus.BAD_REQUEST, "400", "이미 존재하는 이메일입니다."),
+  DUPLICATE_NICKNAME(HttpStatus.BAD_REQUEST, "400", "이미 존재하는 닉네임입니다."),
+  EMAIL_NOT_FOUND(HttpStatus.BAD_REQUEST, "400", "존재하지 않는 이메일입니다."),
+  INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "400", "비밀번호가 일치하지 않습니다."),
 
   // 401 Unauthorized
 
