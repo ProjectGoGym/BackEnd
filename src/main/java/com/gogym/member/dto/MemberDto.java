@@ -5,15 +5,12 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import lombok.*;
 
-/**
- * MemberDto
- * 사용자 계정 및 인증 관련 요청 및 응답 데이터 객체
- */
+//사용자 계정 및 인증 관련 요청 및 응답 데이터 객체
+
 public class MemberDto {
 
-  /**
-   * 회원가입 요청 데이터
-   */
+  //회원가입 요청
+
   @Getter
   @Setter
   public static class SignUpRequest {
@@ -52,9 +49,8 @@ public class MemberDto {
     private String interestArea2;
   }
 
-  /**
-   * 로그인 요청 데이터
-   */
+  //로그인 요청 데이터
+
   @Data
   public static class LoginRequest {
 
@@ -68,25 +64,32 @@ public class MemberDto {
     private String password;
   }
 
-  /**
-   * 로그인 응답 데이터
-   */
+  //회원가입 응답 데이터
+
+  @Data
+  @AllArgsConstructor
+  @NoArgsConstructor
+  public static class SignUpResponse {
+    private Long userId;    // 사용자 ID
+    private String nickname; // 사용자 닉네임
+    private String email;    // 사용자 이메일
+  }
+  
+  //로그인 응답
   @Getter
   @Setter
   @NoArgsConstructor
   @AllArgsConstructor
+  @Builder
   public static class LoginResponse {
-
-    //닉네임
-    private String nickname;
-
-    //토큰
-    private String token;
+    private Long userId;          // 사용자 ID
+    private String nickname;      // 닉네임
+    private String email;         // 이메일
+    private String token;         // JWT 토큰
+    private String role;          // 사용자 역할 ("USER" 또는 "ADMIN")
   }
 
-  /**
-   * 비밀번호 재설정 요청 데이터
-   */
+  //비밀번호 재설정 요청
   @Data
   public static class ResetPasswordRequest {
 
@@ -98,6 +101,10 @@ public class MemberDto {
     //새로운 비밀번호
     @NotBlank
     private String newPassword;
+    
+    //새로운 비밀번호 확인
+    @NotBlank
+    private String confirmPassword; 
   }
 }
 

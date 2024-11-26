@@ -13,11 +13,7 @@ public class EmailService {
 
   private final JavaMailSender mailSender;
 
-  /**
-   * 이메일 인증 링크 발송
-   * @param email 수신자 이메일
-   * @param token 인증 토큰
-   */
+  //이메일 인증 링크 발송
   public void sendVerificationEmail(String email, String token) {
     String verificationUrl = "http://localhost:8080/api/members/verify-email?token=" + token;
 
