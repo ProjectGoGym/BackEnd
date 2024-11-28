@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -162,7 +161,7 @@ public class AuthService {
         // Redis에서 토큰 검증
         String email = redisTemplate.opsForValue().get(EMAIL_VERIFICATION_PREFIX + token);
         
-        // Redis에 저장된 이메일이 없는 경우 - 유효하지 않은 토큰
+        // Redis에 저장된 이메일이 없는 경ㄴ 유효하지 않은 토큰
         if (email == null) {
             throw new CustomException(ErrorCode.INVALID_TOKEN); // 토큰이 유효하지 않음
         }

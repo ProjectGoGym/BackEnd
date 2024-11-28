@@ -28,7 +28,7 @@ public class EmailVerificationToken {
   public EmailVerificationToken(String email) {
     this.email = email;
     this.token = UUID.randomUUID().toString();
-    this.expirationTime = LocalDateTime.now().plusHours(24); // 토큰 유효기간 24시간
+    this.expirationTime = LocalDateTime.now().plusMinutes(5); //5분
   }
 
   public boolean isExpired() {
