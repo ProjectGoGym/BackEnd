@@ -4,7 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
-
+import com.gogym.member.entity.EmailVerificationToken;
+import com.gogym.member.repository.EmailVerificationTokenRepository;
 import java.util.UUID;
 
 @Service
@@ -12,12 +13,17 @@ import java.util.UUID;
 public class EmailService {
 
   private final JavaMailSender mailSender;
+  private final EmailVerificationTokenRepository tokenRepository;
 
-  //이메일 인증 링크 발송
-  public void sendVerificationEmail(String email, String token) {
-    String verificationUrl = "http://localhost:8080/api/members/verify-email?token=" + token;
-    //추후 수정해야할 부분
-    
+  public void sendVerificationEmail(String email) {
+    // 토큰 생성 및 저장
+    EmailVerificationToken token = new EmailVerificationToken(email);
+    tokenRepository.save(token);
+
+    // 인증 URL 생성
+    String verificationUrl = "http://localhost:8080/api/members/verify-email?token=" + token.getToken();
+
+    // 이메일 발송
     SimpleMailMessage message = new SimpleMailMessage();
     message.setTo(email);
     message.setSubject("이메일 인증 요청");
@@ -26,3 +32,4 @@ public class EmailService {
     mailSender.send(message);
   }
 }
+

@@ -4,6 +4,8 @@ import com.gogym.common.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import lombok.*;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.EnumType;
 
 @Entity
 @Getter
@@ -29,15 +31,16 @@ public class Member extends BaseEntity {
 
   @Column(nullable = false)
   private String password;
-  
+
+  @Enumerated(EnumType.STRING)
   @Column(nullable = false)
-  private String role = "USER";
+  private Role role;
 
   private String profileImageUrl;
+
   private String interestArea1;
   private String interestArea2;
-  
-  private boolean isEmailVerified = false; // 이메일 인증 여부
 
-  private String emailVerificationToken; // 인증 토큰 저장
+  @Column(name = "email_verified", nullable = false)
+  private boolean emailVerified = false;
 }

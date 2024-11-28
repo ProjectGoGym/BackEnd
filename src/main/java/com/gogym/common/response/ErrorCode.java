@@ -18,13 +18,21 @@ public enum ErrorCode {
   // 401 Unauthorized : 인증 실패 관련
   EMAIL_NOT_FOUND(HttpStatus.UNAUTHORIZED, "401", "존재하지 않는 이메일입니다."),
   INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, "401", "비밀번호가 일치하지 않습니다."),
-
+  MEMBER_NOT_FOUND(HttpStatus.UNAUTHORIZED, "401", "존재하지 않는 회원 입니다."),
+  UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", "인증이 필요합니다."),
+  
   // 403 Forbidden : 권한 부족
-
+  FORBIDDEN(HttpStatus.FORBIDDEN, "FORBIDDEN", "해당 채팅방에 참여 중이 아닙니다."),
+  // 404 not found
+  REQUEST_NOT_FOUND(HttpStatus.NOT_FOUND, "404", "찾을 수 없습니다."),
+  CHATROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "CHATROOM_NOT_FOUND", "채팅방을 찾을 수 없습니다."),
+  
   // 409 Conflict : 충돌 관련
   DUPLICATE_EMAIL(HttpStatus.CONFLICT, "409", "이미 존재하는 이메일입니다."),
   DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "409", "이미 존재하는 닉네임입니다."),
-
+  ALREADY_READ(HttpStatus.CONFLICT, "409", "이미 확인한 알림입니다."),
+  CHATROOM_ALREADY_EXISTS(HttpStatus.CONFLICT, "CHATROOM_ALREADY_EXISTS", "이미 존재하는 채팅방입니다."),
+  
   // 500 Internal Server Error: 서버 내부 문제
   INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "500", "서버 내부 오류입니다.");
 

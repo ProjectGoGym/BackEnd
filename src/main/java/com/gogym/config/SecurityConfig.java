@@ -36,25 +36,24 @@ public class SecurityConfig {
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
-        // CSRF 비활성화 (REST API 사용 시 필요 없음)
-        .csrf().disable()
-        .authorizeHttpRequests(auth -> auth
-            // 인증 없이 접근을 허용할 엔드포인트
-            .requestMatchers(
-                "/api/members/sign-up",
-                "/api/members/sign-in",
-                "/api/members/check-email",
-                "/api/members/check-nickname",
-                "/api/members/verify-code",
-                "/api/members/send-code"
+    .csrf().disable()
+    .authorizeHttpRequests(auth -> auth
+        // 인증 없이 접근을 허용할 엔드포인트
+        .requestMatchers(
+            "/api/auth/sign-up",
+            "/api/auth/sign-in",
+            "/api/auth/check-email",
+            "/api/auth/check-nickname",
+            "/api/auth/verify-email",
+            "/api/auth/send-verification-email"
             ).permitAll()
-            // 그 외의 모든 요청은 인증 필요
-            .anyRequest().authenticated()
+        // 그 외의 모든 요청은 인증 필요
+        .anyRequest().authenticated()
         )
-        // JWT 인증 필터를 UsernamePasswordAuthenticationFilter 전에 추가
-        .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
-
-    return http.build();
+    // JWT 인증 필터를 UsernamePasswordAuthenticationFilter 전에 추가
+    .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
+    
+      return http.build();
   }
 }
 
