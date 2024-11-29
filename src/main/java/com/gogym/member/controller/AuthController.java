@@ -2,7 +2,9 @@ package com.gogym.member.controller;
 
 import com.gogym.common.response.ApplicationResponse;
 import com.gogym.common.response.SuccessCode;
-import com.gogym.member.dto.AuthRequest;
+import com.gogym.member.dto.SignUpRequest;
+import com.gogym.member.dto.SignInRequest;
+import com.gogym.member.dto.ResetPasswordRequest;
 import com.gogym.member.dto.AuthResponse;
 import com.gogym.member.service.AuthService;
 import jakarta.validation.Valid;
@@ -27,7 +29,7 @@ public class AuthController {
   // 회원가입
   @PostMapping("/sign-up")
   public ResponseEntity<ApplicationResponse<AuthResponse>> signUp(
-    @RequestBody @Valid AuthRequest request // 요청 데이터 검증 및 전달
+    @RequestBody @Valid SignUpRequest request // 요청 데이터 검증 및 전달
   ) {
     AuthResponse response = authService.signUp(request); // 회원가입 처리
     return ResponseEntity.ok(ApplicationResponse.ok(response, SuccessCode.AUTH_SUCCESS)); // 성공 응답 반환
@@ -36,7 +38,7 @@ public class AuthController {
   // 로그인
   @PostMapping("/sign-in")
   public ResponseEntity<ApplicationResponse<AuthResponse>> login(
-    @RequestBody @Valid AuthRequest request
+    @RequestBody @Valid SignInRequest request
   ) {
     // 로그인 처리 및 사용자 정보 생성
     AuthResponse response = authService.login(request);
@@ -62,7 +64,7 @@ public class AuthController {
   // 비밀번호 재설정
   @PostMapping("/reset-password")
   public ResponseEntity<ApplicationResponse<Void>> resetPassword(
-    @RequestBody @Valid AuthRequest request // 요청 데이터 검증 및 전달
+    @RequestBody @Valid ResetPasswordRequest request // 요청 데이터 검증 및 전달
   ) {
     authService.resetPassword(request); // 비밀번호 재설정 처리
     return ResponseEntity.ok(ApplicationResponse.noData(SuccessCode.AUTH_SUCCESS)); // 성공 응답 반환
@@ -107,4 +109,6 @@ public class AuthController {
     return ResponseEntity.ok(ApplicationResponse.noData(SuccessCode.AUTH_SUCCESS));
   }
 }
+
+
 

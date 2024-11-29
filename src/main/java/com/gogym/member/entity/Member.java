@@ -1,20 +1,17 @@
 package com.gogym.member.entity;
 
 import com.gogym.common.entity.BaseEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
+import jakarta.persistence.*;
 import lombok.*;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.EnumType;
 
 @Entity
+@Table(name = "members")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-
-//회원 엔티티
+@Access(AccessType.FIELD)
 public class Member extends BaseEntity {
 
   @Column(nullable = false)
@@ -36,11 +33,14 @@ public class Member extends BaseEntity {
   @Column(nullable = false)
   private Role role;
 
+  @Column(name = "profile_image_url")
   private String profileImageUrl;
 
   private String interestArea1;
   private String interestArea2;
 
-  @Column(name = "email_verified", nullable = false)
+  @Column(name = "verified_at")
   private boolean emailVerified = false;
 }
+
+
