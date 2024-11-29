@@ -10,3 +10,4 @@ gradlew.bat
 settings.gradle
 .idea
 .gitattributes
+application-local.yml
