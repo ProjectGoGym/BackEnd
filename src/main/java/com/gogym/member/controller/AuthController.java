@@ -8,7 +8,6 @@ import com.gogym.member.dto.ResetPasswordRequest;
 import com.gogym.member.dto.AuthResponse;
 import com.gogym.member.service.AuthService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -92,7 +91,7 @@ public class AuthController {
 
   // 이메일 인증 확인
   @GetMapping("/verify-email")
-  public ApplicationResponse<Void> verifyEmail(@RequestParam @NotBlank String token) {
+  public ApplicationResponse<Void> verifyEmail(@RequestParam(name = "token") String token) {
     // 이메일 인증 토큰 검증 서비스 호출
     authService.verifyEmailToken(token);
 
@@ -101,12 +100,12 @@ public class AuthController {
   }
 
   // 이메일 인증 요청
-  @PostMapping("/send-verification-email")
+  @PostMapping(value = "/send-verification-email", produces = "application/json")
   public ResponseEntity<ApplicationResponse<Void>> sendVerificationEmail(
-    @RequestParam @Email String email
+      @RequestParam(name = "email") String email
   ) {
-    authService.sendVerificationEmail(email);
-    return ResponseEntity.ok(ApplicationResponse.noData(SuccessCode.AUTH_SUCCESS));
+      authService.sendVerificationEmail(email);
+      return ResponseEntity.ok(ApplicationResponse.noData(SuccessCode.AUTH_SUCCESS));
   }
 }
 
