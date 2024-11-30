@@ -14,7 +14,7 @@ java {
 }
 
 bootJar {
-    mainClassName = 'com.gogym.GoGymApplication'
+    mainClass = 'com.gogym.GoGymApplication'
 }
 
 repositories {
