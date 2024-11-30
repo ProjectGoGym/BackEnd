@@ -1,10 +1,8 @@
 package com.gogym.exception;
 
-import static com.gogym.common.response.ErrorCode.REQUEST_VALIDATION_FAIL;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 
-import com.gogym.common.response.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.ConstraintViolationException;
@@ -43,7 +41,7 @@ public class GlobalExceptionHandler {
     String errorMessage = e.getBindingResult().getAllErrors().get(0).getDefaultMessage();
     String requestURI = request.getRequestURI();
 
-    ErrorResponse response = ErrorResponse.from(REQUEST_VALIDATION_FAIL);
+    ErrorResponse response = ErrorResponse.from(ErrorCode.REQUEST_VALIDATION_FAIL);
 
     log.error("MethodArgumentNotValidException: {}, Request URI: {}", errorMessage, requestURI);
 
@@ -55,7 +53,7 @@ public class GlobalExceptionHandler {
     String errorMessage = e.getMessage();
     String requestURI = request.getRequestURI();
 
-    ErrorResponse response = ErrorResponse.from(REQUEST_VALIDATION_FAIL);
+    ErrorResponse response = ErrorResponse.from(ErrorCode.REQUEST_VALIDATION_FAIL);
 
     log.error("ConstraintViolationException: {}, Request URI: {}", errorMessage, requestURI);
 
