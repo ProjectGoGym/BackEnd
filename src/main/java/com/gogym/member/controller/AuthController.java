@@ -3,7 +3,6 @@ package com.gogym.member.controller;
 import com.gogym.member.dto.SignUpRequest;
 import com.gogym.member.dto.SignInRequest;
 import com.gogym.member.dto.ResetPasswordRequest;
-import com.gogym.member.dto.AuthResponse;
 import com.gogym.member.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,24 +24,24 @@ public class AuthController {
 
   // 회원가입
   @PostMapping("/sign-up")
-  public ResponseEntity<AuthResponse> signUp(
+  public ResponseEntity<Void> signUp(
       @RequestBody @Valid SignUpRequest request
   ) {
-    AuthResponse response = authService.signUp(request);
-    return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    authService.signUp(request);
+    return ResponseEntity.status(HttpStatus.CREATED).build();
   }
 
   // 로그인
   @PostMapping("/sign-in")
-  public ResponseEntity<AuthResponse> login(
+  public ResponseEntity<Void> login(
       @RequestBody @Valid SignInRequest request
   ) {
-    AuthResponse response = authService.login(request);
+    authService.login(request);
     String token = authService.generateToken(request.getEmail(), List.of(ROLE_USER));
 
     return ResponseEntity.ok()
         .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
-        .body(response);
+        .build();
   }
 
   // 로그아웃
@@ -65,23 +64,23 @@ public class AuthController {
 
   // 이메일 중복 확인
   @GetMapping("/check-email")
-  public ResponseEntity<String> checkEmail(@RequestParam("email") String email) {
+  public ResponseEntity<Void> checkEmail(@RequestParam("email") String email) {
     authService.checkEmail(email);
-    return ResponseEntity.ok("이메일이 사용 가능합니다.");
+    return ResponseEntity.ok().build();
   }
 
   // 닉네임 중복 확인
   @GetMapping("/check-nickname")
-  public ResponseEntity<String> checkNickname(@RequestParam("nickname") String nickname) {
+  public ResponseEntity<Void> checkNickname(@RequestParam("nickname") String nickname) {
     authService.checkNickname(nickname);
-    return ResponseEntity.ok("닉네임이 사용 가능합니다.");
+    return ResponseEntity.ok().build();
   }
 
   // 이메일 인증 확인
   @GetMapping("/verify-email")
-  public ResponseEntity<String> verifyEmail(@RequestParam(name = "token") String token) {
+  public ResponseEntity<Void> verifyEmail(@RequestParam(name = "token") String token) {
     authService.verifyEmailToken(token);
-    return ResponseEntity.ok("이메일 인증이 완료되었습니다.");
+    return ResponseEntity.ok().build();
   }
 
   // 이메일 인증 요청
@@ -93,4 +92,5 @@ public class AuthController {
     return ResponseEntity.noContent().build();
   }
 }
+
 

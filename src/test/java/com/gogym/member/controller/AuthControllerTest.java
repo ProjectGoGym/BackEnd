@@ -5,7 +5,6 @@ import com.gogym.member.dto.SignUpRequest;
 import com.gogym.member.dto.SignInRequest;
 import com.gogym.member.service.AuthService;
 import com.gogym.member.entity.Role;
-import com.gogym.member.dto.AuthResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,10 +12,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -73,19 +74,17 @@ class AuthControllerTest {
   @Test
   @DisplayName("로그인 요청을 처리하고 JWT 토큰을 반환한다.")
   void signIn_shouldReturnJwtToken() throws Exception {
-    AuthResponse mockResponse = AuthResponse.builder()
-      .token("mockJwtToken")
-      .build();
+      // Mocking AuthService
+      doNothing().when(authService).login(any(SignInRequest.class));
 
-    when(authService.login(any(SignInRequest.class))).thenReturn(mockResponse);
+      String jsonRequest = objectMapper.writeValueAsString(signInRequest);
 
-    String jsonRequest = objectMapper.writeValueAsString(signInRequest);
-
-    mockMvc.perform(post("/api/auth/sign-in")
-        .contentType(MediaType.APPLICATION_JSON)
-        .content(jsonRequest))
-      .andExpect(status().isOk())
-      .andExpect(jsonPath("$.token").value("mockJwtToken"));
+      mockMvc.perform(post("/api/auth/sign-in")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(jsonRequest))
+          .andExpect(status().isOk())
+          .andExpect(header().exists(HttpHeaders.AUTHORIZATION))
+          .andExpect(header().string(HttpHeaders.AUTHORIZATION, "Bearer mockJwtToken"));
   }
 
   @Test

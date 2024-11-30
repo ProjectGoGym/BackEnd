@@ -2,12 +2,12 @@ package com.gogym.member.service;
 
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
-import com.gogym.member.dto.AuthResponse;
 import com.gogym.member.dto.ResetPasswordRequest;
 import com.gogym.member.dto.SignInRequest;
 import com.gogym.member.dto.SignUpRequest;
 import com.gogym.member.entity.Member;
 import com.gogym.member.repository.MemberRepository;
+import com.gogym.common.response.SuccessCode;
 import com.gogym.config.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -35,7 +35,7 @@ public class AuthService {
 
   // 회원가입 처리
   @Transactional
-  public AuthResponse signUp(SignUpRequest request) {
+  public Long signUp(SignUpRequest request) {
     // 이메일 중복 확인
     if (memberRepository.existsByEmail(request.getEmail())) {
       throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
@@ -53,27 +53,25 @@ public class AuthService {
     memberRepository.save(member);
 
     // 응답 객체 생성 및 반환
-    return AuthResponse.fromEntity(member);
+    return member.getId();
   }
 
   // 로그인 처리
   @Transactional
-  public AuthResponse login(SignInRequest request) {
-    // 이메일로 사용자 조회
-    Member member = memberRepository.findByEmail(request.getEmail())
-      .orElseThrow(() -> new CustomException(ErrorCode.EMAIL_NOT_FOUND));
+  public void login(SignInRequest request) {
+      // 이메일로 사용자 조회
+      Member member = memberRepository.findByEmail(request.getEmail())
+        .orElseThrow(() -> new CustomException(ErrorCode.EMAIL_NOT_FOUND));
 
-    // 비밀번호 검증
-    if (!passwordEncoder.matches(request.getPassword(), member.getPassword())) {
-      throw new CustomException(ErrorCode.INVALID_PASSWORD);
-    }
+      // 비밀번호 검증
+      if (!passwordEncoder.matches(request.getPassword(), member.getPassword())) {
+          throw new CustomException(ErrorCode.INVALID_PASSWORD);
+      }
 
-    // JWT 토큰 생성
-    String token = jwtTokenProvider.createToken(member.getEmail(), List.of(member.getRole().name()));
-
-    // 응답 객체 생성 및 반환
-    return AuthResponse.fromEntityWithToken(member, token);
+      // JWT 토큰 생성
+      jwtTokenProvider.createToken(member.getEmail(), List.of(member.getRole().name()));
   }
+
 
   // 비밀번호 재설정 처리
   @Transactional

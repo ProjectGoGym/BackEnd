@@ -7,11 +7,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import com.gogym.member.entity.Member;
 
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -39,7 +37,7 @@ public class SignUpRequest {
   private String interestArea2;
 
   private Role role;
-  
+
   public Member toEntity(String encodedPassword) {
     return Member.builder()
       .name(this.name)
