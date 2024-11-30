@@ -1,0 +1,18 @@
+spring:
+  datasource:
+    url: ENC(GwbWhVWFvWCKfylX5lJuwhOsYmc3+DqWlq63TuicR5vjEhaEmlQReJr34dJrgNDXoHZ7apHClYy1EoEGr73T5A3iqEjw8BEeZUWFEXwEzzShkvi61vT6k8PwGym0h4dfPsCxDYpjbEeDAmBiO8lJeYPm4d6Ry3UUXpFffMIozL0MyZfpI7dNCWceQBa/PjeIi7HxNEHDSbc=)
+    username: ENC(IOXfCImgScfD667LhMfAYw==)
+    password: ENC(rCPtHIU3XOIx7W6YKId6gEx4aBImhryq)
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      # 테이블 컬럼 변동 없을 때 none으로 변경
+      ddl-auto: create-drop
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
