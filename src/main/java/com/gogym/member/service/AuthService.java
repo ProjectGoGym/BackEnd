@@ -1,13 +1,13 @@
 package com.gogym.member.service;
 
 import com.gogym.exception.CustomException;
-import com.gogym.exception.ErrorCode;
 import com.gogym.member.dto.SignUpRequest;
 import com.gogym.member.dto.SignInRequest;
 import com.gogym.member.dto.ResetPasswordRequest;
 import com.gogym.member.dto.AuthResponse;
 import com.gogym.member.entity.Member;
 import com.gogym.member.repository.MemberRepository;
+import com.gogym.common.response.ErrorCode;
 import com.gogym.config.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;

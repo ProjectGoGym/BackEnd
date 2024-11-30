@@ -1,7 +1,6 @@
 package com.gogym.common.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.gogym.exception.ErrorCode;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

@@ -1,5 +1,6 @@
 package com.gogym.exception;
 
+import com.gogym.common.response.ErrorCode;
 import lombok.Getter;
 
 @Getter

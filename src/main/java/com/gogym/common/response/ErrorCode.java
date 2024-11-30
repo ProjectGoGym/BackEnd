@@ -1,4 +1,4 @@
-package com.gogym.exception;
+package com.gogym.common.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
