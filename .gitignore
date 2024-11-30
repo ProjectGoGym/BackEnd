@@ -5,10 +5,10 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 .env
-gradlew
 gradlew.bat
 settings.gradle
 .idea
 .gitattributes
 application-local.yml
 logs
+#
