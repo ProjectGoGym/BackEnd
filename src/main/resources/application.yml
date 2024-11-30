@@ -37,4 +37,4 @@ logging:
 
 jasypt:
   encryptor:
-    password: Rhwla123!
+    password: ${JASYPT_ENCRYPTOR_PASSWORD}
