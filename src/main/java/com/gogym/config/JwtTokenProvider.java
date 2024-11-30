@@ -24,8 +24,9 @@ public class JwtTokenProvider {
   private final long validityInMilliseconds;
 
   // JwtTokenProvider 생성자
-  public JwtTokenProvider(@Value("${jwt.secret}") String secret,
-                          @Value("${jwt.validity}") long validityInMilliseconds) {
+  public JwtTokenProvider(
+      @Value("${spring.jwt.secret}") String secret,
+      @Value("${spring.jwt.validity}") long validityInMilliseconds) {
     this.secretKey = Keys.hmacShaKeyFor(secret.getBytes());
     this.validityInMilliseconds = validityInMilliseconds;
   }
