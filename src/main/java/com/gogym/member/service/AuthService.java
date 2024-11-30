@@ -1,5 +1,6 @@
 package com.gogym.member.service;
 
+import com.gogym.config.JwtTokenProvider;
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
 import com.gogym.member.dto.ResetPasswordRequest;
@@ -7,8 +8,9 @@ import com.gogym.member.dto.SignInRequest;
 import com.gogym.member.dto.SignUpRequest;
 import com.gogym.member.entity.Member;
 import com.gogym.member.repository.MemberRepository;
-import com.gogym.common.response.SuccessCode;
-import com.gogym.config.JwtTokenProvider;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.mail.SimpleMailMessage;
@@ -16,10 +18,6 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -65,7 +63,7 @@ public class AuthService {
 
     // 비밀번호 검증
     if (!passwordEncoder.matches(request.getPassword(), member.getPassword())) {
-        throw new CustomException(ErrorCode.INVALID_PASSWORD);
+        throw new CustomException(ErrorCode.UNAUTHORIZED);
     }
 
     // JWT 토큰 생성 후 반환

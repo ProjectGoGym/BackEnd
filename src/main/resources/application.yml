@@ -5,11 +5,11 @@ spring:
   application:
     name: GoGym
   profiles:
-    active: dev
+    active: prod
 
   data:
     redis:
-      host: localhost
+      host: ENC(BAyrDQ2US9n4xvHaYjIbiMoftLiRNAta)
       port: 6379
       timeout: 2000
 
@@ -24,8 +24,8 @@ spring:
             enable: true
 
   jwt:
-    secret: # 환경변수 설정 필요
-    validity: 3600000
+    secret: ENC(sz14IJLNwiaaHMqAtImz76SKb3nSkiq8FlPPYwToQFyAs1uMSprSqv21vvqUl1An)
+    validity: ENC(iSNAc2YD8ecXGkZWP+5f0A==)
 
 logging:
   level:
@@ -34,3 +34,7 @@ logging:
         SQL: info
         type:
           descriptor: trace
+
+jasypt:
+  encryptor:
+    password: ${JASYPT_ENCRYPTOR_PASSWORD}
