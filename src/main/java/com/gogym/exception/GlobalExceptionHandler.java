@@ -12,18 +12,16 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-  // 사용자 정의 예외 처리
   @ExceptionHandler(CustomException.class)
   public ResponseEntity<ErrorResponse> handleCustomException(CustomException e) {
     ErrorCode errorCode = e.getErrorCode();
     ErrorResponse response = ErrorResponse.from(errorCode);
 
-    log.error("CustomException: {}, Code: {}", errorCode.getMessage(), errorCode.getCode());
+    log.error("CustomException: {}, Code: {}", errorCode.getMessage(), errorCode.getHttpStatus());
 
-    return ResponseEntity.ok(response);
+    return ResponseEntity.status(errorCode.getHttpStatus()).body(response);
   }
 
-  // 예상치 못한 런타임 예외 처리
   @ExceptionHandler(RuntimeException.class)
   public ResponseEntity<ErrorResponse> handleUnexpectedException(RuntimeException e) {
 
@@ -34,7 +32,6 @@ public class GlobalExceptionHandler {
     return ResponseEntity.ok(response);
   }
 
-  // 요청 검증 실패 처리
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(
       HttpServletRequest request, MethodArgumentNotValidException e) {
@@ -48,7 +45,6 @@ public class GlobalExceptionHandler {
     return ResponseEntity.ok(response);
   }
 
-  // 제약 조건 위반 예외 처리
   @ExceptionHandler(ConstraintViolationException.class)
   public ResponseEntity<ErrorResponse> handleConstraintViolationException(HttpServletRequest request, ConstraintViolationException e) {
     String errorMessage = e.getMessage();
