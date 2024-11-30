@@ -3,20 +3,14 @@ package com.gogym.notification.dto;
 import com.gogym.notification.entity.Notification;
 import com.gogym.notification.type.NotificationType;
 import java.time.LocalDateTime;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-public class NotificationDto {
+public record NotificationDto(
 
-  private NotificationType type;
+  NotificationType type,
+  String content,
+  LocalDateTime createdAt
 
-  private String content;
-
-  private LocalDateTime createdAt;
+  ) {
 
   public static NotificationDto fromEntity(Notification notification) {
     return new NotificationDto(notification.getType(), notification.getContent(),

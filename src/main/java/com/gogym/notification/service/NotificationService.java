@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -20,6 +21,8 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
+@Slf4j
 public class NotificationService {
 
   private final NotificationRepository notificationRepository;
@@ -28,8 +31,12 @@ public class NotificationService {
 
   public SseEmitter subscribe(Long memberId) {
 
-    // TODO : Member 객체 검증 로직
-
+    /*
+       TODO : Member 객체 검증 로직
+        예시)
+        Member member = memberRepository.findById(memberId).orElseThrow(() -> new CustomException(예외처리));
+        검증 메서드를 별도 분리하기
+     */
     SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
     emitters.put(memberId, emitter);
 
@@ -56,6 +63,7 @@ public class NotificationService {
             .name("dummy")
             .data("Well Connected! Waiting for notifications."));
       } catch (IOException e) {
+        log.error("▶ 더미 데이터 전송 실패 : memberId = {}, 오류 : {}", memberId, e.getMessage());
         removeEmitter(memberId);
       }
     }
@@ -79,6 +87,7 @@ public class NotificationService {
             .name("heartbeat")
             .data("connecting..."));
       } catch (IOException e) {
+        log.error("▶ 하트비트 메세지 전송 실패 : memberId = {}, 오류 : {}", memberId, e.getMessage());
         removeEmitter(memberId);
       }
     }
@@ -88,14 +97,24 @@ public class NotificationService {
   @Transactional
   public void createNotification(Long memberId, NotificationDto notificationDto) {
 
-    // TODO : Member 객체 검증 로직
+    /*
+       TODO : Member 객체 검증 로직
+        예시)
+        Member member = memberRepository.findById(memberId).orElseThrow(() -> new CustomException(예외처리));
+        검증 메서드를 별도 분리하기
+     */
 
-    Notification notification = Notification.of(memberId, notificationDto);
+    try {
+      // TODO : Member 객체를 저장
+      Notification notification = Notification.of(memberId, notificationDto);
 
-    // 알림받을 회원이 구독하지 않은상태(로그인 하지 않은 상태) 이더라도 알림은 저장이 됩니다.
-    notificationRepository.save(notification);
+      // 알림받을 회원이 구독하지 않은상태(로그인 하지 않은 상태) 이더라도 알림은 저장이 됩니다.
+      notificationRepository.save(notification);
 
-    sendNotification(memberId, notification);
+      sendNotification(memberId, notification);
+    } catch (Exception e) {
+      log.error("▶ 알림 생성 중 오류 발생 : memberId = {}, notificationDto = {}, 오류 : {}", memberId, notificationDto, e.getMessage());
+    }
   }
 
   public void sendNotification(Long memberId, Notification notification) {
@@ -109,15 +128,20 @@ public class NotificationService {
             .name("notification")
             .data(notificationDto));
       } catch (IOException e) {
+        log.error("▶ 알림 전송 중 오류 발생 : memberId = {}, 오류 : {}", memberId, e.getMessage());
         removeEmitter(memberId);
       }
     }
   }
 
-  @Transactional(readOnly = true)
   public Page<NotificationDto> getAllNotifications(Long memberId, Pageable pageable) {
 
-    // TODO : Member 객체 검증 로직
+    /*
+       TODO : Member 객체 검증 로직
+        예시)
+        Member member = memberRepository.findById(memberId).orElseThrow(() -> new CustomException(예외처리));
+        검증 메서드를 별도 분리하기
+     */
 
     // 읽지않은 알림목록만 받아옵니다.
     Page<Notification> notificationPage = notificationRepository.findAllByMemberIdAndIsReadFalse(
@@ -127,13 +151,14 @@ public class NotificationService {
   }
 
   @Transactional
-  public void updateNotification(Long id, Long memberId) {
+  public void updateNotification(Long notificationId, Long memberId) {
 
-    Notification notification = notificationRepository.findByIdAndMemberId(id, memberId)
+    Notification notification = notificationRepository.findByIdAndMemberId(notificationId, memberId)
         .orElseThrow(() -> new CustomException(REQUEST_NOT_FOUND));
 
     if (notification.getIsRead()) {
-      throw new CustomException(ALREADY_READ, "이미 읽은 알림입니다.");
+      log.error("▶ 하트비트 메세지 전송 실패 : memberId = {}, notificationId = {}", memberId, notificationId);
+      throw new CustomException(ALREADY_READ);
     }
     notification.read();
   }

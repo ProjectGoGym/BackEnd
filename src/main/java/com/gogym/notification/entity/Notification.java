@@ -7,6 +7,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,8 +16,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
+@Table(name = "notifications")
 public class Notification extends BaseEntity {
 
+
+  // TODO : 추후 join column 으로 Member 객체 연결
   private Long memberId;
 
   @Enumerated(EnumType.STRING)
@@ -26,12 +30,12 @@ public class Notification extends BaseEntity {
   @Column(nullable = false)
   private String content;
 
-  @Column(nullable = false)
+  @Column(name = "is_read", nullable = false)
   private Boolean isRead;
 
   public static Notification of(Long memberId, NotificationDto notificationdto) {
 
-    return new Notification(memberId, notificationdto.getType(), notificationdto.getContent(), false);
+    return new Notification(memberId, notificationdto.type(), notificationdto.content(), false);
   }
 
   public void read() {

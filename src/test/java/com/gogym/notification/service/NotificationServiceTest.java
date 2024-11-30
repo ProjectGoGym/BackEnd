@@ -145,7 +145,7 @@ class NotificationServiceTest {
   }
 
   @Test
-  @DisplayName("회원의 알림이 없으면 예외가 발생한다,")
+  @DisplayName("회원의 알림이 없으면 예외가 발생한다.")
   void updateNotification_shouldThrowExceptionWhenNotificationNotFound() {
     // given
     Long notificationId = 1L;
