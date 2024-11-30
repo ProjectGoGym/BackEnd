@@ -34,3 +34,7 @@ logging:
         SQL: info
         type:
           descriptor: trace
+
+jasypt:
+  encryptor:
+    password: ${JASYPT_ENCRYPTOR_PASSWORD}
