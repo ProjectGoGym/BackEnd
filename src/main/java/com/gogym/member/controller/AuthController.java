@@ -36,8 +36,7 @@ public class AuthController {
   public ResponseEntity<Void> login(
       @RequestBody @Valid SignInRequest request
   ) {
-    authService.login(request);
-    String token = authService.generateToken(request.getEmail(), List.of(ROLE_USER));
+    String token = authService.login(request);
 
     return ResponseEntity.ok()
         .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
@@ -47,9 +46,9 @@ public class AuthController {
   // 로그아웃
   @PostMapping("/sign-out")
   public ResponseEntity<Void> logout(
-      @RequestHeader("Authorization") String token
+      @RequestHeader("Authorization") String authorizationHeader
   ) {
-    authService.logout(token.replace("Bearer ", ""));
+    authService.logout(authorizationHeader);
     return ResponseEntity.noContent().build();
   }
 
@@ -92,5 +91,6 @@ public class AuthController {
     return ResponseEntity.noContent().build();
   }
 }
+
 
 

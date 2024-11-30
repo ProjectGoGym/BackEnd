@@ -58,18 +58,18 @@ public class AuthService {
 
   // 로그인 처리
   @Transactional
-  public void login(SignInRequest request) {
-      // 이메일로 사용자 조회
-      Member member = memberRepository.findByEmail(request.getEmail())
-        .orElseThrow(() -> new CustomException(ErrorCode.EMAIL_NOT_FOUND));
+  public String login(SignInRequest request) {
+    // 이메일로 사용자 조회
+    Member member = memberRepository.findByEmail(request.getEmail())
+      .orElseThrow(() -> new CustomException(ErrorCode.EMAIL_NOT_FOUND));
 
-      // 비밀번호 검증
-      if (!passwordEncoder.matches(request.getPassword(), member.getPassword())) {
-          throw new CustomException(ErrorCode.INVALID_PASSWORD);
-      }
+    // 비밀번호 검증
+    if (!passwordEncoder.matches(request.getPassword(), member.getPassword())) {
+        throw new CustomException(ErrorCode.INVALID_PASSWORD);
+    }
 
-      // JWT 토큰 생성
-      jwtTokenProvider.createToken(member.getEmail(), List.of(member.getRole().name()));
+    // JWT 토큰 생성 후 반환
+    return jwtTokenProvider.createToken(member.getEmail(), List.of(member.getRole().name()));
   }
 
 
@@ -92,9 +92,14 @@ public class AuthService {
 
   // 로그아웃 처리
   @Transactional
-  public void logout(String token) {
-    // Redis에 토큰 저장 및 만료 시간 설정
-    redisTemplate.opsForValue().set(token, "logout", TOKEN_EXPIRATION_TIME, TimeUnit.MILLISECONDS);
+  public void logout(String authorizationHeader) {
+    String token = extractToken(authorizationHeader);
+    redisTemplate.opsForValue().set(token, "logout", 3600000, TimeUnit.MILLISECONDS);
+  }
+
+  // 토큰 추출
+  public String extractToken(String authorizationHeader) {
+    return authorizationHeader.replace("Bearer ", "");
   }
 
   // 이메일 중복 확인
@@ -148,7 +153,7 @@ public class AuthService {
     Member member = memberRepository.findByEmail(email)
       .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
 
-    member.setEmailVerified(true);
+    member.verifyEmail();
     memberRepository.save(member);
 
     // 사용한 토큰 삭제
