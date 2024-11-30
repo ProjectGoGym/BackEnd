@@ -1,11 +1,10 @@
 package com.gogym.exception;
 
-import static com.gogym.common.response.ErrorCode.REQUEST_VALIDATION_FAIL;
+import static com.gogym.exception.ErrorCode.REQUEST_VALIDATION_FAIL;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 
 import com.gogym.common.response.ApplicationResponse;
-import com.gogym.common.response.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.ConstraintViolationException;

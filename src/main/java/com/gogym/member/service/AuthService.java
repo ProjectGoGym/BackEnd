@@ -1,7 +1,7 @@
 package com.gogym.member.service;
 
-import com.gogym.common.response.ErrorCode;
 import com.gogym.exception.CustomException;
+import com.gogym.exception.ErrorCode;
 import com.gogym.member.dto.SignUpRequest;
 import com.gogym.member.dto.SignInRequest;
 import com.gogym.member.dto.ResetPasswordRequest;
