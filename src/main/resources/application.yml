@@ -1,0 +1,40 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: GoGym
+  profiles:
+    active: prod
+
+  data:
+    redis:
+      host: ENC(BAyrDQ2US9n4xvHaYjIbiMoftLiRNAta)
+      port: 6379
+      timeout: 2000
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  jwt:
+    secret: ENC(sz14IJLNwiaaHMqAtImz76SKb3nSkiq8FlPPYwToQFyAs1uMSprSqv21vvqUl1An)
+    validity: ENC(iSNAc2YD8ecXGkZWP+5f0A==)
+
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: info
+        type:
+          descriptor: trace
+
+jasypt:
+  encryptor:
+    password: ${JASYPT_ENCRYPTOR_PASSWORD}
