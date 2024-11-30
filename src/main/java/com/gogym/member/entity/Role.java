@@ -1,5 +1,6 @@
 package com.gogym.member.entity;
 
-public class MemberEntity {
-
+public enum Role {
+  USER,
+  ADMIN;
 }

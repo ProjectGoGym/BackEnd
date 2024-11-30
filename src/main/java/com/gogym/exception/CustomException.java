@@ -1,6 +1,5 @@
 package com.gogym.exception;
 
-import com.gogym.common.response.ErrorCode;
 import lombok.Getter;
 
 @Getter
@@ -16,5 +15,4 @@ public class CustomException extends RuntimeException {
     super(message);
     this.errorCode = errorCode;
   }
-
 }
