@@ -65,7 +65,6 @@ public class NotificationService {
             .name("dummy")
             .data("Well Connected! Waiting for notifications."));
       } catch (IOException e) {
-        log.error("▶ 더미 데이터 전송 실패 : memberId = {}, 오류 : {}", memberId, e.getMessage());
         removeEmitter(memberId);
       }
     }
@@ -84,7 +83,6 @@ public class NotificationService {
             .name("heartbeat")
             .data("connecting..."));
       } catch (IOException e) {
-        log.error("▶ 하트비트 메세지 전송 실패 : memberId = {}, 오류 : {}", memberId, e.getMessage());
         removeEmitter(memberId);
       }
     }
@@ -96,18 +94,12 @@ public class NotificationService {
 
     Member member = findByMemberFromMemberRepository(memberId);
 
-    try {
-      Notification notification = Notification.of(member, notificationDto);
+    Notification notification = Notification.of(member, notificationDto);
 
-      // 알림받을 회원이 구독하지 않은상태(로그인 하지 않은 상태) 이더라도 알림은 저장이 됩니다.
-      notificationRepository.save(notification);
+    // 알림받을 회원이 구독하지 않은상태(로그인 하지 않은 상태) 이더라도 알림은 저장이 됩니다.
+    notificationRepository.save(notification);
 
-      sendNotification(memberId, notification);
-
-    } catch (Exception e) {
-      log.error("▶ 알림 생성 중 오류 발생 : memberId = {}, notificationDto = {}, 오류 : {}", memberId,
-          notificationDto, e.getMessage());
-    }
+    sendNotification(memberId, notification);
   }
 
   public void sendNotification(Long memberId, Notification notification) {
@@ -121,7 +113,6 @@ public class NotificationService {
             .name("notification")
             .data(notificationDto));
       } catch (IOException e) {
-        log.error("▶ 알림 전송 중 오류 발생 : memberId = {}, 오류 : {}", memberId, e.getMessage());
         removeEmitter(memberId);
       }
     }
@@ -145,7 +136,6 @@ public class NotificationService {
         .orElseThrow(() -> new CustomException(NOTIFICATION_NOT_FOUND));
 
     if (notification.getIsRead()) {
-      log.error("▶ 읽은 상태의 알림 읽기 시도 : memberId = {}, notificationId = {}", memberId, notificationId);
       throw new CustomException(ALREADY_READ);
     }
     notification.read();
