@@ -1,4 +1,4 @@
-package com.gogym.config;
+package com.gogym.member.jwt;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

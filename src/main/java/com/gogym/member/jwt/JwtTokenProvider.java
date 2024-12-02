@@ -1,4 +1,4 @@
-package com.gogym.config;
+package com.gogym.member.jwt;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

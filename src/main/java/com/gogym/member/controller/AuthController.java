@@ -11,15 +11,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
-
-  private static final String ROLE_USER = "ROLE_USER";
-
+  
   private final AuthService authService;
 
   // 회원가입
@@ -55,23 +51,26 @@ public class AuthController {
   // 비밀번호 재설정
   @PostMapping("/reset-password")
   public ResponseEntity<Void> resetPassword(
+      @RequestHeader("Authorization") String authorizationHeader,
       @RequestBody @Valid ResetPasswordRequest request
   ) {
-    authService.resetPassword(request);
+    String token = authorizationHeader.replace("Bearer ", "");
+    
+    authService.resetPassword(token, request);
     return ResponseEntity.noContent().build();
   }
 
   // 이메일 중복 확인
   @GetMapping("/check-email")
   public ResponseEntity<Void> checkEmail(@RequestParam("email") String email) {
-    authService.checkEmail(email);
+    authService.validateEmail(email);
     return ResponseEntity.ok().build();
   }
 
   // 닉네임 중복 확인
   @GetMapping("/check-nickname")
   public ResponseEntity<Void> checkNickname(@RequestParam("nickname") String nickname) {
-    authService.checkNickname(nickname);
+    authService.validateNickname(nickname);
     return ResponseEntity.ok().build();
   }
 
