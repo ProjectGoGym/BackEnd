@@ -44,7 +44,7 @@ public class SignUpRequest {
       .email(this.email)
       .nickname(this.nickname)
       .phone(this.phone)
-      .password(encodedPassword) // 암호화된 비밀번호 사용
+      .password(encodedPassword)
       .role(this.role)
       .profileImageUrl(this.profileImageUrl)
       .interestArea1(this.interestArea1)
