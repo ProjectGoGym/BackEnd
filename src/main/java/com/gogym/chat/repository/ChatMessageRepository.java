@@ -1,5 +1,6 @@
 package com.gogym.chat.repository;
 
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,6 +14,6 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
       WHERE m.chatRoom.id = :chatRoomId
       ORDER BY m.createdAt DESC
   """)
-  ChatMessage findTopByChatRoomIdOrderByCreatedAtDesc(@Param("chatRoomId") Long chatRoomId);
+  Optional<ChatMessage> findTopByChatRoomIdOrderByCreatedAtDesc(@Param("chatRoomId") Long chatRoomId);
   
 }
