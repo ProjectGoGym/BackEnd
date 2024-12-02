@@ -26,6 +26,8 @@ public class AuthService {
 
   private static final long TOKEN_EXPIRATION_TIME = 60 * 60 * 1000; // 1시간 (밀리초)
   private static final String EMAIL_VERIFICATION_PREFIX = "emailVerification:";
+  
+  // TODO : 서버 주소 또는 도메인 파면 변경해야할 부분
   private static final String SERVER_URL = "http://3.36.198.162:8080/";
   private final MemberService memberService;
   
