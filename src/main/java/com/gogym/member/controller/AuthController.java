@@ -54,9 +54,7 @@ public class AuthController {
       @RequestHeader("Authorization") String authorizationHeader,
       @RequestBody @Valid ResetPasswordRequest request
   ) {
-    String token = authorizationHeader.replace("Bearer ", "");
-    
-    authService.resetPassword(token, request);
+    authService.resetPassword(authorizationHeader, request);
     return ResponseEntity.noContent().build();
   }
 

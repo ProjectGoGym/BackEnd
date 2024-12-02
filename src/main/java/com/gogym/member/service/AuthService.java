@@ -68,11 +68,11 @@ public class AuthService {
 
   // 비밀번호 재설정 처리
   @Transactional
-  public void resetPassword(String token, ResetPasswordRequest request) {
-    
+  public void resetPassword(String authorizationHeader, ResetPasswordRequest request) {
+    String token = extractToken(authorizationHeader);
     // JWT 토큰에서 이메일 추출
     String authenticatedEmail = jwtTokenProvider.getAuthentication(token).getName();
-
+    
     // 요청된 이메일과 인증된 이메일 비교
     if (!authenticatedEmail.equals(request.getEmail())) {
         throw new CustomException(ErrorCode.FORBIDDEN);
@@ -80,7 +80,7 @@ public class AuthService {
     
     // 이메일로 사용자 찾기
     Member member = memberRepository.findByEmail(request.getEmail())
-      .orElseThrow(() -> new CustomException(ErrorCode.EMAIL_NOT_FOUND));
+      .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
 
     // 새 비밀번호 암호화 후 저장
     member.setPassword(passwordEncoder.encode(request.getNewPassword()));
@@ -151,7 +151,6 @@ public class AuthService {
     // 이메일 인증 상태 업데이트
     Member member = memberRepository.findByEmail(email)
       .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
-
     member.verifyEmail();
     memberRepository.save(member);
 
