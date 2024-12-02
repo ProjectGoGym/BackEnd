@@ -15,7 +15,6 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.beans.factory.annotation.Value;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -27,9 +26,8 @@ public class AuthService {
 
   private static final long TOKEN_EXPIRATION_TIME = 60 * 60 * 1000; // 1시간 (밀리초)
   private static final String EMAIL_VERIFICATION_PREFIX = "emailVerification:";
-
-  @Value("${app.verification-url}")
-  private String verificationUrlTemplate;
+  private static final String SERVER_URL = "http://3.36.198.162:8080/";
+  private final MemberService memberService;
   
   private final MemberRepository memberRepository;
   private final PasswordEncoder passwordEncoder;
@@ -127,7 +125,7 @@ public class AuthService {
     redisTemplate.opsForValue().set(EMAIL_VERIFICATION_PREFIX + token, email, TOKEN_EXPIRATION_TIME, TimeUnit.MILLISECONDS);
 
     // 인증 URL 생성
-    String verificationUrl = verificationUrlTemplate + token;
+    String verificationUrl = SERVER_URL + "api/auth/verify-email?token=" + token;
 
     // 이메일 발송
     SimpleMailMessage message = new SimpleMailMessage();
@@ -170,9 +168,9 @@ public class AuthService {
       }
 
       // 사용자 조회 -> 반환
-      return memberRepository.findByEmail(email)
-          .orElseThrow(() -> new CustomException(ErrorCode.EMAIL_NOT_FOUND));
+      return memberService.findByEmail(email);
   }
+  
 }
 
 
