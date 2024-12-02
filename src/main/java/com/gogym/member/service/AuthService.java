@@ -159,10 +159,20 @@ public class AuthService {
     redisTemplate.delete(EMAIL_VERIFICATION_PREFIX + token);
   }
   
-  // Id로 사용자 조회하는 메서드, 아이디 반환용
-  public Member getById(Long id) {
-      return memberRepository.findById(id)
-          .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
+  // 사용자 조회하는 메서드, [맴버 객체]를 반환
+  public Member getById(String token) {
+      String email;
+      
+      // JWT 토큰에서 이메일 추출
+      try {
+          email = jwtTokenProvider.getAuthentication(token).getName();
+      } catch (Exception e) {
+          throw new CustomException(ErrorCode.INVALID_TOKEN);
+      }
+
+      // 사용자 조회 -> 반환
+      return memberRepository.findByEmail(email)
+          .orElseThrow(() -> new CustomException(ErrorCode.EMAIL_NOT_FOUND));
   }
 }
 
