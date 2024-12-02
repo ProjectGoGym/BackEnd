@@ -16,7 +16,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Value;
-
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -59,7 +58,7 @@ public class AuthService {
 
     // 비밀번호 검증
     if (!passwordEncoder.matches(request.getPassword(), member.getPassword())) {
-        throw new CustomException(ErrorCode.INVALID_PASSWORD);
+        throw new CustomException(ErrorCode.UNAUTHORIZED);
     }
 
     // JWT 토큰 생성 후 반환
