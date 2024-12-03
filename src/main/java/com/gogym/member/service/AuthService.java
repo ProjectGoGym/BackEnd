@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import org.springframework.security.core.Authentication;
 
 @Service
 @RequiredArgsConstructor
@@ -69,13 +70,21 @@ public class AuthService {
   // 비밀번호 재설정 처리
   @Transactional
   public void resetPassword(String authorizationHeader, ResetPasswordRequest request) {
+    // 토큰 추출
     String token = extractToken(authorizationHeader);
-    // JWT 토큰에서 이메일 추출
-    String authenticatedEmail = jwtTokenProvider.getAuthentication(token).getName();
     
+    // JWT 토큰에서 인증 정보 추출
+    Authentication authentication = jwtTokenProvider.getAuthentication(token);
+    if (authentication == null || authentication.getName() == null) {
+      throw new CustomException(ErrorCode.UNAUTHORIZED);
+    }
+    
+    // 인증된 이메일 추출
+    String authenticatedEmail = authentication.getName();
+
     // 요청된 이메일과 인증된 이메일 비교
     if (!authenticatedEmail.equals(request.getEmail())) {
-        throw new CustomException(ErrorCode.FORBIDDEN);
+      throw new CustomException(ErrorCode.FORBIDDEN);
     }
     
     // 이메일로 사용자 찾기
