@@ -37,7 +37,7 @@ public class WebSocketChatController {
     
     // 메시지를 구독자에게 전송
     this.messagingTemplate.convertAndSend(
-        TOPIC_CHATROOM_PREFIX + messageRequest.chatroomId(),
+        TOPIC_CHATROOM_PREFIX + messageRequest.chatRoomId(),
         savedMessage);
   }
   

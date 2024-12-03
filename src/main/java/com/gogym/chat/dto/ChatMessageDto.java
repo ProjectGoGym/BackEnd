@@ -5,12 +5,12 @@ import java.time.LocalDateTime;
 public class ChatMessageDto {
 
   public record ChatMessageRequest(
-      Long chatroomId,
+      Long chatRoomId,
       Long senderId,
       String content) {}
 
   public record ChatMessageResponse(
-      Long chatroomId,
+      Long chatRoomId,
       Long senderId,
       String content,
       LocalDateTime createdAt) {}

@@ -28,7 +28,7 @@ public class ChatRedisServiceImpl implements ChatRedisService {
   @Override
   public ChatMessageResponse saveMessageToRedis(ChatMessageRequest messageRequest) {
     // Redis Key 생성
-    String redisKey = REDIS_CHATROOM_MESSAGE_KEY + messageRequest.chatroomId();
+    String redisKey = REDIS_CHATROOM_MESSAGE_KEY + messageRequest.chatRoomId();
 
     // LocalDateTime을 String으로 변환
     String createdAt = LocalDateTime.now().format(DATE_TIME_FORMATTER);
@@ -47,7 +47,7 @@ public class ChatRedisServiceImpl implements ChatRedisService {
 
     // 메시지 저장 결과 반환
     return new ChatMessageResponse(
-        messageRequest.chatroomId(),
+        messageRequest.chatRoomId(),
         messageRequest.senderId(),
         messageRequest.content(),
         LocalDateTime.parse(createdAt, DATE_TIME_FORMATTER));
