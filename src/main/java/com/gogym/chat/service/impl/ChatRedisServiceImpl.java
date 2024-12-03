@@ -2,13 +2,17 @@ package com.gogym.chat.service.impl;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gogym.chat.dto.ChatMessageDto.ChatMessageHistory;
 import com.gogym.chat.dto.ChatMessageDto.ChatMessageRequest;
 import com.gogym.chat.dto.ChatMessageDto.ChatMessageResponse;
 import com.gogym.chat.service.ChatRedisService;
+import com.gogym.exception.CustomException;
+import com.gogym.exception.ErrorCode;
+import com.gogym.util.RedisUtil;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -19,7 +23,7 @@ public class ChatRedisServiceImpl implements ChatRedisService {
   private static final String REDIS_CHATROOM_MESSAGE_KEY = "chatroom:messages:";
   private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-  private final RedisTemplate<String, Object> redisTemplate;
+  private final RedisUtil redisUtil;
 
   @Override
   public ChatMessageResponse saveMessageToRedis(ChatMessageRequest messageRequest) {
@@ -35,8 +39,11 @@ public class ChatRedisServiceImpl implements ChatRedisService {
         messageRequest.senderId(),
         createdAt);
 
-    // Redis 목록에 메시지 추가
-    this.redisTemplate.opsForList().rightPush(redisKey, messageHistory);
+    // 메시지 객체를 JSON 문자열로 직렬화
+    String messageJson = this.serializeMessageHistory(messageHistory);
+
+    // Redis에 저장
+    this.redisUtil.save(redisKey, messageJson, 3600);
 
     // 메시지 저장 결과 반환
     return new ChatMessageResponse(
@@ -44,6 +51,15 @@ public class ChatRedisServiceImpl implements ChatRedisService {
         messageRequest.senderId(),
         messageRequest.content(),
         LocalDateTime.parse(createdAt, DATE_TIME_FORMATTER));
+  }
+  
+  private String serializeMessageHistory(ChatMessageHistory messageHistory) {
+    try {
+      ObjectMapper objectMapper = new ObjectMapper();
+      return objectMapper.writeValueAsString(messageHistory);
+    } catch (JsonProcessingException e) {
+      throw new CustomException(ErrorCode.JSON_MAPPING_FAILURE);
+    }
   }
 
 }

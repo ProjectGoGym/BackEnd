@@ -1,21 +1,21 @@
 package com.gogym.chat.schedule;
 
-import com.gogym.chat.entity.ChatMessage;
-import com.gogym.chat.entity.ChatRoom;
-import com.gogym.chat.dto.ChatMessageDto.ChatMessageHistory;
-import com.gogym.chat.repository.ChatMessageRepository;
-import com.gogym.chat.repository.ChatRoomRepository;
-import com.gogym.exception.CustomException;
-import com.gogym.exception.ErrorCode;
-
-import lombok.RequiredArgsConstructor;
+import java.util.Set;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gogym.chat.dto.ChatMessageDto.ChatMessageHistory;
+import com.gogym.chat.entity.ChatMessage;
+import com.gogym.chat.entity.ChatRoom;
+import com.gogym.chat.repository.ChatMessageRepository;
+import com.gogym.chat.repository.ChatRoomRepository;
+import com.gogym.exception.CustomException;
+import com.gogym.exception.ErrorCode;
+import com.gogym.util.RedisUtil;
+import lombok.RequiredArgsConstructor;
 
 @Component
 @Transactional
@@ -28,6 +28,7 @@ public class ChatMessageBatchScheduler {
   private final ChatMessageRepository chatMessageRepository;
 
   private final RedisTemplate<String, Object> redisTemplate;
+  private final RedisUtil redisUtil;
 
   /**
    * 일정 주기로 Redis에 저장된 메시지를 DB로 저장.
@@ -46,29 +47,37 @@ public class ChatMessageBatchScheduler {
       ChatRoom chatRoom = this.chatRoomRepository.findById(chatroomId)
           .orElseThrow(() -> new CustomException(ErrorCode.CHATROOM_NOT_FOUND));
 
-      // Redis 메시지 가져오기
-      List<Object> messages = this.redisTemplate.opsForList().range(redisKey, 0, -1);
-      if (messages == null || messages.isEmpty()) {
+      // Redis에서 메시지 가져오기
+      String messageJson = this.redisUtil.get(redisKey);
+      if (messageJson == null || messageJson.isEmpty()) {
         return;
       }
 
-      // Redis 메시지를 ChatMessage 엔티티로 변환
-      List<ChatMessage> chatMessages = messages.stream()
-          .filter(msg -> msg instanceof ChatMessageHistory)
-          .map(msg -> {
-            ChatMessageHistory history = (ChatMessageHistory) msg;
-            return ChatMessage.builder()
-                .chatRoom(chatRoom)
-                .content(history.content())
-                .senderId(history.senderId())
-                .build();
-          }).collect(Collectors.toList());
+      // JSON 문자열을 ChatMessageHistory 객체로 역직렬화
+      ChatMessageHistory messageHistory = deserializeMessageHistory(messageJson);
+
+      // ChatMessage 엔티티로 변환
+      ChatMessage chatMessage = ChatMessage.builder()
+          .chatRoom(chatRoom)
+          .content(messageHistory.content())
+          .senderId(messageHistory.senderId())
+          .build();
 
       // DB에 저장
-      this.chatMessageRepository.saveAll(chatMessages);
+      this.chatMessageRepository.save(chatMessage);
 
-      // Redis 메시지 삭제
-      this.redisTemplate.delete(redisKey);
+      // Redis에서 메시지 삭제
+      this.redisUtil.delete(redisKey);
     });
   }
+  
+  private ChatMessageHistory deserializeMessageHistory(String messageJson) {
+    try {
+      ObjectMapper objectMapper = new ObjectMapper();
+      return objectMapper.readValue(messageJson, ChatMessageHistory.class);
+    } catch (JsonProcessingException e) {
+      throw new CustomException(ErrorCode.JSON_MAPPING_FAILURE);
+    }
+  }
+
 }
