@@ -45,7 +45,7 @@ public class SignUpRequest {
       .nickname(this.nickname)
       .phone(this.phone)
       .password(encodedPassword)
-      .role(this.role)
+      .role(Role.USER)
       .profileImageUrl(this.profileImageUrl)
       .interestArea1(this.interestArea1)
       .interestArea2(this.interestArea2)

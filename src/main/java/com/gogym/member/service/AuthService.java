@@ -49,6 +49,7 @@ public class AuthService {
 
       // 회원 데이터 저장
       memberRepository.save(member);
+      
   }
 
   // 로그인 처리
