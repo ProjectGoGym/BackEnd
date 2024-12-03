@@ -4,15 +4,15 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import com.gogym.chat.dto.ChatMessageDto.ChatMessageHistory;
 import com.gogym.chat.dto.ChatMessageDto.ChatMessageRequest;
 import com.gogym.chat.dto.ChatMessageDto.ChatMessageResponse;
 import com.gogym.chat.service.ChatRedisService;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
-@Transactional
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class ChatRedisServiceImpl implements ChatRedisService {
 
