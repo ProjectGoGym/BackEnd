@@ -10,12 +10,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
-
 import javax.crypto.SecretKey;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
+import com.gogym.exception.CustomException;
+import com.gogym.exception.ErrorCode;
 
 @Component
 public class JwtTokenProvider {
@@ -85,13 +86,13 @@ public class JwtTokenProvider {
     }
   }
 
-  // 요청 헤더에서 JWT 추출
-  public String resolveToken(HttpServletRequest request) {
-    String bearerToken = request.getHeader("Authorization");
+  // 요청 헤더 또는 문자열에서 JWT 추출
+  public String resolveOrExtractToken(HttpServletRequest request, String authorizationHeader) {
+    String bearerToken = authorizationHeader != null ? authorizationHeader : request.getHeader("Authorization");
     if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
       return bearerToken.substring(7);
     }
-    return null;
+    throw new CustomException(ErrorCode.UNAUTHORIZED, "Invalid authorization header.");
   }
 }
 
