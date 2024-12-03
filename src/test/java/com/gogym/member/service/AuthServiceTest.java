@@ -2,6 +2,7 @@ package com.gogym.member.service;
 
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
+import com.gogym.member.dto.LoginResponse;
 import com.gogym.member.dto.ResetPasswordRequest;
 import com.gogym.member.dto.SignInRequest;
 import com.gogym.member.dto.SignUpRequest;
@@ -83,9 +84,11 @@ class AuthServiceTest {
     when(passwordEncoder.matches("password123", "encodedPassword")).thenReturn(true);
     when(jwtTokenProvider.createToken("test@example.com", List.of("USER"))).thenReturn("mockedToken");
 
-    String token = authService.login(request);
-
-    assertEquals("mockedToken", token);
+    LoginResponse response = authService.login(request);
+    
+    assertEquals("mockedToken", response.getToken());
+    assertEquals("test@example.com", response.getEmail());
+    assertEquals("USER", member.getRole().name());
   }
 
   @Test

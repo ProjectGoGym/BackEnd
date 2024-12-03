@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import org.springframework.security.core.Authentication;
+import com.gogym.member.dto.LoginResponse;
 
 @Service
 @RequiredArgsConstructor
@@ -53,78 +54,81 @@ public class AuthService {
   }
 
   // 로그인 처리
-  public String login(SignInRequest request) {
+  public LoginResponse login(SignInRequest request) {
     // 이메일로 사용자 조회
     Member member = memberRepository.findByEmail(request.getEmail())
-      .orElseThrow(() -> new CustomException(ErrorCode.EMAIL_NOT_FOUND));
+        .orElseThrow(() -> new CustomException(ErrorCode.EMAIL_NOT_FOUND));
 
     // 비밀번호 검증
     if (!passwordEncoder.matches(request.getPassword(), member.getPassword())) {
         throw new CustomException(ErrorCode.UNAUTHORIZED);
     }
 
-    // JWT 토큰 생성 후 반환
-    return jwtTokenProvider.createToken(member.getEmail(), List.of(member.getRole().name()));
-  }
+    // JWT 토큰 생성
+    String token = jwtTokenProvider.createToken(member.getEmail(), List.of(member.getRole().name()));
 
+    // 사용자 정보 반환 (role 제외)
+    return new LoginResponse(
+        member.getEmail(),
+        member.getName(),
+        member.getNickname(),
+        member.getPhone(),
+        token
+    );
+    
+  }
 
   // 비밀번호 재설정 처리
   @Transactional
   public void resetPassword(String authorizationHeader, ResetPasswordRequest request) {
-    // 토큰 추출
-    String token = extractToken(authorizationHeader);
-    
-    // JWT 토큰에서 인증 정보 추출
-    Authentication authentication = jwtTokenProvider.getAuthentication(token);
-    if (authentication == null || authentication.getName() == null) {
-      throw new CustomException(ErrorCode.UNAUTHORIZED);
-    }
-    
-    // 인증된 이메일 추출
-    String authenticatedEmail = authentication.getName();
+      //토큰에서 인증된 이메일 추출
+      String authenticatedEmail = extractAuthenticatedEmail(authorizationHeader);
 
-    // 요청된 이메일과 인증된 이메일 비교
-    if (!authenticatedEmail.equals(request.getEmail())) {
-      throw new CustomException(ErrorCode.FORBIDDEN);
-    }
-    
-    // 이메일로 사용자 찾기
-    Member member = memberRepository.findByEmail(request.getEmail())
-      .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
+      //인증된 이메일과 요청된 이메일 비교
+      validateAuthenticatedEmail(authenticatedEmail, request.getEmail());
 
-    // 새 비밀번호 암호화 후 저장
-    member.setPassword(passwordEncoder.encode(request.getNewPassword()));
+      //비밀번호 업데이트
+      updatePassword(request.getEmail(), request.getNewPassword());
+  }
+
+  // 인증된 이메일과 요청된 이메일 비교
+  private void validateAuthenticatedEmail(String authenticatedEmail, String requestedEmail) {
+    if (!authenticatedEmail.equals(requestedEmail)) {
+      throw new CustomException(ErrorCode.FORBIDDEN); 
+    }
+  }
+
+  // 비밀번호 업데이트
+  private void updatePassword(String email, String newPassword) {
+    Member member = memberRepository.findByEmail(email)
+        .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
+    member.setPassword(passwordEncoder.encode(newPassword));
   }
 
   // 로그아웃 처리
   public void logout(String authorizationHeader) {
     String token = extractToken(authorizationHeader);
-    redisTemplate.opsForValue().set(token, "logout", 3600000, TimeUnit.MILLISECONDS);
-  }
-
-  // 토큰 추출
-  public String extractToken(String authorizationHeader) {
-    return authorizationHeader.replace("Bearer ", "");
+    redisTemplate.opsForValue().set(token, "logout", 600000, TimeUnit.MILLISECONDS);
   }
 
   // 이메일 중복 확인
   public void validateEmail(String email) {
-      if (memberRepository.existsByEmail(email)) {
-          throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
-      }
+    if (memberRepository.existsByEmail(email)) {
+      throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
+    }
   }
   
   // 닉네임 중복 확인
   public void validateNickname(String nickname) {
-      if (memberRepository.existsByNickname(nickname)) {
-          throw new CustomException(ErrorCode.DUPLICATE_NICKNAME);
-      }
+    if (memberRepository.existsByNickname(nickname)) {
+      throw new CustomException(ErrorCode.DUPLICATE_NICKNAME);
+    }
   }
   
   //이메일로 사용자 조회
   public Member findMemberByEmail(String email) {
-      return memberRepository.findByEmail(email)
-          .orElseThrow(() -> new CustomException(ErrorCode.EMAIL_NOT_FOUND));
+    return memberRepository.findByEmail(email)
+        .orElseThrow(() -> new CustomException(ErrorCode.EMAIL_NOT_FOUND));
   }
 
   // 이메일 인증 요청
@@ -133,7 +137,8 @@ public class AuthService {
     String token = UUID.randomUUID().toString();
 
     // Redis에 토큰 저장
-    redisTemplate.opsForValue().set(EMAIL_VERIFICATION_PREFIX + token, email, TOKEN_EXPIRATION_TIME, TimeUnit.MILLISECONDS);
+    redisTemplate.opsForValue().set(EMAIL_VERIFICATION_PREFIX + token, email,
+        TOKEN_EXPIRATION_TIME, TimeUnit.MILLISECONDS);
 
     // 인증 URL 생성
     String verificationUrl = SERVER_URL + "api/auth/verify-email?token=" + token;
@@ -167,22 +172,31 @@ public class AuthService {
     redisTemplate.delete(EMAIL_VERIFICATION_PREFIX + token);
   }
   
-  // 사용자 조회하는 메서드, [맴버 객체]를 반환
-  public Member getById(String token) {
-      String email;
-      
-      // JWT 토큰에서 이메일 추출
-      try {
-          email = jwtTokenProvider.getAuthentication(token).getName();
-      } catch (Exception e) {
-          throw new CustomException(ErrorCode.INVALID_TOKEN);
-      }
-
-      // 사용자 조회 -> 반환
-      return memberService.findByEmail(email);
+  
+  // --아래 코드는 util로 따로 빼야하는지 고민중입니다--
+  // jwt 토큰 추출
+  public String extractToken(String authorizationHeader) {
+    return authorizationHeader.replace("Bearer ", "");
+    
   }
   
+  // JWT 토큰에서 인증된 이메일 추출
+  private String extractAuthenticatedEmail(String authorizationHeader) {
+      String token = extractToken(authorizationHeader);
+      Authentication authentication = jwtTokenProvider.getAuthentication(token);
+      if (authentication == null || authentication.getName() == null) {
+          throw new CustomException(ErrorCode.UNAUTHORIZED);
+      }
+      return authentication.getName();
+  }
+  
+  // 사용자 조회하는 메서드, [맴버 객체]를 반환
+  public Member getById(String authorizationHeader) {
+    // 1. JWT 토큰에서 인증된 이메일 추출
+    String email = extractAuthenticatedEmail(authorizationHeader);
+
+    // 2. 이메일로 사용자 조회 -> 반환
+    return memberService.findByEmail(email);
+  }
+
 }
-
-
-

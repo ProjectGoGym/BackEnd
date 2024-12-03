@@ -28,6 +28,7 @@ public class SignUpRequest {
   @NotBlank
   private String nickname;
 
+  @NotBlank
   private String phone;
 
   private String profileImageUrl;

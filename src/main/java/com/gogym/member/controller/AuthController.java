@@ -10,6 +10,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.gogym.member.dto.LoginResponse;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -29,14 +30,12 @@ public class AuthController {
 
   // 로그인
   @PostMapping("/sign-in")
-  public ResponseEntity<Void> login(
-      @RequestBody @Valid SignInRequest request
-  ) {
-    String token = authService.login(request);
+  public ResponseEntity<LoginResponse> login(@RequestBody @Valid SignInRequest request) {
+    LoginResponse loginResponse = authService.login(request);
 
     return ResponseEntity.ok()
-        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
-        .build();
+        .header(HttpHeaders.AUTHORIZATION, "Bearer " + loginResponse.getToken())
+        .body(loginResponse);  
   }
 
   // 로그아웃
