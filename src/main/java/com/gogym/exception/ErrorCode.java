@@ -41,6 +41,7 @@ public enum ErrorCode {
   CHATROOM_ALREADY_EXISTS(CONFLICT, "이미 존재하는 채팅방입니다."),
 
   // 500 INTERNAL SERVER ERROR
+  JSON_MAPPING_FAILURE(HttpStatus.INTERNAL_SERVER_ERROR, "JSON 변환 중 오류가 발생했습니다."),
   INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다.");
 
   private final HttpStatus httpStatus;
