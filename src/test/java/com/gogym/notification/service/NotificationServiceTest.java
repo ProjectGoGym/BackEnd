@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -69,8 +68,7 @@ class NotificationServiceTest {
   }
 
   @Test
-  @DisplayName("구독을 신청한 회원은 Map 에 등록되어 관리된다.")
-  void subscribe_shouldAddEmitterToMap() {
+  void 구독을_신청한_회원은_Map_에_등록되어_관리된다() {
     // given
     when(memberRepository.findById(member.getId())).thenReturn(Optional.of(member));
     // when
@@ -82,8 +80,7 @@ class NotificationServiceTest {
   }
 
   @Test
-  @DisplayName("알림 생성 시 DB 에 저장된다.")
-  void createNotification_shouldSaveNotification() {
+  void 알림_생성_시_DB_에_저장된다() {
     // given
     when(memberRepository.findById(member.getId())).thenReturn(Optional.of(member));
     // when
@@ -93,8 +90,7 @@ class NotificationServiceTest {
   }
 
   @Test
-  @DisplayName("저장된 알림이 있고 읽지 않은 경우 알림이 조회된다.")
-  void getAllNotifications_shouldReturnUnReadNotifications() {
+  void 저장된_알림이_있고_읽지_않은_경우_알림이_조회된다() {
     // given
     when(memberRepository.findById(member.getId())).thenReturn(Optional.of(member));
     Page<Notification> notificationPage = new PageImpl<>(List.of(notification));
@@ -110,8 +106,7 @@ class NotificationServiceTest {
   }
 
   @Test
-  @DisplayName("저장된 알림이 없는 경우 빈 배열을 반환한다.")
-  void getAllNotifications_shouldReturnEmptyNotifications() {
+  void 저장된_알림이_없는_경우_빈_배열을_반환한다() {
     // given
     when(memberRepository.findById(member.getId())).thenReturn(Optional.of(member));
     Page<Notification> notificationPage = Page.empty();
@@ -127,8 +122,7 @@ class NotificationServiceTest {
   }
 
   @Test
-  @DisplayName("저장된 알림이 있고, 읽은 상태면 빈 배열을 반환한다.")
-  void getAllNotifications_shouldReturnEmptyWhenAllNotificationsRead() {
+  void 저장된_알림이_있고_읽은_상태면_빈_배열을_반환한다() {
     // given
     when(memberRepository.findById(member.getId())).thenReturn(Optional.of(member));
     Page<Notification> notificationPage = new PageImpl<>(List.of(readNotification));
@@ -143,8 +137,7 @@ class NotificationServiceTest {
   }
 
   @Test
-  @DisplayName("알림을 읽음 상태로 변경 요청이 오면 읽음 상태로 변경한다.")
-  void updateNotification_shouldMarkAsRead() {
+  void 알림을_읽음_상태로_변경_요청이_오면_읽음_상태로_변경한다() {
     // given
     Long notificationId = 1L;
     when(notificationRepository.findByIdAndMemberId(notificationId, member.getId())).thenReturn(
@@ -156,8 +149,7 @@ class NotificationServiceTest {
   }
 
   @Test
-  @DisplayName("회원의 알림이 없으면 예외가 발생한다.")
-  void updateNotification_shouldThrowExceptionWhenNotificationNotFound() {
+  void 회원의_알림이_없으면_예외가_발생한다() {
     // given
     Long notificationId = 1L;
     when(notificationRepository.findByIdAndMemberId(notificationId, member.getId())).thenReturn(
@@ -170,8 +162,7 @@ class NotificationServiceTest {
   }
 
   @Test
-  @DisplayName("이미 읽은 상태의 알림의 읽음요청을 보내면 예외가 발생한다.")
-  void updateNotification_shouldThrowExceptionWhenNotificationAlreadyRead() {
+  void 이미_읽은_상태의_알림의_읽음요청을_보내면_예외가_발생한다() {
     // given
     Long notificationId = 1L;
     when(notificationRepository.findByIdAndMemberId(notificationId, member.getId())).thenReturn(
