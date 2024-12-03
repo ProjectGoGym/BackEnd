@@ -39,6 +39,12 @@ public class ChatMessageBatchScheduler {
     Set<String> redisKeys = this.redisTemplate.keys(REDIS_CHATROOM_MESSAGE_KEY + "*");
 
     redisKeys.forEach(redisKey -> {
+      // Redis에서 메시지 가져오기
+      String messageJson = this.redisUtil.get(redisKey);
+      if (messageJson == null || messageJson.isEmpty()) {
+        return;
+      }
+
       // Redis Key에서 chatroomId 추출
       String chatroomIdStr = redisKey.replace(REDIS_CHATROOM_MESSAGE_KEY, "");
       Long chatroomId = Long.parseLong(chatroomIdStr);
@@ -46,12 +52,6 @@ public class ChatMessageBatchScheduler {
       // 채팅방 정보 조회
       ChatRoom chatRoom = this.chatRoomRepository.findById(chatroomId)
           .orElseThrow(() -> new CustomException(ErrorCode.CHATROOM_NOT_FOUND));
-
-      // Redis에서 메시지 가져오기
-      String messageJson = this.redisUtil.get(redisKey);
-      if (messageJson == null || messageJson.isEmpty()) {
-        return;
-      }
 
       // JSON 문자열을 ChatMessageHistory 객체로 역직렬화
       ChatMessageHistory messageHistory = deserializeMessageHistory(messageJson);
