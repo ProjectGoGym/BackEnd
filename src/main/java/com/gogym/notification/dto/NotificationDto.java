@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 
 public record NotificationDto(
 
+    Long notificationId,
     NotificationType type,
     String content,
     LocalDateTime createdAt
@@ -13,7 +14,7 @@ public record NotificationDto(
 ) {
 
   public static NotificationDto fromEntity(Notification notification) {
-    return new NotificationDto(notification.getType(), notification.getContent(),
+    return new NotificationDto(notification.getId(), notification.getType(), notification.getContent(),
         notification.getCreatedAt());
   }
 }
