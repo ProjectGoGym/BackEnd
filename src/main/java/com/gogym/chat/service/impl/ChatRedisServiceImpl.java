@@ -53,6 +53,12 @@ public class ChatRedisServiceImpl implements ChatRedisService {
         LocalDateTime.parse(createdAt, DATE_TIME_FORMATTER));
   }
   
+  /**
+   * 주어진 ChatMessageHistory 객체를 JSON 문자열로 직렬화합니다.
+   * 
+   * @param messageHistory 직렬화할 ChatMessageHistory 객체
+   * @return 직렬화된 JSON 문자열
+   */
   private String serializeMessageHistory(ChatMessageHistory messageHistory) {
     try {
       ObjectMapper objectMapper = new ObjectMapper();

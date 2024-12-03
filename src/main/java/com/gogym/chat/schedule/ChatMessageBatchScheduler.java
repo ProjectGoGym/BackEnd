@@ -34,7 +34,7 @@ public class ChatMessageBatchScheduler {
    * 일정 주기로 Redis에 저장된 메시지를 DB로 저장.
    * Redis에 저장된 메시지를 읽어서 DB에 저장한 뒤 Redis에서 해당 메시지를 삭제합니다.
    */
-  @Scheduled(fixedRate = 300000)
+  @Scheduled(fixedRate = 60000)
   public void batchMessagesToDatabase() {
     Set<String> redisKeys = this.redisTemplate.keys(REDIS_CHATROOM_MESSAGE_KEY + "*");
 
@@ -54,7 +54,7 @@ public class ChatMessageBatchScheduler {
           .orElseThrow(() -> new CustomException(ErrorCode.CHATROOM_NOT_FOUND));
 
       // JSON 문자열을 ChatMessageHistory 객체로 역직렬화
-      ChatMessageHistory messageHistory = deserializeMessageHistory(messageJson);
+      ChatMessageHistory messageHistory = this.deserializeMessageHistory(messageJson);
 
       // ChatMessage 엔티티로 변환
       ChatMessage chatMessage = ChatMessage.builder()
@@ -71,9 +71,16 @@ public class ChatMessageBatchScheduler {
     });
   }
   
+  /**
+   * Redis에서 가져온 JSON 메시지를 ChatMessageHistory 객체로 역직렬화합니다.
+   * 
+   * @param messageJson Redis에서 가져온 메시지 JSON
+   * @return ChatMessageHistory 객체
+   */
   private ChatMessageHistory deserializeMessageHistory(String messageJson) {
     try {
       ObjectMapper objectMapper = new ObjectMapper();
+      objectMapper.findAndRegisterModules();
       return objectMapper.readValue(messageJson, ChatMessageHistory.class);
     } catch (JsonProcessingException e) {
       throw new CustomException(ErrorCode.JSON_MAPPING_FAILURE);
