@@ -2,18 +2,16 @@ package com.gogym.chat.repository;
 
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import com.gogym.chat.entity.ChatMessage;
 
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
   
-  @Query("""
-      SELECT m
-      FROM ChatMessage m
-      WHERE m.chatRoom.id = :chatRoomId
-      ORDER BY m.createdAt DESC
-  """)
-  Optional<ChatMessage> findTopByChatRoomIdOrderByCreatedAtDesc(@Param("chatRoomId") Long chatRoomId);
+  /**
+   * 특정 채팅방에서 가장 최근에 생성된 메시지를 조회합니다.
+   *
+   * @param chatRoomId 채팅방 ID
+   * @return 가장 최근의 메시지 (Optional)
+   */
+  Optional<ChatMessage> findFirstByChatRoomIdOrderByCreatedAtDesc(Long chatRoomId);
   
 }
