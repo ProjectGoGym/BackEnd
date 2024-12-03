@@ -7,6 +7,7 @@ import org.springframework.stereotype.Controller;
 import com.gogym.chat.dto.ChatMessageDto.ChatMessageRequest;
 import com.gogym.chat.dto.ChatMessageDto.ChatMessageResponse;
 import com.gogym.chat.service.ChatRedisService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -31,7 +32,7 @@ public class WebSocketChatController {
    */
   @MessageMapping("/chatroom/message")
   @SendTo("/topic/messages")
-  public void send(ChatMessageRequest messageRequest) {
+  public void send(@Valid ChatMessageRequest messageRequest) {
     // 메시지를 Redis에 저장
     ChatMessageResponse savedMessage = this.chatRedisService.saveMessageToRedis(messageRequest);
     

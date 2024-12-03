@@ -1,6 +1,7 @@
 package com.gogym.chat.dto;
 
 import java.time.LocalDateTime;
+import jakarta.validation.constraints.NotNull;
 
 public class ChatRoomDto {
 
@@ -14,6 +15,6 @@ public class ChatRoomDto {
       String lastMessage,
       LocalDateTime lastMessageAt) {}
 
-  public record LeaveRequest(Long lastReadMessageId) {}
+  public record LeaveRequest(@NotNull Long lastReadMessageId) {}
 
 }
