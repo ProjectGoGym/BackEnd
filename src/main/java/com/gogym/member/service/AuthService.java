@@ -93,7 +93,6 @@ public class AuthService {
 
     // 새 비밀번호 암호화 후 저장
     member.setPassword(passwordEncoder.encode(request.getNewPassword()));
-    memberRepository.save(member);
   }
 
   // 로그아웃 처리

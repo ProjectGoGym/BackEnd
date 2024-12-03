@@ -24,7 +24,7 @@ public class AuthController {
       @RequestBody @Valid SignUpRequest request
   ) {
     authService.signUp(request);
-    return ResponseEntity.status(HttpStatus.CREATED).build();
+    return ResponseEntity.status(HttpStatus.OK).build();
   }
 
   // 로그인
