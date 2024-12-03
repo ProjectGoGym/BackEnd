@@ -10,16 +10,13 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import com.gogym.member.dto.LoginResponse;
 
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
-
-  private static final String ROLE_USER = "ROLE_USER";
-
+  
   private final AuthService authService;
 
   // 회원가입
@@ -28,19 +25,17 @@ public class AuthController {
       @RequestBody @Valid SignUpRequest request
   ) {
     authService.signUp(request);
-    return ResponseEntity.status(HttpStatus.CREATED).build();
+    return ResponseEntity.status(HttpStatus.OK).build();
   }
 
   // 로그인
   @PostMapping("/sign-in")
-  public ResponseEntity<Void> login(
-      @RequestBody @Valid SignInRequest request
-  ) {
-    String token = authService.login(request);
+  public ResponseEntity<LoginResponse> login(@RequestBody @Valid SignInRequest request) {
+    LoginResponse loginResponse = authService.login(request);
 
     return ResponseEntity.ok()
-        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
-        .build();
+        .header(HttpHeaders.AUTHORIZATION, "Bearer " + loginResponse.getToken())
+        .body(loginResponse);  
   }
 
   // 로그아웃
@@ -55,23 +50,24 @@ public class AuthController {
   // 비밀번호 재설정
   @PostMapping("/reset-password")
   public ResponseEntity<Void> resetPassword(
+      @RequestHeader("Authorization") String authorizationHeader,
       @RequestBody @Valid ResetPasswordRequest request
   ) {
-    authService.resetPassword(request);
+    authService.resetPassword(authorizationHeader, request);
     return ResponseEntity.noContent().build();
   }
 
   // 이메일 중복 확인
   @GetMapping("/check-email")
   public ResponseEntity<Void> checkEmail(@RequestParam("email") String email) {
-    authService.checkEmail(email);
+    authService.validateEmail(email);
     return ResponseEntity.ok().build();
   }
 
   // 닉네임 중복 확인
   @GetMapping("/check-nickname")
   public ResponseEntity<Void> checkNickname(@RequestParam("nickname") String nickname) {
-    authService.checkNickname(nickname);
+    authService.validateNickname(nickname);
     return ResponseEntity.ok().build();
   }
 

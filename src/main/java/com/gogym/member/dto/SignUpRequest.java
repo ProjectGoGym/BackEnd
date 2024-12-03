@@ -28,6 +28,7 @@ public class SignUpRequest {
   @NotBlank
   private String nickname;
 
+  @NotBlank
   private String phone;
 
   private String profileImageUrl;
@@ -44,8 +45,8 @@ public class SignUpRequest {
       .email(this.email)
       .nickname(this.nickname)
       .phone(this.phone)
-      .password(encodedPassword) // 암호화된 비밀번호 사용
-      .role(this.role)
+      .password(encodedPassword)
+      .role(Role.USER)
       .profileImageUrl(this.profileImageUrl)
       .interestArea1(this.interestArea1)
       .interestArea2(this.interestArea2)
