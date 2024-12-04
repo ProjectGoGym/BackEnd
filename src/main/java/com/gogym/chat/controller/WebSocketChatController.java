@@ -31,7 +31,6 @@ public class WebSocketChatController {
    * @param request 송신 메시지 정보를 포함한 {@link ChatMessageRequest}.
    */
   @MessageMapping("/chatroom/message")
-  @SendTo("/topic/messages")
   public void send(@Valid ChatMessageRequest messageRequest) {
     // 메시지를 Redis에 저장
     ChatMessageResponse savedMessage = this.chatRedisService.saveMessageToRedis(messageRequest);
