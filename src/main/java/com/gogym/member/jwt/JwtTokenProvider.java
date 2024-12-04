@@ -92,7 +92,7 @@ public class JwtTokenProvider {
     if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
       return bearerToken.substring(7);
     }
-    throw new CustomException(ErrorCode.UNAUTHORIZED, "Invalid authorization header.");
+    throw new CustomException(ErrorCode.UNAUTHORIZED);
   }
 }
 

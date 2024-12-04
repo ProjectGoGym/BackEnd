@@ -3,14 +3,15 @@ package com.gogym.member.controller;
 import com.gogym.member.dto.SignUpRequest;
 import com.gogym.member.dto.SignInRequest;
 import com.gogym.member.dto.ResetPasswordRequest;
+import com.gogym.member.dto.LoginResponse;
 import com.gogym.member.service.AuthService;
+import com.gogym.member.service.EmailService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.gogym.member.dto.LoginResponse;
+import com.gogym.aop.LoginMemberId;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -18,6 +19,7 @@ import com.gogym.member.dto.LoginResponse;
 public class AuthController {
   
   private final AuthService authService;
+  private final EmailService emailService;
 
   // 회원가입
   @PostMapping("/sign-up")
@@ -32,35 +34,30 @@ public class AuthController {
   @PostMapping("/sign-in")
   public ResponseEntity<LoginResponse> login(@RequestBody @Valid SignInRequest request) {
     LoginResponse loginResponse = authService.login(request);
-
-    return ResponseEntity.ok()
-        .header(HttpHeaders.AUTHORIZATION, "Bearer " + loginResponse.getToken())
-        .body(loginResponse);  
+    return ResponseEntity.ok().body(loginResponse);  
   }
 
   // 로그아웃
   @PostMapping("/sign-out")
-  public ResponseEntity<Void> logout(
-      @RequestHeader("Authorization") String authorizationHeader
-  ) {
-    authService.logout(authorizationHeader);
+  public ResponseEntity<Void> logout(@LoginMemberId Long memberId) {
+    authService.logout(memberId);
     return ResponseEntity.noContent().build();
   }
 
   // 비밀번호 재설정
   @PostMapping("/reset-password")
   public ResponseEntity<Void> resetPassword(
-      @RequestHeader("Authorization") String authorizationHeader,
+      @LoginMemberId Long memberId,
       @RequestBody @Valid ResetPasswordRequest request
   ) {
-    authService.resetPassword(authorizationHeader, request);
+    authService.resetPassword(memberId, request);
     return ResponseEntity.noContent().build();
   }
 
   // 이메일 중복 확인
   @GetMapping("/check-email")
   public ResponseEntity<Void> checkEmail(@RequestParam("email") String email) {
-    authService.validateEmail(email);
+    emailService.validateEmail(email);
     return ResponseEntity.ok().build();
   }
 
@@ -74,7 +71,7 @@ public class AuthController {
   // 이메일 인증 확인
   @GetMapping("/verify-email")
   public ResponseEntity<Void> verifyEmail(@RequestParam(name = "token") String token) {
-    authService.verifyEmailToken(token);
+    emailService.verifyEmailToken(token);
     return ResponseEntity.ok().build();
   }
 
@@ -83,7 +80,7 @@ public class AuthController {
   public ResponseEntity<Void> sendVerificationEmail(
       @RequestParam(name = "email") String email
   ) {
-    authService.sendVerificationEmail(email);
+    emailService.sendVerificationEmail(email);
     return ResponseEntity.noContent().build();
   }
 }
