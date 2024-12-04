@@ -13,6 +13,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "chat_message_read")
@@ -31,6 +32,7 @@ public class ChatMessageRead extends BaseEntity {
   
   @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "last_read_message")
+  @Setter
   private ChatMessage lastReadMessage; // 마지막으로 읽은 메시지
   
 }
