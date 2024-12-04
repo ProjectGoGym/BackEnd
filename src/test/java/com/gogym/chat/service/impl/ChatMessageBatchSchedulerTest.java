@@ -9,6 +9,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -53,16 +54,15 @@ class ChatMessageBatchSchedulerTest {
     // Given
     Long chatroomId = 1L;
     String redisKey = "chatroom:messages:1";
+    String mockMessageJson = "{\"content\":\"안녕하세요!\",\"senderId\":123,\"createdAt\":\"2024-12-03 12:00:00\"}";
 
     ChatRoom mockChatRoom = mock(ChatRoom.class);
-    String mockMessageJson =
-        "{\"content\":\"안녕하세요!\",\"senderId\":123,\"createdAt\":\"2024-12-03 12:00:00\"}";
 
     // RedisTemplate Mock 설정
     when(this.redisTemplate.keys("chatroom:messages:*")).thenReturn(Set.of(redisKey));
 
     // RedisUtil Mock 설정
-    when(this.redisUtil.get(redisKey)).thenReturn(mockMessageJson);
+    when(this.redisUtil.lrange(redisKey, 0, -1)).thenReturn(List.of(mockMessageJson));
 
     // ChatRoomRepository Mock 설정
     when(this.chatRoomRepository.findById(chatroomId)).thenReturn(Optional.of(mockChatRoom));
@@ -93,7 +93,7 @@ class ChatMessageBatchSchedulerTest {
     when(this.redisTemplate.keys("chatroom:messages:*")).thenReturn(Set.of(redisKey));
 
     // RedisUtil Mock 설정
-    when(this.redisUtil.get(redisKey)).thenReturn(validMessageJson);
+    when(this.redisUtil.lrange(redisKey, 0, -1)).thenReturn(List.of(validMessageJson));
 
     // ChatRoomRepository Mock 설정
     when(this.chatRoomRepository.findById(chatroomId)).thenReturn(Optional.empty());
@@ -111,7 +111,7 @@ class ChatMessageBatchSchedulerTest {
     when(this.redisTemplate.keys("chatroom:messages:*")).thenReturn(Set.of(redisKey));
 
     // RedisUtil Mock 설정 (Redis에 메시지가 없는 상황)
-    when(this.redisUtil.get(redisKey)).thenReturn(null);
+    when(this.redisUtil.lrange(redisKey, 0, -1)).thenReturn(List.of()); // 빈 리스트 반환
 
     // When
     assertDoesNotThrow(() -> this.chatMessageBatchScheduler.batchMessagesToDatabase());
