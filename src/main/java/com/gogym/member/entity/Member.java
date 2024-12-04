@@ -40,10 +40,10 @@ public class Member extends BaseEntity {
   @Column(name = "profile_image_url")
   private String profileImageUrl;
 
-  @Column(name = "region_id_1", nullable = true)
+  @Column(name = "region_id_1")
   private Long regionId1;
 
-  @Column(name = "region_id_2", nullable = true)
+  @Column(name = "region_id_2")
   private Long regionId2;
 
   @Setter
