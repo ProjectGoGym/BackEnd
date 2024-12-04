@@ -31,6 +31,7 @@ public enum ErrorCode {
   CHATROOM_NOT_FOUND(NOT_FOUND, "채팅방을 찾을 수 없습니다."),
   CHAT_MESSAGE_NOT_FOUND(NOT_FOUND, "채팅 메시지를 찾을 수 없습니다."),
   CITY_NOT_FOUND(NOT_FOUND, "도시를 찾을 수 없습니다."),
+  DISTRICT_NOT_FOUND(NOT_FOUND, "지역을 찾을 수 없습니다."),
   GYM_PAY_NOT_FOUND(NOT_FOUND, "짐페이를 찾을 수 없습니다. 짐페이를 개설해주세요."),
   PAYMENT_NOT_FOUND(NOT_FOUND, "결제 정보를 찾을 수 없습니다."),
 
@@ -42,6 +43,7 @@ public enum ErrorCode {
 
   // 500 INTERNAL SERVER ERROR
   JSON_MAPPING_FAILURE(HttpStatus.INTERNAL_SERVER_ERROR, "JSON 변환 중 오류가 발생했습니다."),
+  PORTONE_API_CALL_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "포트원 API 호출 중 오류가 발생했습니다."),
   INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다.");
 
   private final HttpStatus httpStatus;
