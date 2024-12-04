@@ -1,5 +1,6 @@
 package com.gogym.chat.schedule;
 
+import java.util.List;
 import java.util.Set;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -38,9 +39,10 @@ public class ChatMessageBatchScheduler {
     Set<String> redisKeys = this.redisTemplate.keys(REDIS_CHATROOM_MESSAGE_KEY + "*");
 
     redisKeys.forEach(redisKey -> {
-      // Redis에서 메시지 가져오기
-      String messageJson = this.redisUtil.get(redisKey);
-      if (messageJson == null || messageJson.isEmpty()) {
+      // Redis에서 모든 메시지 가져오기
+      List<String> messagesJson = this.redisUtil.lrange(redisKey, 0, -1);
+
+      if (messagesJson == null || messagesJson.isEmpty()) {
         return;
       }
 
@@ -52,20 +54,23 @@ public class ChatMessageBatchScheduler {
       ChatRoom chatRoom = this.chatRoomRepository.findById(chatroomId)
           .orElseThrow(() -> new CustomException(ErrorCode.CHATROOM_NOT_FOUND));
 
-      // JSON 문자열을 ChatMessageHistory 객체로 역직렬화
-      ChatMessageHistory messageHistory = JsonUtil.deserialize(messageJson, ChatMessageHistory.class);
+      // 메시지를 하나씩 처리
+      messagesJson.forEach(messageJson -> {
+        // JSON 문자열을 ChatMessageHistory 객체로 역직렬화
+        ChatMessageHistory messageHistory = JsonUtil.deserialize(messageJson, ChatMessageHistory.class);
 
-      // ChatMessage 엔티티로 변환
-      ChatMessage chatMessage = ChatMessage.builder()
-          .chatRoom(chatRoom)
-          .content(messageHistory.content())
-          .senderId(messageHistory.senderId())
-          .build();
+        // ChatMessage 엔티티로 변환
+        ChatMessage chatMessage = ChatMessage.builder()
+            .chatRoom(chatRoom)
+            .content(messageHistory.content())
+            .senderId(messageHistory.senderId())
+            .build();
 
-      // DB에 저장
-      this.chatMessageRepository.save(chatMessage);
+        // DB에 저장
+        this.chatMessageRepository.save(chatMessage);
+      });
 
-      // Redis에서 메시지 삭제
+      // Redis에서 해당 채팅방 메시지 삭제
       this.redisUtil.delete(redisKey);
     });
   }

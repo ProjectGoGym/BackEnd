@@ -40,7 +40,7 @@ public class ChatRedisServiceImpl implements ChatRedisService {
     String messageJson = JsonUtil.serialize(messageHistory);
 
     // Redis에 저장
-    this.redisUtil.save(redisKey, messageJson, 3600);
+    this.redisUtil.lpush(redisKey, messageJson);
 
     // 메시지 저장 결과 반환
     return new ChatMessageResponse(
