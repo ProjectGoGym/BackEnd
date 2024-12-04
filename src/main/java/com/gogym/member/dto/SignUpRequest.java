@@ -3,6 +3,7 @@ package com.gogym.member.dto;
 import com.gogym.member.entity.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -33,9 +34,11 @@ public class SignUpRequest {
 
   private String profileImageUrl;
 
-  private String interestArea1;
+  @NotNull
+  private Long regionId1;
 
-  private String interestArea2;
+  @NotNull
+  private Long regionId2;
 
   private Role role;
 
@@ -48,8 +51,8 @@ public class SignUpRequest {
       .password(encodedPassword)
       .role(Role.USER)
       .profileImageUrl(this.profileImageUrl)
-      .interestArea1(this.interestArea1)
-      .interestArea2(this.interestArea2)
+      .regionId1(this.regionId1)
+      .regionId2(this.regionId2)
       .build();
   }
 }

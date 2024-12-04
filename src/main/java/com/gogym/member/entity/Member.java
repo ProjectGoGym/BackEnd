@@ -40,11 +40,11 @@ public class Member extends BaseEntity {
   @Column(name = "profile_image_url")
   private String profileImageUrl;
 
-  @Column(name = "interest_area_1")
-  private String interestArea1;
+  @Column(name = "region_id_1", nullable = true)
+  private Long regionId1;
 
-  @Column(name = "interest_area_2")
-  private String interestArea2;
+  @Column(name = "region_id_2", nullable = true)
+  private Long regionId2;
 
   @Setter
   @Column(name = "verified_at")
