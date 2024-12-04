@@ -1,7 +1,7 @@
-package com.gogym.common.annotation;
+package com.gogym.aop;
 
-import com.gogym.aop.LoginMemberId;
 import com.gogym.member.jwt.JwtTokenProvider;
+import com.gogym.common.annotation.LoginMemberId;
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
