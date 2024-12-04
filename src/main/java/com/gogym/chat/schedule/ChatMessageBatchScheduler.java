@@ -5,8 +5,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gogym.chat.dto.ChatMessageDto.ChatMessageHistory;
 import com.gogym.chat.entity.ChatMessage;
 import com.gogym.chat.entity.ChatRoom;
@@ -14,6 +12,7 @@ import com.gogym.chat.repository.ChatMessageRepository;
 import com.gogym.chat.repository.ChatRoomRepository;
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
+import com.gogym.util.JsonUtil;
 import com.gogym.util.RedisUtil;
 import lombok.RequiredArgsConstructor;
 
@@ -54,7 +53,7 @@ public class ChatMessageBatchScheduler {
           .orElseThrow(() -> new CustomException(ErrorCode.CHATROOM_NOT_FOUND));
 
       // JSON 문자열을 ChatMessageHistory 객체로 역직렬화
-      ChatMessageHistory messageHistory = this.deserializeMessageHistory(messageJson);
+      ChatMessageHistory messageHistory = JsonUtil.deserialize(messageJson, ChatMessageHistory.class);
 
       // ChatMessage 엔티티로 변환
       ChatMessage chatMessage = ChatMessage.builder()
@@ -69,22 +68,6 @@ public class ChatMessageBatchScheduler {
       // Redis에서 메시지 삭제
       this.redisUtil.delete(redisKey);
     });
-  }
-  
-  /**
-   * Redis에서 가져온 JSON 메시지를 ChatMessageHistory 객체로 역직렬화합니다.
-   * 
-   * @param messageJson Redis에서 가져온 메시지 JSON
-   * @return ChatMessageHistory 객체
-   */
-  private ChatMessageHistory deserializeMessageHistory(String messageJson) {
-    try {
-      ObjectMapper objectMapper = new ObjectMapper();
-      objectMapper.findAndRegisterModules();
-      return objectMapper.readValue(messageJson, ChatMessageHistory.class);
-    } catch (JsonProcessingException e) {
-      throw new CustomException(ErrorCode.JSON_MAPPING_FAILURE);
-    }
   }
 
 }
