@@ -34,10 +34,8 @@ public class SignUpRequest {
 
   private String profileImageUrl;
 
-  @NotNull
   private Long regionId1;
 
-  @NotNull
   private Long regionId2;
 
   private Role role;
