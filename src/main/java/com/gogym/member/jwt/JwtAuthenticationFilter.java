@@ -1,4 +1,4 @@
-package com.gogym.config;
+package com.gogym.member.jwt;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -10,20 +10,27 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
-
 import java.io.IOException;
+import java.util.List;
 
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
   private final JwtTokenProvider jwtTokenProvider;
+  private final List<String> exemptUrls;
+  
+  @Override
+  protected boolean shouldNotFilter(HttpServletRequest request) {
+    String path = request.getRequestURI();
+    return exemptUrls.stream().anyMatch(path::startsWith);
+    }
 
   @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
 
     // 요청 헤더에서 JWT 토큰 추출
-    String token = jwtTokenProvider.resolveToken(request);
+    String token = jwtTokenProvider.extractToken(request, null);
 
     // 토큰 검증 및 SecurityContext 설정
     if (token != null && jwtTokenProvider.validateToken(token)) {

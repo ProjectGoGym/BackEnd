@@ -1,163 +1,127 @@
 package com.gogym.member.service;
 
-import com.gogym.config.JwtTokenProvider;
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
 import com.gogym.member.dto.ResetPasswordRequest;
 import com.gogym.member.dto.SignInRequest;
 import com.gogym.member.dto.SignUpRequest;
 import com.gogym.member.entity.Member;
+import com.gogym.member.jwt.JwtTokenProvider;
 import com.gogym.member.repository.MemberRepository;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import org.springframework.security.core.Authentication;
+import com.gogym.member.dto.LoginResponse;
+
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class AuthService {
 
-  private static final long TOKEN_EXPIRATION_TIME = 60 * 60 * 1000; // 1시간 (밀리초)
-  private static final String EMAIL_VERIFICATION_PREFIX = "emailVerification:";
-
+  // TODO : 서버 주소 또는 도메인 파면 변경해야할 부분
+  private final MemberService memberService;
+  
   private final MemberRepository memberRepository;
   private final PasswordEncoder passwordEncoder;
   private final JwtTokenProvider jwtTokenProvider;
-  private final JavaMailSender mailSender;
   private final RedisTemplate<String, String> redisTemplate;
-
-  // 회원가입 처리
+  
+  //회원가입 처리
   @Transactional
-  public Long signUp(SignUpRequest request) {
-    // 이메일 중복 확인
-    if (memberRepository.existsByEmail(request.getEmail())) {
-      throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
-    }
-
-    // 닉네임 중복 확인
-    if (memberRepository.existsByNickname(request.getNickname())) {
-      throw new CustomException(ErrorCode.DUPLICATE_NICKNAME);
-    }
-
-    // Dto → Entity 변환
+  public void signUp(SignUpRequest request) {
+    // Dto에서 Entity 변환
     Member member = request.toEntity(passwordEncoder.encode(request.getPassword()));
-
     // 회원 데이터 저장
     memberRepository.save(member);
-
-    // 응답 객체 생성 및 반환
-    return member.getId();
   }
 
   // 로그인 처리
-  @Transactional
-  public String login(SignInRequest request) {
+  public LoginResponse login(SignInRequest request) {
     // 이메일로 사용자 조회
-    Member member = memberRepository.findByEmail(request.getEmail())
-      .orElseThrow(() -> new CustomException(ErrorCode.EMAIL_NOT_FOUND));
-
+    Member member = memberService.findByEmail(request.getEmail());    
     // 비밀번호 검증
     if (!passwordEncoder.matches(request.getPassword(), member.getPassword())) {
-        throw new CustomException(ErrorCode.UNAUTHORIZED);
-    }
-
-    // JWT 토큰 생성 후 반환
-    return jwtTokenProvider.createToken(member.getEmail(), List.of(member.getRole().name()));
+    throw new CustomException(ErrorCode.UNAUTHORIZED);
   }
-
-
+    //JWT 토큰 생성
+    String token = jwtTokenProvider.createToken(
+        member.getEmail(),
+        member.getId(),
+        List.of(member.getRole().name())
+        );
+  
+    // 사용자 정보 반환
+    return new LoginResponse(
+        member.getEmail(),
+        member.getName(),
+        member.getNickname(),
+        member.getPhone()
+        );
+  }
+  
   // 비밀번호 재설정 처리
   @Transactional
-  public void resetPassword(ResetPasswordRequest request) {
-    // 이메일로 사용자 찾기
-    Member member = memberRepository.findByEmail(request.getEmail())
-      .orElseThrow(() -> new CustomException(ErrorCode.EMAIL_NOT_FOUND));
+  public void resetPassword(Long memberId, ResetPasswordRequest request) {
+    Member member = memberService.findById(memberId);
+    validateAuthenticatedEmail(member.getEmail(), request.getEmail());
 
-    // 새 비밀번호 암호화 후 저장
-    member.setPassword(passwordEncoder.encode(request.getNewPassword()));
-    memberRepository.save(member);
+    // 비밀번호 업데이트
+    updatePassword(request.getEmail(), request.getNewPassword());
+    
   }
 
-  // JWT 토큰 생성
-  public String generateToken(String email, List<String> roles) {
-    return jwtTokenProvider.createToken(email, roles);
+  // 인증된 이메일과 요청된 이메일 비교
+  private void validateAuthenticatedEmail(String authenticatedEmail, String requestedEmail) {
+    if (!authenticatedEmail.equals(requestedEmail)) {
+      throw new CustomException(ErrorCode.FORBIDDEN);
+      }
+  }
+
+  // 비밀번호 업데이트
+  private void updatePassword(String email, String newPassword) {
+    Member member = memberService.findByEmail(email);
+    member.setPassword(passwordEncoder.encode(newPassword));
   }
 
   // 로그아웃 처리
-  @Transactional
-  public void logout(String authorizationHeader) {
-    String token = extractToken(authorizationHeader);
-    redisTemplate.opsForValue().set(token, "logout", 3600000, TimeUnit.MILLISECONDS);
-  }
-
-  // 토큰 추출
-  public String extractToken(String authorizationHeader) {
-    return authorizationHeader.replace("Bearer ", "");
-  }
-
-  // 이메일 중복 확인
-  @Transactional(readOnly = true)
-  public void checkEmail(String email) {
-    if (memberRepository.existsByEmail(email)) {
-      throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
-    }
+  public void logout(Long memberId) {
+    redisTemplate.opsForValue().set("logout:" + memberId, "logout", 600000, TimeUnit.MILLISECONDS);
   }
 
   // 닉네임 중복 확인
-  @Transactional(readOnly = true)
-  public void checkNickname(String nickname) {
+  public void validateNickname(String nickname) {
     if (memberRepository.existsByNickname(nickname)) {
       throw new CustomException(ErrorCode.DUPLICATE_NICKNAME);
     }
+    
   }
 
-  // 이메일 인증 요청
-  @Transactional
-  public void sendVerificationEmail(String email) {
-    // 토큰 생성
-    String token = UUID.randomUUID().toString();
-
-    // Redis에 토큰 저장
-    redisTemplate.opsForValue().set(EMAIL_VERIFICATION_PREFIX + token, email, TOKEN_EXPIRATION_TIME, TimeUnit.MILLISECONDS);
-
-    // 인증 URL 생성
-    String verificationUrl = "http://localhost:8080/api/auth/verify-email?token=" + token;
-
-    // 이메일 발송
-    SimpleMailMessage message = new SimpleMailMessage();
-    message.setTo(email);
-    message.setSubject("이메일 인증 요청");
-    message.setText("다음 링크를 클릭하여 이메일을 인증하세요: " + verificationUrl);
-
-    mailSender.send(message);
-  }
-
-  // 이메일 인증 확인
-  @Transactional
-  public void verifyEmailToken(String token) {
-    // Redis에서 토큰 검증
-    String email = redisTemplate.opsForValue().get(EMAIL_VERIFICATION_PREFIX + token);
-
-    if (email == null) {
-      throw new CustomException(ErrorCode.INVALID_TOKEN); // 토큰이 유효하지 않음
+  // JWT 토큰에서 인증된 이메일 추출
+  private String extractAuthenticatedEmail(String authorizationHeader) {
+    String token = jwtTokenProvider.extractToken(null, authorizationHeader);
+    Authentication authentication = jwtTokenProvider.getAuthentication(token);
+    if (authentication == null || authentication.getName() == null) {
+      throw new CustomException(ErrorCode.UNAUTHORIZED);
+      
     }
-
-    // 이메일 인증 상태 업데이트
-    Member member = memberRepository.findByEmail(email)
-      .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
-
-    member.verifyEmail();
-    memberRepository.save(member);
-
-    // 사용한 토큰 삭제
-    redisTemplate.delete(EMAIL_VERIFICATION_PREFIX + token);
+    
+    return authentication.getName();
+    
   }
+
+  // 사용자 조회하는 메서드, [맴버 객체]를 반환
+  public Member getById(String authorizationHeader) {
+    // JWT 토큰에서 인증된 이메일 추출
+    String email = extractAuthenticatedEmail(authorizationHeader);
+    
+    // 이메일로 사용자 조회 -> 반환
+    return memberService.findByEmail(email);
+    
+  }
+  
 }
-
-
-

@@ -1,5 +1,6 @@
-package com.gogym.config;
+package com.gogym.member.jwt;
 
+import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -51,11 +52,29 @@ public class SecurityConfig {
         // 그 외의 모든 요청은 인증 필요
         .anyRequest().authenticated()
         )
-    // JWT 인증 필터를 UsernamePasswordAuthenticationFilter 전에 추가
-    .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
+    // JWT 인증 필터를 AuthenticationFilter 전에 추가
+    .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
     
       return http.build();
   }
+
+  //JwtAuthenticationFilter Bean
+  @Bean
+  public JwtAuthenticationFilter jwtAuthenticationFilter() {
+    return new JwtAuthenticationFilter(jwtTokenProvider, exemptUrls()); 
+  }
+
+  //인증 제외 경로
+  private List<String> exemptUrls() {
+    return List.of(
+        "/api/auth/sign-up",
+        "/api/auth/sign-in",
+        "/api/auth/check-email",
+        "/api/auth/check-nickname",
+        "/api/auth/verify-email",
+        "/api/auth/reset-password",
+        "/api/auth/send-verification-email"
+        
+        );
+    }
 }
-
-
