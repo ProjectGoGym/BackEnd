@@ -41,3 +41,5 @@ jasypt:
 
 portone:
   secret: ENC(Yae9m6UdFdavIg+60o/aoAP5jG7K4gwTIIy/I8FLCsp8PYOcIb0sfwr3wd8Z37XGke+83s1e4VTEv9OtMwV3wmnOWTeXJJ1JqxmGc8VKHFzyR6FJ4YoSPfwKjsBrUwB1)
+  webhook:
+    secret: ENC(rNgfIF0802rxis0Md6mRpdGH3WpdHA7XxabMdLFZXV6TWgeXAyUjfsFdffaqMBOfJlKSro6UCy3Krc2nOUfRNw==)
