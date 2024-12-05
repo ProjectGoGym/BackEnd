@@ -34,7 +34,7 @@ public class AuthService {
   //회원가입 처리
   @Transactional
   public void signUp(SignUpRequest request) {
-    // Dto → Entity 변환
+    // Dto에서 Entity 변환
     Member member = request.toEntity(passwordEncoder.encode(request.getPassword()));
     // 회원 데이터 저장
     memberRepository.save(member);
@@ -54,7 +54,7 @@ public class AuthService {
   //JWT 토큰 생성
   String token = jwtTokenProvider.createToken(
       member.getEmail(),
-      member.getId(), // memberId 추가
+      member.getId(),
       List.of(member.getRole().name())
   );
   

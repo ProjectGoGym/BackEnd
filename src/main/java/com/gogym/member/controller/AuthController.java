@@ -41,7 +41,7 @@ public class AuthController {
   @PostMapping("/sign-out")
   public ResponseEntity<Void> logout(@LoginMemberId Long memberId) {
     authService.logout(memberId);
-    return ResponseEntity.noContent().build();
+    return ResponseEntity.ok().build();
   }
 
   // 비밀번호 재설정
@@ -51,7 +51,7 @@ public class AuthController {
       @RequestBody @Valid ResetPasswordRequest request
   ) {
     authService.resetPassword(memberId, request);
-    return ResponseEntity.noContent().build();
+    return ResponseEntity.ok().build();
   }
 
   // 이메일 중복 확인
@@ -81,7 +81,7 @@ public class AuthController {
       @RequestParam(name = "email") String email
   ) {
     emailService.sendVerificationEmail(email);
-    return ResponseEntity.noContent().build();
+    return ResponseEntity.ok().build();
   }
 }
 
