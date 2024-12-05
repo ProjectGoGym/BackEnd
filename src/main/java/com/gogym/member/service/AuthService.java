@@ -42,30 +42,26 @@ public class AuthService {
 
   // 로그인 처리
   public LoginResponse login(SignInRequest request) {
-  // 이메일로 사용자 조회
-  Member member = memberService.findByEmail(request.getEmail());
-
-  // 비밀번호 검증
-  if (!passwordEncoder.matches(request.getPassword(), member.getPassword())) {
+    // 이메일로 사용자 조회
+    Member member = memberService.findByEmail(request.getEmail());    
+    // 비밀번호 검증
+    if (!passwordEncoder.matches(request.getPassword(), member.getPassword())) {
     throw new CustomException(ErrorCode.UNAUTHORIZED);
   }
-
-
-  //JWT 토큰 생성
-  String token = jwtTokenProvider.createToken(
-      member.getEmail(),
-      member.getId(),
-      List.of(member.getRole().name())
-  );
+    //JWT 토큰 생성
+    String token = jwtTokenProvider.createToken(
+        member.getEmail(),
+        member.getId(),
+        List.of(member.getRole().name())
+        );
   
-  // 사용자 정보 반환
-  return new LoginResponse(
-      member.getEmail(),
-      member.getName(),
-      member.getNickname(),
-      member.getPhone()
-  );
-  
+    // 사용자 정보 반환
+    return new LoginResponse(
+        member.getEmail(),
+        member.getName(),
+        member.getNickname(),
+        member.getPhone()
+        );
   }
   
   // 비밀번호 재설정 처리

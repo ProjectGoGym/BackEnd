@@ -27,14 +27,14 @@ public class EmailService {
   private final MemberRepository memberRepository;
   private final JavaMailSender mailSender;
   private final RedisTemplate<String, String> redisTemplate;
-
+  
   // 이메일 중복 확인
   public void validateEmail(String email) {
     if (memberRepository.existsByEmail(email)) {
       throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
     }
   }
-
+  
   // 이메일 인증 요청
   public void sendVerificationEmail(String email) {
     // 토큰 생성
