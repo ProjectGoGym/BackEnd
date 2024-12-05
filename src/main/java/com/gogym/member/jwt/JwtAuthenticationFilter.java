@@ -22,7 +22,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       throws ServletException, IOException {
 
     // 요청 헤더에서 JWT 토큰 추출
-    String token = jwtTokenProvider.resolveOrExtractToken(request, null);
+    String token = jwtTokenProvider.extractToken(request, null);
 
     // 토큰 검증 및 SecurityContext 설정
     if (token != null && jwtTokenProvider.validateToken(token)) {

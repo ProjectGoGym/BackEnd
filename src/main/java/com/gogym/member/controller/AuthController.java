@@ -3,6 +3,7 @@ package com.gogym.member.controller;
 import com.gogym.member.dto.SignUpRequest;
 import com.gogym.member.dto.SignInRequest;
 import com.gogym.member.dto.ResetPasswordRequest;
+import com.gogym.common.annotation.LoginMemberId;
 import com.gogym.member.dto.LoginResponse;
 import com.gogym.member.service.AuthService;
 import com.gogym.member.service.EmailService;
@@ -11,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.gogym.aop.LoginMemberId;
 
 @RestController
 @RequestMapping("/api/auth")

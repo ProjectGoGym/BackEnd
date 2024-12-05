@@ -59,6 +59,8 @@ public class MemberService {
     memberRepository.delete(member);
   }
 
+  
+  //TODO - 아래 전부 페이징 처리해야함
   // 내가 작성한 게시글 조회
   public List<String> getMyPostsById(Long memberId, int page, int size) {
     Member member = findById(memberId);

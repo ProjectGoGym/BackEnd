@@ -33,9 +33,10 @@ public class JwtTokenProvider {
   }
 
   // JWT 생성
-  public String createToken(String username, List<String> roles) {
-    Claims claims = Jwts.claims().setSubject(username); // 사용자 이름 설정
-    claims.put("roles", roles); // 사용자 권한 정보 추가
+  public String createToken(String email, Long memberId, List<String> roles) {
+    Claims claims = Jwts.claims().setSubject(email); // 사용자 이메일 설정
+    claims.put("id", memberId); // 사용자 ID 추가
+    claims.put("roles", roles); // 사용자 권한 추가
 
     Date now = new Date();
     Date expiration = new Date(now.getTime() + validityInMilliseconds);
@@ -46,8 +47,16 @@ public class JwtTokenProvider {
         .setExpiration(expiration) // 만료 시간
         .signWith(secretKey, SignatureAlgorithm.HS256) // 서명 알고리즘 및 비밀 키
         .compact();
+    
   }
-
+  
+  //id 추출
+  public Long extractMemberId(String token) {
+    Claims claims = getClaims(token);
+    return claims.get("id", Long.class); // "id"를 Long 타입으로 추출
+    
+  }
+  
   // JWT에서 인증 정보 추출
   public Authentication getAuthentication(String token) {
     Claims claims = getClaims(token); // 토큰에서 클레임 추출
@@ -86,8 +95,8 @@ public class JwtTokenProvider {
     }
   }
 
-  // 요청 헤더 또는 문자열에서 JWT 추출
-  public String resolveOrExtractToken(HttpServletRequest request, String authorizationHeader) {
+  // JWT 추출
+  public String extractToken(HttpServletRequest request, String authorizationHeader) {
     String bearerToken = authorizationHeader != null ? authorizationHeader : request.getHeader("Authorization");
     if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
       return bearerToken.substring(7);

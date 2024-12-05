@@ -34,8 +34,6 @@ public class AuthService {
   //회원가입 처리
   @Transactional
   public void signUp(SignUpRequest request) {
-    validateNickname(request.getNickname()); // 닉네임 중복 확인
-
     // Dto → Entity 변환
     Member member = request.toEntity(passwordEncoder.encode(request.getPassword()));
     // 회원 데이터 저장
@@ -52,9 +50,14 @@ public class AuthService {
     throw new CustomException(ErrorCode.UNAUTHORIZED);
   }
 
-  // JWT 토큰 생성
-  String token = jwtTokenProvider.createToken(member.getEmail(), List.of(member.getRole().name()));
 
+  //JWT 토큰 생성
+  String token = jwtTokenProvider.createToken(
+      member.getEmail(),
+      member.getId(), // memberId 추가
+      List.of(member.getRole().name())
+  );
+  
   // 사용자 정보 반환
   return new LoginResponse(
       member.getEmail(),
@@ -104,7 +107,7 @@ public class AuthService {
 
   // JWT 토큰에서 인증된 이메일 추출
   private String extractAuthenticatedEmail(String authorizationHeader) {
-    String token = jwtTokenProvider.resolveOrExtractToken(null, authorizationHeader);
+    String token = jwtTokenProvider.extractToken(null, authorizationHeader);
     Authentication authentication = jwtTokenProvider.getAuthentication(token);
     if (authentication == null || authentication.getName() == null) {
       throw new CustomException(ErrorCode.UNAUTHORIZED);

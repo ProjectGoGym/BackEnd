@@ -69,7 +69,6 @@ public class EmailService {
     // 이메일 인증 상태 업데이트
     Member member = memberService.findByEmail(email);
     member.verifyEmail();
-    memberRepository.save(member);
 
     // 사용한 토큰 삭제
     redisTemplate.delete(EMAIL_VERIFICATION_PREFIX + token);
