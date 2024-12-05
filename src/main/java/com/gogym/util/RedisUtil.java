@@ -32,4 +32,20 @@ public class RedisUtil {
     return redisTemplate.opsForList().range(key, start, end);
   }
   
+  public boolean addToSet(String key, String value, long ttl) {
+    Long result = redisTemplate.opsForSet().add(key, value);
+    if (result == 0) {
+      return false;
+    }
+
+    setTTL(key, ttl);
+    return true;
+  }
+
+  public void setTTL(String key, long ttl) {
+    if (redisTemplate.getExpire(key) == -1) {
+      redisTemplate.expire(key, Duration.ofSeconds(ttl));
+    }
+  }
+  
 }
