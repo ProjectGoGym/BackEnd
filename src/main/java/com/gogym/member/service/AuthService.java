@@ -8,6 +8,7 @@ import com.gogym.member.dto.SignUpRequest;
 import com.gogym.member.entity.Member;
 import com.gogym.member.jwt.JwtTokenProvider;
 import com.gogym.member.repository.MemberRepository;
+import com.gogym.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -30,6 +31,7 @@ public class AuthService {
   private final PasswordEncoder passwordEncoder;
   private final JwtTokenProvider jwtTokenProvider;
   private final RedisTemplate<String, String> redisTemplate;
+  private final NotificationService notificationService;
   
   //회원가입 처리
   @Transactional
@@ -90,6 +92,7 @@ public class AuthService {
 
   // 로그아웃 처리
   public void logout(Long memberId) {
+    notificationService.removeEmitter(memberId);
     redisTemplate.opsForValue().set("logout:" + memberId, "logout", 600000, TimeUnit.MILLISECONDS);
   }
 

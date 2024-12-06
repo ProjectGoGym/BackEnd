@@ -2,6 +2,7 @@ package com.gogym.notification.controller;
 
 import static org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE;
 
+import com.gogym.common.annotation.LoginMemberId;
 import com.gogym.notification.dto.NotificationDto;
 import com.gogym.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
@@ -22,18 +23,15 @@ public class NotificationController {
 
   private final NotificationService notificationService;
 
-  // TODO : 파라미터로 memberId 를 받는것이 아닌 token 으로 받는것으로 수정 {member-id} 제거
-  @GetMapping(value = "/subscribe/{member-id}", produces = TEXT_EVENT_STREAM_VALUE)
-  public SseEmitter subscribe(@PathVariable("member-id") Long memberId) {
+  @GetMapping(value = "/subscribe", produces = TEXT_EVENT_STREAM_VALUE)
+  public SseEmitter subscribe(@LoginMemberId Long memberId) {
 
     return notificationService.subscribe(memberId);
   }
 
   @GetMapping
-  public ResponseEntity<Page<NotificationDto>> getAllNotifications(Pageable pageable) {
-
-    // TODO : 하드코딩 추후 변경
-    Long memberId = 1L;
+  public ResponseEntity<Page<NotificationDto>> getAllNotifications(@LoginMemberId Long memberId,
+      Pageable pageable) {
 
     Page<NotificationDto> notifications = notificationService.getAllNotifications(memberId,
         pageable);
@@ -42,10 +40,8 @@ public class NotificationController {
   }
 
   @PutMapping("/{notification-id}/read")
-  public ResponseEntity<Void> updateNotification(@PathVariable("notification-id") Long notificationId) {
-
-    // TODO : 하드코딩 추후 변경
-    Long memberId = 1L;
+  public ResponseEntity<Void> updateNotification(@LoginMemberId Long memberId,
+      @PathVariable("notification-id") Long notificationId) {
 
     notificationService.updateNotification(notificationId, memberId);
 

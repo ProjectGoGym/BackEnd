@@ -1,10 +1,7 @@
 package com.gogym.post.service;
 
-import static com.gogym.exception.ErrorCode.MEMBER_NOT_FOUND;
-
-import com.gogym.exception.CustomException;
 import com.gogym.member.entity.Member;
-import com.gogym.member.repository.MemberRepository;
+import com.gogym.member.service.MemberService;
 import com.gogym.post.dto.PostRequestDto;
 import com.gogym.post.dto.PostResponseDto;
 import com.gogym.post.entity.Gym;
@@ -23,7 +20,7 @@ public class PostService {
 
   private final PostRepository postRepository;
 
-  private final MemberRepository memberRepository;
+  private final MemberService memberService;
 
   private final GymRepository gymRepository;
 
@@ -32,8 +29,7 @@ public class PostService {
   @Transactional
   public PostResponseDto createPost(Long memberId, PostRequestDto postRequestDto) {
 
-    // TODO : 추후 MemberService 에서 추출
-    Member member = findByMemberFromMemberRepository(memberId);
+    Member member = memberService.findById(memberId);
 
     Gym gym = findOrCreateGym(postRequestDto);
 
@@ -53,12 +49,5 @@ public class PostService {
     return gymRepository.findByLatitudeAndLongitude(postRequestDto.latitude(),
             postRequestDto.longitude())
         .orElseGet(() -> gymRepository.save(Gym.createGym(postRequestDto, regionId)));
-  }
-
-  // TODO : 추후 MemberService 에서 추출
-  private Member findByMemberFromMemberRepository(Long memberId) {
-
-    return memberRepository.findById(memberId)
-        .orElseThrow(() -> new CustomException(MEMBER_NOT_FOUND));
   }
 }
