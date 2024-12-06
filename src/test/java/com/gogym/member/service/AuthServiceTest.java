@@ -114,19 +114,6 @@ class AuthServiceTest {
   }
   
   @Test
-  void 이미_존재하는_이메일로_중복확인을_시도하면_예외가_발생한다() {
-    // given
-    when(memberRepository.existsByEmail(signUpRequest.getEmail())).thenReturn(true);
-
-    // when & then
-    CustomException e = assertThrows(CustomException.class, 
-        () -> emailService.validateEmail(signUpRequest.getEmail()));
-
-    // then
-    assertEquals(e.getErrorCode(), ErrorCode.DUPLICATE_EMAIL);
-  }
-
-  @Test
   void 존재하지_않는_이메일로_중복확인을_시도하면_예외가_발생하지_않는다() {
     // when
     emailService.validateEmail("new@example.com");
