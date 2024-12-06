@@ -3,6 +3,7 @@ package com.gogym.member.entity;
 import com.gogym.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "members")
@@ -48,11 +49,11 @@ public class Member extends BaseEntity {
 
   @Setter
   @Column(name = "verified_at")
-  private boolean verifiedAt = false;
-  
-  //이메일 인증 상태 업데이트 메서드
-  public void verifyEmail() {
-    this.verifiedAt = true; 
+  private LocalDateTime verifiedAt; // 이메일 인증 시간을 저장
+
+  // 이메일 인증 여부 확인 메서드
+  public boolean isVerified() {
+    return this.verifiedAt != null; // 인증 시간이 null이 아니면 인증됨
   }
   
   //프로필 업데이트 메서드

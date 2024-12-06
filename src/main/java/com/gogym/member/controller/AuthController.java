@@ -1,6 +1,7 @@
 package com.gogym.member.controller;
 
 import com.gogym.member.dto.SignUpRequest;
+import com.gogym.member.entity.Member;
 import com.gogym.member.dto.SignInRequest;
 import com.gogym.member.dto.ResetPasswordRequest;
 import com.gogym.common.annotation.LoginMemberId;
@@ -9,6 +10,7 @@ import com.gogym.member.service.AuthService;
 import com.gogym.member.service.EmailService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -33,8 +35,27 @@ public class AuthController {
   // 로그인
   @PostMapping("/sign-in")
   public ResponseEntity<LoginResponse> login(@RequestBody @Valid SignInRequest request) {
-    LoginResponse loginResponse = authService.login(request);
-    return ResponseEntity.ok().body(loginResponse);  
+    // 로그인 처리 및 토큰 생성
+    String token = authService.login(request);
+
+    // 사용자 정보를 가져오기
+    Member member = authService.getMemberByEmail(request.getEmail());
+    LoginResponse loginResponse = new LoginResponse(
+        member.getEmail(),
+        member.getName(),
+        member.getNickname(),
+        member.getPhone()
+        
+        );
+
+    // HttpHeaders를 사용하여 헤더에 Authorization 추가
+    HttpHeaders headers = new HttpHeaders();
+    headers.add("Authorization", "Bearer " + token);
+
+    // ResponseEntity에 헤더와 바디를 추가
+    return ResponseEntity.ok()
+        .headers(headers)
+        .body(loginResponse);
   }
 
   // 로그아웃

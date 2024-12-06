@@ -22,8 +22,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   @Override
   protected boolean shouldNotFilter(HttpServletRequest request) {
     String path = request.getRequestURI();
-    return exemptUrls.stream().anyMatch(path::startsWith);
-    }
+    // 인증이 필요 없는 경로 확인
+    return path.startsWith("/api/auth/");
+  }
 
   @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)

@@ -2,21 +2,21 @@ package com.gogym.member.service;
 
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
+import com.gogym.member.dto.LoginResponse;
 import com.gogym.member.dto.ResetPasswordRequest;
 import com.gogym.member.dto.SignInRequest;
 import com.gogym.member.dto.SignUpRequest;
 import com.gogym.member.entity.Member;
 import com.gogym.member.jwt.JwtTokenProvider;
 import com.gogym.member.repository.MemberRepository;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import org.springframework.security.core.Authentication;
-import com.gogym.member.dto.LoginResponse;
 
 @Service
 @RequiredArgsConstructor
@@ -30,7 +30,7 @@ public class AuthService {
   private final PasswordEncoder passwordEncoder;
   private final JwtTokenProvider jwtTokenProvider;
   private final RedisTemplate<String, String> redisTemplate;
-  
+
   //회원가입 처리
   @Transactional
   public void signUp(SignUpRequest request) {
@@ -41,27 +41,33 @@ public class AuthService {
   }
 
   // 로그인 처리
-  public LoginResponse login(SignInRequest request) {
-    // 이메일로 사용자 조회
-    Member member = memberService.findByEmail(request.getEmail());    
+  public String login(SignInRequest request) {
+    // 사용자의 이메일로 회원 정보 조회
+    Member member = memberService.findByEmail(request.getEmail());
+
+    // 이메일 인증 여부 확인
+    if (!member.isVerified()) {
+        throw new CustomException(ErrorCode.EMAIL_NOT_VERIFIED);
+    }
+
     // 비밀번호 검증
     if (!passwordEncoder.matches(request.getPassword(), member.getPassword())) {
-    throw new CustomException(ErrorCode.UNAUTHORIZED);
-  }
-    //JWT 토큰 생성
+        throw new CustomException(ErrorCode.UNAUTHORIZED);
+    }
+
+    // JWT 토큰 생성 (토큰 생성 부분)
     String token = jwtTokenProvider.createToken(
         member.getEmail(),
         member.getId(),
-        List.of(member.getRole().name())
-        );
-  
-    // 사용자 정보 반환
-    return new LoginResponse(
-        member.getEmail(),
-        member.getName(),
-        member.getNickname(),
-        member.getPhone()
-        );
+        List.of(member.getRole().name()) // 사용자의 역할을 기반으로 토큰 생성
+    );
+
+    // JWT 토큰을 Redis에 저장 (로그인 상태 관리)
+    redisTemplate.opsForValue().set("login:" + member.getId(), token, 60 * 60 * 24, TimeUnit.SECONDS); // 24시간 동안 유효
+
+    // 생성된 JWT 토큰 반환
+    return token;
+    
   }
   
   // 비밀번호 재설정 처리
@@ -90,7 +96,7 @@ public class AuthService {
 
   // 로그아웃 처리
   public void logout(Long memberId) {
-    redisTemplate.opsForValue().set("logout:" + memberId, "logout", 600000, TimeUnit.MILLISECONDS);
+    redisTemplate.delete("login:" + memberId);
   }
 
   // 닉네임 중복 확인
@@ -120,6 +126,12 @@ public class AuthService {
     String email = extractAuthenticatedEmail(authorizationHeader);
     
     // 이메일로 사용자 조회 -> 반환
+    return memberService.findByEmail(email);
+    
+  }
+  
+  //이메일로 회원 정보 조회
+  public Member getMemberByEmail(String email) {
     return memberService.findByEmail(email);
     
   }
