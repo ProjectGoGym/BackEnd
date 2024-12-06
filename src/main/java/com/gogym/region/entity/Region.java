@@ -19,12 +19,10 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @Table(name = "regions")
-
 // 테스트용 입니다
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-
 public class Region {
 
   @Id
