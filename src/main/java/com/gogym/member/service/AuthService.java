@@ -2,21 +2,21 @@ package com.gogym.member.service;
 
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
+import com.gogym.member.dto.LoginResponse;
 import com.gogym.member.dto.ResetPasswordRequest;
 import com.gogym.member.dto.SignInRequest;
 import com.gogym.member.dto.SignUpRequest;
 import com.gogym.member.entity.Member;
 import com.gogym.member.jwt.JwtTokenProvider;
 import com.gogym.member.repository.MemberRepository;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import org.springframework.security.core.Authentication;
-import com.gogym.member.dto.LoginResponse;
 
 @Service
 @RequiredArgsConstructor
@@ -30,7 +30,7 @@ public class AuthService {
   private final PasswordEncoder passwordEncoder;
   private final JwtTokenProvider jwtTokenProvider;
   private final RedisTemplate<String, String> redisTemplate;
-  
+
   //회원가입 처리
   @Transactional
   public void signUp(SignUpRequest request) {

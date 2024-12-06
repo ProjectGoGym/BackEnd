@@ -1,4 +1,4 @@
-package com.gogym.post.service;
+package com.gogym.region.service;
 
 import static com.gogym.exception.ErrorCode.CITY_NOT_FOUND;
 import static com.gogym.exception.ErrorCode.DISTRICT_NOT_FOUND;
@@ -11,7 +11,6 @@ import com.gogym.exception.CustomException;
 import com.gogym.region.dto.RegionDto;
 import com.gogym.region.entity.Region;
 import com.gogym.region.repository.RegionRepository;
-import com.gogym.region.service.RegionService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;

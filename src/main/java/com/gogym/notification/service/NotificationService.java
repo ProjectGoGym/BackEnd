@@ -1,12 +1,11 @@
 package com.gogym.notification.service;
 
 import static com.gogym.exception.ErrorCode.ALREADY_READ;
-import static com.gogym.exception.ErrorCode.MEMBER_NOT_FOUND;
 import static com.gogym.exception.ErrorCode.NOTIFICATION_NOT_FOUND;
 
 import com.gogym.exception.CustomException;
 import com.gogym.member.entity.Member;
-import com.gogym.member.repository.MemberRepository;
+import com.gogym.member.service.MemberService;
 import com.gogym.notification.dto.NotificationDto;
 import com.gogym.notification.entity.Notification;
 import com.gogym.notification.repository.NotificationRepository;
@@ -30,14 +29,14 @@ public class NotificationService {
 
   private final NotificationRepository notificationRepository;
 
-  private final MemberRepository memberRepository;
+  private final MemberService memberService;
 
   @Getter
   private final Map<Long, SseEmitter> emitters = new ConcurrentHashMap<>();
 
   public SseEmitter subscribe(Long memberId) {
 
-    findByMemberFromMemberRepository(memberId);
+    memberService.findById(memberId);
 
     SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
     emitters.put(memberId, emitter);
@@ -52,7 +51,7 @@ public class NotificationService {
     return emitter;
   }
 
-  private void removeEmitter(Long memberId) {
+  public void removeEmitter(Long memberId) {
     emitters.remove(memberId);
   }
 
@@ -92,7 +91,7 @@ public class NotificationService {
   // 다른 서비스 로직에서 트리거가 되는 메서드에 사용되면 될 것 같습니다.
   public void createNotification(Long memberId, NotificationDto notificationDto) {
 
-    Member member = findByMemberFromMemberRepository(memberId);
+    Member member = memberService.findById(memberId);
 
     Notification notification = Notification.of(member, notificationDto);
 
@@ -120,7 +119,7 @@ public class NotificationService {
 
   public Page<NotificationDto> getAllNotifications(Long memberId, Pageable pageable) {
 
-    findByMemberFromMemberRepository(memberId);
+    memberService.findById(memberId);
 
     // 읽지않은 알림목록만 받아옵니다.
     Page<Notification> notificationPage = notificationRepository.findAllByMemberIdAndIsReadFalse(
@@ -139,12 +138,5 @@ public class NotificationService {
       throw new CustomException(ALREADY_READ);
     }
     notification.read();
-  }
-
-  // 각 메서드 내에서 회원 객체를 확인하는 로직
-  private Member findByMemberFromMemberRepository(Long memberId) {
-
-    return memberRepository.findById(memberId)
-        .orElseThrow(() -> new CustomException(MEMBER_NOT_FOUND));
   }
 }

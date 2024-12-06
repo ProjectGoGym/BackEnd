@@ -7,7 +7,8 @@ public record RegionDto(
     Long regionId,
     String name
 ) {
-    public static RegionDto fromEntity(Region region) {
-      return new RegionDto(region.getId(), region.getName());
-    }
+
+  public static RegionDto fromEntity(Region region) {
+    return new RegionDto(region.getId(), region.getName());
+  }
 }

@@ -14,7 +14,7 @@ import static org.mockito.Mockito.when;
 
 import com.gogym.exception.CustomException;
 import com.gogym.member.entity.Member;
-import com.gogym.member.repository.MemberRepository;
+import com.gogym.member.service.MemberService;
 import com.gogym.notification.dto.NotificationDto;
 import com.gogym.notification.entity.Notification;
 import com.gogym.notification.repository.NotificationRepository;
@@ -40,7 +40,7 @@ class NotificationServiceTest {
   private NotificationRepository notificationRepository;
 
   @Mock
-  private MemberRepository memberRepository;
+  private MemberService memberService;
 
   @Mock
   private SseEmitter sseEmitter;
@@ -70,7 +70,6 @@ class NotificationServiceTest {
   @Test
   void 구독을_신청한_회원은_Map_에_등록되어_관리된다() {
     // given
-    when(memberRepository.findById(member.getId())).thenReturn(Optional.of(member));
     // when
     sseEmitter = notificationService.subscribe(member.getId());
     // then
@@ -82,7 +81,6 @@ class NotificationServiceTest {
   @Test
   void 알림_생성_시_DB_에_저장된다() {
     // given
-    when(memberRepository.findById(member.getId())).thenReturn(Optional.of(member));
     // when
     notificationService.createNotification(member.getId(), notificationDto);
     // then
@@ -92,7 +90,6 @@ class NotificationServiceTest {
   @Test
   void 저장된_알림이_있고_읽지_않은_경우_알림이_조회된다() {
     // given
-    when(memberRepository.findById(member.getId())).thenReturn(Optional.of(member));
     Page<Notification> notificationPage = new PageImpl<>(List.of(notification));
     when(notificationRepository.findAllByMemberIdAndIsReadFalse(member.getId(), pageable)).thenReturn(
         notificationPage);
@@ -108,7 +105,6 @@ class NotificationServiceTest {
   @Test
   void 저장된_알림이_없는_경우_빈_배열을_반환한다() {
     // given
-    when(memberRepository.findById(member.getId())).thenReturn(Optional.of(member));
     Page<Notification> notificationPage = Page.empty();
 
     when(notificationRepository.findAllByMemberIdAndIsReadFalse(member.getId(), pageable)).thenReturn(
@@ -124,7 +120,6 @@ class NotificationServiceTest {
   @Test
   void 저장된_알림이_있고_읽은_상태면_빈_배열을_반환한다() {
     // given
-    when(memberRepository.findById(member.getId())).thenReturn(Optional.of(member));
     Page<Notification> notificationPage = new PageImpl<>(List.of(readNotification));
     when(notificationRepository.findAllByMemberIdAndIsReadFalse(member.getId(), pageable)).thenReturn(
         notificationPage);

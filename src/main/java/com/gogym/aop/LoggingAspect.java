@@ -15,7 +15,7 @@ public class LoggingAspect {
   @Pointcut("execution(* com.gogym..controller..*(..))")
   public void apiLayer() {}
 
-  @Pointcut("execution(* com.gogym..service..*(..)) && !execution(* com.gogym..schedule..*(..))")
+  @Pointcut("execution(* com.gogym..service..*(..)) && !execution(* com.gogym..schedule..*(..)) && !execution(* com.gogym.notification.service.NotificationService.getEmitters(..))")
   public void serviceLayer() {}
 
   @Around("apiLayer()")
