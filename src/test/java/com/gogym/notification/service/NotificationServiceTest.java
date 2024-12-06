@@ -58,7 +58,7 @@ class NotificationServiceTest {
   void setUp() {
 
     member = Member.builder().id(1L).build();
-    notificationDto = new NotificationDto(ADD_WISHLIST_MY_POST, "test message", null);
+    notificationDto = new NotificationDto(1L, ADD_WISHLIST_MY_POST, "test message", null);
     notification = Notification.of(member, notificationDto);
     readNotification = new Notification(member, ADD_WISHLIST_MY_POST, "test message", true);
   }
