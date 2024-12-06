@@ -36,13 +36,16 @@ public class LoginMemberIdHandler implements HandlerMethodArgumentResolver {
 
     if (!jwtTokenProvider.validateToken(token)) {
       throw new CustomException(ErrorCode.UNAUTHORIZED);
+      
     }
-
-    Authentication authentication = jwtTokenProvider.getAuthentication(token);
-    if (authentication == null || authentication.getName() == null) {
+    
+    // JWT에서 memberId 추출
+    Long memberId = jwtTokenProvider.extractMemberId(token);
+    if (memberId == null) {
       throw new CustomException(ErrorCode.UNAUTHORIZED);
+      
     }
-
-    return Long.valueOf(authentication.getName());
+    
+    return memberId;
   }
 }

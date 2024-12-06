@@ -47,12 +47,12 @@ public class AuthService {
 
     // 이메일 인증 여부 확인
     if (!member.isVerified()) {
-        throw new CustomException(ErrorCode.EMAIL_NOT_VERIFIED);
+      throw new CustomException(ErrorCode.EMAIL_NOT_VERIFIED);
     }
 
     // 비밀번호 검증
     if (!passwordEncoder.matches(request.getPassword(), member.getPassword())) {
-        throw new CustomException(ErrorCode.UNAUTHORIZED);
+      throw new CustomException(ErrorCode.UNAUTHORIZED);
     }
 
     // JWT 토큰 생성 (토큰 생성 부분)
@@ -72,15 +72,16 @@ public class AuthService {
   
   // 비밀번호 재설정 처리
   @Transactional
-  public void resetPassword(Long memberId, ResetPasswordRequest request) {
-    Member member = memberService.findById(memberId);
-    validateAuthenticatedEmail(member.getEmail(), request.getEmail());
+  public void resetPassword(String email, ResetPasswordRequest request) {
+    Member member = memberRepository.findByEmail(email)
+        .orElseThrow(() -> new CustomException(ErrorCode.EMAIL_NOT_FOUND));
 
-    // 비밀번호 업데이트
-    updatePassword(request.getEmail(), request.getNewPassword());
+    // 새 비밀번호 암호화 후 저장
+    member.setPassword(passwordEncoder.encode(request.getNewPassword()));
+    memberRepository.save(member);
     
   }
-
+  
   // 인증된 이메일과 요청된 이메일 비교
   private void validateAuthenticatedEmail(String authenticatedEmail, String requestedEmail) {
     if (!authenticatedEmail.equals(requestedEmail)) {
@@ -96,7 +97,7 @@ public class AuthService {
 
   // 로그아웃 처리
   public void logout(Long memberId) {
-    redisTemplate.delete("login:" + memberId);
+    redisTemplate.delete("login:" + memberId);//TODO - redis 비교-저장해서 사용하는 부분 꼭 필요한지 
   }
 
   // 닉네임 중복 확인

@@ -61,18 +61,18 @@ public class AuthController {
   // 로그아웃
   @PostMapping("/sign-out")
   public ResponseEntity<Void> logout(@LoginMemberId Long memberId) {
-    authService.logout(memberId);
+    authService.logout(memberId); // Redis에서 토큰 삭제
     return ResponseEntity.ok().build();
   }
+
 
   // 비밀번호 재설정
   @PostMapping("/reset-password")
   public ResponseEntity<Void> resetPassword(
-      @LoginMemberId Long memberId,
       @RequestBody @Valid ResetPasswordRequest request
   ) {
-    authService.resetPassword(memberId, request);
-    return ResponseEntity.ok().build();
+      authService.resetPassword(request.getEmail(), request);
+      return ResponseEntity.ok().build();
   }
 
   // 이메일 중복 확인
