@@ -47,7 +47,8 @@ public class SecurityConfig {
             "/api/auth/check-nickname",
             "/api/auth/verify-email",
             "/api/auth/reset-password",
-            "/api/auth/send-verification-email"
+            "/api/auth/send-verification-email",
+            "/api/regions"
             ).permitAll()
         // 그 외의 모든 요청은 인증 필요
         .anyRequest().authenticated()
