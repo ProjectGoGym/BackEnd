@@ -56,7 +56,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       }
 
     } catch (Exception e) {
-      SecurityContextHolder.clearContext();
+      //SecurityContextHolder.clearContext();
       logger.error("JWT 인증 과정에서 예외 발생", e);
     }
     // 인증이 실패했더라도 다음 필터로 전달
