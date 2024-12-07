@@ -110,7 +110,7 @@ public class AuthService {
   }
 
   //JWT 토큰에서 인증된 이메일 추출
-  private String extractAuthenticatedEmail(HttpServletRequest request) {
+  public String extractAuthenticatedEmail(HttpServletRequest request) {
     // request에서 Authorization 헤더를 사용하여 토큰 추출
 
     String token = jwtTokenProvider.extractToken(request);
