@@ -15,7 +15,7 @@ public class RedisUtil {
   public void save(String key, String value, long ttl) {
     redisTemplate.opsForValue().set(key, value, Duration.ofSeconds(ttl));
   }
-  
+
   public String get(String key) {
     return redisTemplate.opsForValue().get(key);
   }

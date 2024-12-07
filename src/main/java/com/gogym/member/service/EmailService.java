@@ -63,11 +63,11 @@ public class EmailService {
 
       // HTML 본문 작성
       String htmlContent =
-          "<html>" + "<body>" + "<p style='margin-bottom: 20px;'>다음 링크를 클릭하여 이메일을 인증하세요:</p>"
+          "<html>" + "<body>" + "<p style='margin-bottom: 20px;'>다음을 클릭하여 이메일을 인증을 완료하세요</p>"
               + "<a href='" + verificationUrl + "' style='padding: 10px 15px; color: white; "
               + "background-color: skyblue; text-decoration: none; border-radius: 5px; "
-              + "display: inline-block;'> GoGym 이용하러 가기 </a>" + "</body>" + "</html>";
-      // 인증 성공시 https://gogym-eight.vercel.app 로 이동 됩니다. AuthService 이메일인증 메서드 참조해주세요
+              + "display: inline-block;'> 인증 완료하기 </a>" + "</body>" + "</html>";
+      // 인증 성공시 https://gogym-eight.vercel.app 로 이동 됩니다. AuthControll verifyEmail 참조해주세요
       // HTML 포맷 설정
       helper.setText(htmlContent, true);
 

@@ -8,6 +8,7 @@ import com.gogym.common.annotation.LoginMemberId;
 import com.gogym.member.dto.LoginResponse;
 import com.gogym.member.service.AuthService;
 import com.gogym.member.service.EmailService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import java.net.URI;
@@ -55,8 +56,8 @@ public class AuthController {
 
   // 로그아웃
   @PostMapping("/sign-out")
-  public ResponseEntity<Void> logout(@LoginMemberId Long memberId) {
-    authService.logout(memberId); // Redis에서 토큰 삭제
+  public ResponseEntity<Void> logout(HttpServletRequest request) {
+    authService.logout(request);
     return ResponseEntity.ok().build();
   }
 

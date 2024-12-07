@@ -15,18 +15,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
-import com.gogym.exception.CustomException;
-import com.gogym.exception.ErrorCode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 
 @Component
 public class JwtTokenProvider {
 
   private final SecretKey secretKey;
   private final long validityInMilliseconds;
-  private static final Logger logger = LoggerFactory.getLogger(JwtTokenProvider.class);
 
   // JwtTokenProvider 생성자
   public JwtTokenProvider(@Value("${spring.jwt.secret}") String secret,
@@ -40,7 +34,6 @@ public class JwtTokenProvider {
     Claims claims = Jwts.claims().setSubject(email); // 사용자 이메일 설정
     claims.put("id", memberId); // 사용자 ID 추가
     claims.put("roles", roles); // 사용자 권한 추가
-    claims.setSubject(String.valueOf(memberId));
 
     Date now = new Date();
     Date expiration = new Date(now.getTime() + validityInMilliseconds);

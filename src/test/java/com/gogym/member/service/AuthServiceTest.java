@@ -151,20 +151,34 @@ class AuthServiceTest {
 
   @Test
   void 비밀번호_재설정이_성공한다() {
-    when(memberRepository.findByEmail(resetPasswordRequest.getEmail()))
-        .thenReturn(Optional.of(member));
+    // Mocking 설정
+    when(memberService.findByEmail(resetPasswordRequest.getEmail())).thenReturn(member);
 
     authService.resetPassword(resetPasswordRequest.getEmail(), resetPasswordRequest);
 
-    verify(memberRepository).findByEmail(resetPasswordRequest.getEmail());
+    // 검증
+    verify(memberService).findByEmail(resetPasswordRequest.getEmail());
     verify(memberRepository).save(any(Member.class));
   }
 
   @Test
   void 로그아웃이_성공한다() {
-    authService.logout(member.getId());
+    // Mock HttpServletRequest 생성
+    HttpServletRequest mockRequest = mock(HttpServletRequest.class);
 
-    verify(redisTemplate).delete("login:" + member.getId());
+    // Mock Token 설정
+    String mockToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9";
+
+    // Mock jwtTokenProvider 동작 설정
+    when(jwtTokenProvider.extractToken(mockRequest)).thenReturn(mockToken);
+    when(jwtTokenProvider.validateToken(mockToken)).thenReturn(true);
+
+    // AuthService 로그아웃 호출
+    authService.logout(mockRequest);
+
+    // 추가 검증
+    verify(jwtTokenProvider).extractToken(mockRequest);
+    verify(jwtTokenProvider).validateToken(mockToken);
   }
 
   @Test

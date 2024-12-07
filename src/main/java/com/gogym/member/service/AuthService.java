@@ -11,7 +11,6 @@ import com.gogym.member.jwt.JwtTokenProvider;
 import com.gogym.member.repository.MemberRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.Authentication;
@@ -61,10 +60,6 @@ public class AuthService {
         List.of(member.getRole().name()) // 사용자의 역할을 기반으로 토큰 생성
     );
 
-    // JWT 토큰을 Redis에 저장 (로그인 상태 관리)
-    redisTemplate.opsForValue().set("login:" + member.getId(), token, 60 * 60 * 24,
-        TimeUnit.SECONDS); // 24시간 동안 유효
-
     // 생성된 JWT 토큰 반환
     return token;
 
@@ -73,8 +68,7 @@ public class AuthService {
   // 비밀번호 재설정 처리
   @Transactional
   public void resetPassword(String email, ResetPasswordRequest request) {
-    Member member = memberRepository.findByEmail(email)
-        .orElseThrow(() -> new CustomException(ErrorCode.EMAIL_NOT_FOUND));
+    Member member = memberService.findByEmail(email);
 
     // 새 비밀번호 암호화 후 저장
     member.setPassword(passwordEncoder.encode(request.getNewPassword()));
@@ -96,8 +90,17 @@ public class AuthService {
   }
 
   // 로그아웃 처리
-  public void logout(Long memberId) {
-    redisTemplate.delete("login:" + memberId);// TODO - redis 비교-저장해서 사용하는 부분 꼭 필요한지
+  public void logout(HttpServletRequest request) {
+    String token = jwtTokenProvider.extractToken(request);
+
+    if (token == null || token.isEmpty()) {
+      throw new CustomException(ErrorCode.UNAUTHORIZED);
+    }
+
+    if (!jwtTokenProvider.validateToken(token)) {
+      throw new CustomException(ErrorCode.UNAUTHORIZED);
+    }
+
   }
 
   // 닉네임 중복 확인
