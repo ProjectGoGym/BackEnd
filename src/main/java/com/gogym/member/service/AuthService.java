@@ -19,7 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Service
+@Service 
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class AuthService {
@@ -110,7 +110,7 @@ public class AuthService {
   }
 
   //JWT 토큰에서 인증된 이메일 추출
-  private String extractAuthenticatedEmail(HttpServletRequest request) {
+  public String extractAuthenticatedEmail(HttpServletRequest request) {
     // request에서 Authorization 헤더를 사용하여 토큰 추출
 
     String token = jwtTokenProvider.extractToken(request);
