@@ -18,5 +18,3 @@ public class SignInRequest {
   @NotBlank
   private String password;
 }
-
-

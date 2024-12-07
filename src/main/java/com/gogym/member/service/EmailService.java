@@ -104,4 +104,3 @@ public class EmailService {
     redisUtil.delete(EMAIL_VERIFICATION_PREFIX + token);
   }
 }
-

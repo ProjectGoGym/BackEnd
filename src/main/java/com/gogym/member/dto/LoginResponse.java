@@ -12,4 +12,3 @@ public class LoginResponse {
   private String nickname;
   private String phone;
 }
-

@@ -83,7 +83,8 @@ public class AuthController {
 
   // 이메일 인증 확인
   @GetMapping("/verify-email")
-  public ResponseEntity<Void> verifyEmail(@RequestParam(name = "token") String token) throws URISyntaxException {
+  public ResponseEntity<Void> verifyEmail(@RequestParam(name = "token") String token)
+      throws URISyntaxException {
     emailService.verifyEmailToken(token);
 
     URI redirectUri = new URI("https://gogym-eight.vercel.app");
@@ -100,5 +101,3 @@ public class AuthController {
     return ResponseEntity.ok().build();
   }
 }
-
-
