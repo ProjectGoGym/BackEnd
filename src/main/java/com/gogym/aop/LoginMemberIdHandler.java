@@ -32,7 +32,7 @@ public class LoginMemberIdHandler implements HandlerMethodArgumentResolver {
   public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
                                 NativeWebRequest webRequest, WebDataBinderFactory binderFactory) {
     HttpServletRequest request = (HttpServletRequest) webRequest.getNativeRequest();
-    String token = jwtTokenProvider.extractToken(request, null);
+    String token = jwtTokenProvider.extractToken(request);
 
     if (!jwtTokenProvider.validateToken(token)) {
       throw new CustomException(ErrorCode.UNAUTHORIZED);

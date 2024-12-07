@@ -101,10 +101,10 @@ public class JwtTokenProvider {
   }
 
   // JWT 추출
-  public String extractToken(HttpServletRequest request, String authorizationHeader) {
-    String bearerToken = authorizationHeader != null ? authorizationHeader : request.getHeader("Authorization");
+  public String extractToken(HttpServletRequest request) {
+    String bearerToken = request.getHeader("Authorization");
     if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-        return bearerToken.substring(7);
+        return bearerToken.substring(7);  // "Bearer "를 제외하고 토큰 반환
     }
     return null; // 헤더가 없거나 잘못된 형식인 경우 null 반환
     

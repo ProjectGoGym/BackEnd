@@ -9,6 +9,7 @@ import com.gogym.member.dto.SignUpRequest;
 import com.gogym.member.entity.Member;
 import com.gogym.member.jwt.JwtTokenProvider;
 import com.gogym.member.repository.MemberRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
@@ -108,28 +109,36 @@ public class AuthService {
     
   }
 
-  // JWT 토큰에서 인증된 이메일 추출
-  private String extractAuthenticatedEmail(String authorizationHeader) {
-    String token = jwtTokenProvider.extractToken(null, authorizationHeader);
+  //JWT 토큰에서 인증된 이메일 추출
+  private String extractAuthenticatedEmail(HttpServletRequest request) {
+    // request에서 Authorization 헤더를 사용하여 토큰 추출
+
+    String token = jwtTokenProvider.extractToken(request);
+
+    // 토큰을 이용하여 인증 정보 가져오기
     Authentication authentication = jwtTokenProvider.getAuthentication(token);
+
+
+    // 인증 정보가 없거나 인증된 이메일이 없는 경우 예외 처리
     if (authentication == null || authentication.getName() == null) {
       throw new CustomException(ErrorCode.UNAUTHORIZED);
-      
-    }
-    
+      }
+
+    // 인증된 이메일 반환
     return authentication.getName();
     
   }
 
-  // 사용자 조회하는 메서드, [맴버 객체]를 반환
-  public Member getById(String authorizationHeader) {
-    // JWT 토큰에서 인증된 이메일 추출
-    String email = extractAuthenticatedEmail(authorizationHeader);
-    
+  //사용자 조회하는 메서드, [맴버 객체]를 반환
+  public Member getById(HttpServletRequest request) {
+    // JWT 토큰에서 인증된 이메일 추출, HttpServletRequest 객체 전달
+    String email = extractAuthenticatedEmail(request);
+   
     // 이메일로 사용자 조회 -> 반환
-    return memberService.findByEmail(email);
-    
+   return memberService.findByEmail(email);
+   
   }
+
   
   //이메일로 회원 정보 조회
   public Member getMemberByEmail(String email) {

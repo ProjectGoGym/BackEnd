@@ -30,35 +30,43 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
+    
+    String method = request.getMethod();
+    String uri = request.getRequestURI();
+    System.out.println("HTTP Method: " + method + ", URI: " + uri);
 
-      // 요청 헤더에서 JWT 토큰 추출
-      String token = jwtTokenProvider.extractToken(request, null);
+    // 요청 헤더에서 JWT 토큰 추출
+    String token = jwtTokenProvider.extractToken(request);
 
-      try {
-          // 토큰 유효성 검증
-          if (token != null && jwtTokenProvider.validateToken(token)) {
-              Authentication authentication = jwtTokenProvider.getAuthentication(token);
+    try {
+      // 토큰 유효성 검증
+      if (token != null && jwtTokenProvider.validateToken(token)) {
+        Authentication authentication = jwtTokenProvider.getAuthentication(token);
+        
+        if (authentication != null) {
+          UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+              authentication.getPrincipal(),
+              null,
+              authentication.getAuthorities()
+              );
 
-              if (authentication != null) {
-                  UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                      authentication.getPrincipal(),
-                      null,
-                      authentication.getAuthorities()
-                  );
-                  authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                  SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-              }
-          } else if (token == null) {
-              logger.warn("Authorization 헤더가 누락되었습니다.");
-          } else {
-              logger.warn("유효하지 않은 토큰입니다.");
+          authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+          SecurityContextHolder.getContext().setAuthentication(authenticationToken);
           }
-      } catch (Exception e) {
-          SecurityContextHolder.clearContext();
-          logger.error("JWT 인증 과정에서 예외 발생", e);
+        } else if (token == null) {
+          logger.warn("Authorization 헤더가 누락되었습니다.");
+          //SecurityContextHolder.clearContext();
+          //return;
+          } else {
+            logger.warn("유효하지 않은 토큰입니다.");
+            }
+      
+    } catch (Exception e) {
+      SecurityContextHolder.clearContext();
+      logger.error("JWT 인증 과정에서 예외 발생", e);
       }
-
-      // 인증이 실패했더라도 다음 필터로 전달
-      filterChain.doFilter(request, response);
+    // 인증이 실패했더라도 다음 필터로 전달
+    filterChain.doFilter(request, response);
+    
   }
 }

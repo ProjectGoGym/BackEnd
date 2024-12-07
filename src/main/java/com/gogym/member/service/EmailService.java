@@ -15,13 +15,16 @@ import java.util.concurrent.TimeUnit;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 @RequiredArgsConstructor
 public class EmailService {
 
-  private static final long TOKEN_EXPIRATION_TIME = 30 * 60 * 1000; // 30분
+  private static final long TOKEN_EXPIRATION_TIME = 60 * 60 * 1000; // 1시간
   private static final String EMAIL_VERIFICATION_PREFIX = "emailVerification:";
+  private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
   
   //변경해야할 부분
   //private static final String SERVER_URL = "http://3.36.198.162:8080/";
@@ -44,8 +47,20 @@ public class EmailService {
     String token = UUID.randomUUID().toString();
 
     // Redis에 토큰 저장
-    redisTemplate.opsForValue().set(EMAIL_VERIFICATION_PREFIX + token, email,
-            TOKEN_EXPIRATION_TIME, TimeUnit.MILLISECONDS);
+    boolean isSaved = redisTemplate.opsForValue().setIfAbsent(
+        EMAIL_VERIFICATION_PREFIX + token,
+        email,
+        TOKEN_EXPIRATION_TIME,
+        TimeUnit.MILLISECONDS
+    );
+    
+    // 저장 실패 시 로그 출력
+    if (!isSaved) {
+        logger.error("Redis에 이메일 인증 토큰 저장 실패: {}", token);
+        throw new RuntimeException("이메일 인증 토큰 저장에 실패했습니다");
+    }
+    
+    logger.info("Redis에 저장된 토큰: {}, 이메일: {}", token, email);
 
     // 인증 URL 생성
     String verificationUrl = SERVER_URL + "api/auth/verify-email?token=" + token;
@@ -80,25 +95,32 @@ public class EmailService {
   // 이메일 인증 확인
   @Transactional
   public void verifyEmailToken(String token) {
-      // Redis에서 토큰 검색
-      String email = redisTemplate.opsForValue().get(EMAIL_VERIFICATION_PREFIX + token);
+    String email = redisTemplate.opsForValue().get(EMAIL_VERIFICATION_PREFIX + token);
 
-      if (email == null) {
-          throw new CustomException(ErrorCode.INVALID_TOKEN);
-      }
+    if (email == null) {
+      logger.error("Redis에서 토큰 조회 실패: {}", token);
+      throw new CustomException(ErrorCode.INVALID_TOKEN);
+    }
 
-      // 회원 정보 업데이트
-      Member member = memberService.findByEmail(email);
+    logger.info("Redis에서 조회된 이메일: {}", email);
 
-      if (member == null) {
-          throw new CustomException(ErrorCode.MEMBER_NOT_FOUND);
-      }
+    Member member = memberService.findByEmail(email);
 
-      member.setVerifiedAt(LocalDateTime.now());
-      memberRepository.save(member);
+    if (member == null) {
+      logger.error("회원 정보 조회 실패. 이메일: {}", email);
+      throw new CustomException(ErrorCode.MEMBER_NOT_FOUND);
+    }
 
-      // 인증 완료 후 토큰 삭제
-      boolean isDeleted = redisTemplate.delete(EMAIL_VERIFICATION_PREFIX + token);
+    logger.info("조회된 회원 정보: {}", member);
+
+    member.setVerifiedAt(LocalDateTime.now());
+    memberRepository.save(member);
+
+    boolean isDeleted = redisTemplate.delete(EMAIL_VERIFICATION_PREFIX + token);
+    if (!isDeleted) {
+      logger.warn("Redis에서 토큰 삭제 실패: {}", token);
+      
+    }
   }
 }
 
