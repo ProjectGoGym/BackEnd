@@ -3,6 +3,7 @@ package com.gogym.member.entity;
 import com.gogym.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "members")
@@ -16,7 +17,7 @@ public class Member extends BaseEntity {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "member_id")
   private Long id;
-  
+
   @Column(name = "member_name", nullable = false)
   private String name;
 
@@ -40,21 +41,26 @@ public class Member extends BaseEntity {
   @Column(name = "profile_image_url")
   private String profileImageUrl;
 
-  @Column(name = "interest_area_1")
-  private String interestArea1;
+  @Column(name = "region_id_1", nullable = true)
+  private Long regionId1;
 
-  @Column(name = "interest_area_2")
-  private String interestArea2;
+  @Column(name = "region_id_2", nullable = true)
+  private Long regionId2;
 
   @Setter
   @Column(name = "verified_at")
-  private boolean verifiedAt = false;
-  
-  //이메일 인증 상태 업데이트 메ㅅ드
-  public void verifyEmail() {
-    this.verifiedAt = true;
-    
+  private LocalDateTime verifiedAt; // 이메일 인증 시간을 저장
+
+  // 이메일 인증 여부 확인 메서드
+  public boolean isVerified() {
+    return this.verifiedAt != null;
+  }
+
+  // 프로필 업데이트 메서드
+  public void updateProfile(String name, String nickname, String phone, String profileImageUrl) {
+    this.name = name;
+    this.nickname = nickname;
+    this.phone = phone;
+    this.profileImageUrl = profileImageUrl;
   }
 }
-
-
