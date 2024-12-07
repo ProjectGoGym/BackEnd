@@ -13,7 +13,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
-
+ 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -31,9 +31,10 @@ public class MemberService {
   public Member findById(Long id) {
     return memberRepository.findById(id)
         .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
-  }
-
+  } 
+  
   /*
+
   // 내 정보 조회
   public MemberProfileResponse getMyProfileById(Long memberId) {
     Member member = findById(memberId);
@@ -52,7 +53,7 @@ public class MemberService {
     Member member = findById(memberId);
     member.updateProfile(request.getName(), request.getNickname(), request.getPhone(), request.getProfileImageUrl());
   }
-
+*/
   // 회원 탈퇴
   @Transactional
   public void deleteMyAccountById(Long memberId) {
@@ -85,7 +86,6 @@ public class MemberService {
     // TODO 최근 본 게시글 로직 유노님이랑 구현해야하는 부분
     return List.of("View 1", "View 2", "View 3", "View 4", "View 5");
   }
-  */
   
 }
 

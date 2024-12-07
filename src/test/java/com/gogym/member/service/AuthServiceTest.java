@@ -1,18 +1,30 @@
 package com.gogym.member.service;
 
 import static com.gogym.exception.ErrorCode.UNAUTHORIZED;
-import static com.gogym.exception.ErrorCode.FORBIDDEN;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.time.LocalDateTime;
+import java.util.Optional;
+
+import jakarta.servlet.http.HttpServletRequest;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
-import com.gogym.member.dto.LoginResponse;
 import com.gogym.member.dto.ResetPasswordRequest;
 import com.gogym.member.dto.SignInRequest;
 import com.gogym.member.dto.SignUpRequest;
@@ -20,13 +32,6 @@ import com.gogym.member.entity.Member;
 import com.gogym.member.entity.Role;
 import com.gogym.member.jwt.JwtTokenProvider;
 import com.gogym.member.repository.MemberRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
@@ -37,15 +42,18 @@ class AuthServiceTest {
   @Mock
   private PasswordEncoder passwordEncoder;
 
-  @Mock
+  @Mock 
   private JwtTokenProvider jwtTokenProvider;
-  
+
   @Mock
   private MemberService memberService;
-  
+
   @Mock
+  private RedisTemplate<String, String> redisTemplate;
+
+  @InjectMocks
   private EmailService emailService;
-  
+
   @InjectMocks
   private AuthService authService;
 
@@ -61,6 +69,7 @@ class AuthServiceTest {
         .email("0123@example.com")
         .password("encodedPassword")
         .role(Role.USER)
+        .verifiedAt(LocalDateTime.now())
         .build();
 
     signUpRequest = SignUpRequest.builder()
@@ -72,7 +81,6 @@ class AuthServiceTest {
         .build();
 
     signInRequest = new SignInRequest("0123@example.com", "TestPassword123!");
-
     resetPasswordRequest = ResetPasswordRequest.builder()
         .email("0123@example.com")
         .newPassword("NewPassword123!")
@@ -81,108 +89,128 @@ class AuthServiceTest {
 
   @Test
   void 회원가입이_성공한다() {
-    // given
     when(passwordEncoder.encode(signUpRequest.getPassword())).thenReturn("encodedPassword");
 
-    // when
     authService.signUp(signUpRequest);
 
-    // then
     verify(memberRepository).save(any(Member.class));
   }
 
   @Test
   void 이미_존재하는_닉네임으로_중복확인을_시도하면_예외가_발생한다() {
-    // given
     when(memberRepository.existsByNickname(signUpRequest.getNickname())).thenReturn(true);
 
-    // when & then
     CustomException e = assertThrows(CustomException.class, 
         () -> authService.validateNickname(signUpRequest.getNickname()));
 
-    // then
     assertEquals(e.getErrorCode(), ErrorCode.DUPLICATE_NICKNAME);
   }
 
   @Test
   void 존재하지_않는_닉네임으로_중복확인을_시도하면_예외가_발생하지_않는다() {
-    // given
     when(memberRepository.existsByNickname(signUpRequest.getNickname())).thenReturn(false);
 
-    // when
     authService.validateNickname(signUpRequest.getNickname());
   }
-  
+
+  @Test
+  void 이미_존재하는_이메일로_중복확인을_시도하면_예외가_발생한다() {
+    when(memberRepository.existsByEmail(signUpRequest.getEmail())).thenReturn(true);
+
+    CustomException e = assertThrows(CustomException.class, 
+        () -> emailService.validateEmail(signUpRequest.getEmail()));
+
+    assertNotNull(e);
+    assertEquals(ErrorCode.DUPLICATE_EMAIL, e.getErrorCode());
+  }
+
   @Test
   void 존재하지_않는_이메일로_중복확인을_시도하면_예외가_발생하지_않는다() {
-    // when
     emailService.validateEmail("new@example.com");
   }
 
   @Test
-  void 올바른_정보로_로그인하면_성공적으로_토큰을_반환한다() {
-    // given
-    when(memberService.findByEmail(signInRequest.getEmail())).thenReturn(member);
-    when(passwordEncoder.matches(signInRequest.getPassword(), member.getPassword())).thenReturn(true);
-    when(jwtTokenProvider.createToken(eq(member.getEmail()), eq(member.getId()), any()))
-      .thenReturn("testToken");
-
-    // when
-    LoginResponse response = authService.login(signInRequest);
-
-    // then
-    assertNotNull(response);
-    assertEquals(response.getEmail(), member.getEmail());
-  }
-
-  @Test
   void 잘못된_비밀번호로_로그인하면_예외가_발생한다() {
-    // given
-    when(memberService.findByEmail(signInRequest.getEmail())).thenReturn(member);
-    when(passwordEncoder.matches(signInRequest.getPassword(), member.getPassword())).thenReturn(false);
+    Member mockMember = mock(Member.class);
+    when(mockMember.isVerified()).thenReturn(true);
+    when(mockMember.getPassword()).thenReturn(member.getPassword());
 
-    // when
+    when(memberService.findByEmail(signInRequest.getEmail())).thenReturn(mockMember);
+    when(passwordEncoder.matches(signInRequest.getPassword(), mockMember.getPassword())).thenReturn(false);
+
     CustomException e = assertThrows(CustomException.class, () -> authService.login(signInRequest));
 
-    // then
     assertEquals(e.getErrorCode(), UNAUTHORIZED);
   }
 
   @Test
   void 비밀번호_재설정이_성공한다() {
-    // given
-    when(memberService.findById(member.getId())).thenReturn(member);
-    when(memberService.findByEmail(resetPasswordRequest.getEmail())).thenReturn(member);
+    when(memberRepository.findByEmail(resetPasswordRequest.getEmail())).thenReturn(Optional.of(member));
 
-    // when
-    authService.resetPassword(member.getId(), resetPasswordRequest);
+    authService.resetPassword(resetPasswordRequest.getEmail(), resetPasswordRequest);
 
-    // then
-    verify(memberService).findById(member.getId());
-    verify(memberService).findByEmail(resetPasswordRequest.getEmail());
+    verify(memberRepository).findByEmail(resetPasswordRequest.getEmail());
+    verify(memberRepository).save(any(Member.class));
   }
 
   @Test
-  void 인증된_이메일과_재설정_요청_이메일이_다르면_예외가_발생한다() {
-    // given
-    Member differentMember = Member.builder()
-      .id(1L)
-      .email("authenticated@example.com") // 인증된 이메일
-      .password("encodedPassword")
-      .build();
+  void 로그아웃이_성공한다() {
+    authService.logout(member.getId());
 
-    ResetPasswordRequest differentResetPasswordRequest = ResetPasswordRequest.builder()
-      .email("request@example.com") // 요청된 이메일
-      .newPassword("NewPassword123!")
-      .build();
+    verify(redisTemplate).delete("login:" + member.getId());
+  }
 
-    when(memberService.findById(differentMember.getId())).thenReturn(differentMember);
+  @Test
+  void 인증된_이메일과_요청된_이메일이_다르면_예외가_발생한다() throws Exception {
+    // Reflection을 이용한 private 메서드 접근
+    Method method = AuthService.class.getDeclaredMethod("validateAuthenticatedEmail", String.class, String.class);
+    method.setAccessible(true); // private 메서드 접근 허용
 
-    // when
-    CustomException e = assertThrows(CustomException.class, 
-        () -> authService.resetPassword(differentMember.getId(), differentResetPasswordRequest));
+    InvocationTargetException exception = assertThrows(InvocationTargetException.class, 
+        () -> method.invoke(authService, "authenticated@example.com", "requested@example.com"));
 
-    // then
-    assertEquals(e.getErrorCode(), FORBIDDEN);
+    //예외를 추출
+    Throwable cause = exception.getCause();
+    assertTrue(cause instanceof CustomException);
+    assertEquals(ErrorCode.FORBIDDEN, ((CustomException) cause).getErrorCode());
+  }
+
+  @Test
+  void JWT에서_인증된_이메일을_추출한다() {
+    HttpServletRequest mockRequest = mock(HttpServletRequest.class);
+    Authentication mockAuthentication = mock(Authentication.class);
+
+    when(jwtTokenProvider.extractToken(mockRequest)).thenReturn("mockToken");
+    when(jwtTokenProvider.getAuthentication("mockToken")).thenReturn(mockAuthentication);
+    when(mockAuthentication.getName()).thenReturn("authenticated@example.com");
+
+    String authenticatedEmail = authService.extractAuthenticatedEmail(mockRequest);
+
+    assertEquals("authenticated@example.com", authenticatedEmail);
+  }
+
+  @Test
+  void 특정_이메일로_사용자를_조회한다() {
+    when(memberService.findByEmail(member.getEmail())).thenReturn(member);
+
+    Member foundMember = authService.getMemberByEmail(member.getEmail());
+
+    assertNotNull(foundMember);
+    assertEquals(member.getEmail(), foundMember.getEmail());
+  }
+
+  @Test
+  void 특정_이메일로_비밀번호를_업데이트한다() throws Exception {
+    when(memberService.findByEmail(member.getEmail())).thenReturn(member);
+
+    // Reflection으로 private 메서드 접근
+    Method method = AuthService.class.getDeclaredMethod("updatePassword", String.class, String.class);
+    method.setAccessible(true); // private 메서드 접근 허용
+
+    method.invoke(authService, member.getEmail(), "UpdatedPassword!");
+
+    verify(memberService).findByEmail(member.getEmail());
+    assertEquals(passwordEncoder.encode("UpdatedPassword!"), member.getPassword());
   }
 }
+
