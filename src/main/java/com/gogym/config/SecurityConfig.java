@@ -1,4 +1,4 @@
-package com.gogym.member.jwt;
+package com.gogym.config;
 
 import java.util.List;
 import org.springframework.context.annotation.Bean;
@@ -10,72 +10,61 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import com.gogym.member.jwt.JwtAuthenticationFilter;
+import com.gogym.member.jwt.JwtTokenProvider;
 
 @Configuration
 public class SecurityConfig {
 
   private final JwtTokenProvider jwtTokenProvider;
 
-  //SecurityConfig 생성자
+  // SecurityConfig 생성자
   public SecurityConfig(JwtTokenProvider jwtTokenProvider) {
     this.jwtTokenProvider = jwtTokenProvider;
   }
 
-  //비밀번호 암호화를 위한 PasswordEncoder Bean 등록
+  // 비밀번호 암호화를 위한 PasswordEncoder Bean 등록
   @Bean
   public PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
   }
 
-  //AuthenticationManager Bean 등록
+  // AuthenticationManager Bean 등록
   @Bean
-  public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+  public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration)
+      throws Exception {
     return configuration.getAuthenticationManager();
   }
 
-  //SecurityFilterChain Bean 등록
+  // SecurityFilterChain Bean 등록
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    http
-    .csrf().disable()
-    .authorizeHttpRequests(auth -> auth
+    http.csrf().disable().authorizeHttpRequests(auth -> auth
         // 인증 없이 접근을 허용할 엔드포인트
-        .requestMatchers(
-            "/api/auth/sign-up",
-            "/api/auth/sign-in",
-            "/api/auth/check-email",
-            "/api/auth/check-nickname",
-            "/api/auth/verify-email",
-            "/api/auth/reset-password",
-            "/api/auth/send-verification-email",
-            "/api/regions"
-            ).permitAll()
+        .requestMatchers("/api/auth/sign-up", "/api/auth/sign-in", "/api/auth/check-email",
+            "/api/auth/check-nickname", "/api/auth/verify-email", "/api/auth/reset-password",
+            "/api/auth/send-verification-email", "/api/regions")
+        .permitAll()
         // 그 외의 모든 요청은 인증 필요
-        .anyRequest().authenticated()
-        )
-    // JWT 인증 필터를 AuthenticationFilter 전에 추가
-    .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
-    
-      return http.build();
+        .anyRequest().authenticated())
+        // JWT 인증 필터를 AuthenticationFilter 전에 추가
+        .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+
+    return http.build();
   }
 
-  //JwtAuthenticationFilter Bean
+  // JwtAuthenticationFilter Bean
   @Bean
   public JwtAuthenticationFilter jwtAuthenticationFilter() {
-    return new JwtAuthenticationFilter(jwtTokenProvider, exemptUrls()); 
+    return new JwtAuthenticationFilter(jwtTokenProvider, exemptUrls());
   }
 
-  //인증 제외 경로
+  // 인증 제외 경로
   private List<String> exemptUrls() {
-    return List.of(
-        "/api/auth/sign-up",
-        "/api/auth/sign-in",
-        "/api/auth/check-email",
-        "/api/auth/check-nickname",
-        "/api/auth/verify-email",
-        "/api/auth/reset-password",
+    return List.of("/api/auth/sign-up", "/api/auth/sign-in", "/api/auth/check-email",
+        "/api/auth/check-nickname", "/api/auth/verify-email", "/api/auth/reset-password",
         "/api/auth/send-verification-email"
-        
-        );
-    }
+
+    );
+  }
 }

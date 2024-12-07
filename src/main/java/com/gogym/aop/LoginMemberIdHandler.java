@@ -16,7 +16,7 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 import jakarta.servlet.http.HttpServletRequest;
 
 // @LoginMemberId 어노테이션을 처리하는 코드
- 
+
 @Component
 @RequiredArgsConstructor
 public class LoginMemberIdHandler implements HandlerMethodArgumentResolver {
@@ -30,19 +30,22 @@ public class LoginMemberIdHandler implements HandlerMethodArgumentResolver {
 
   @Override
   public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
-                                NativeWebRequest webRequest, WebDataBinderFactory binderFactory) {
+      NativeWebRequest webRequest, WebDataBinderFactory binderFactory) {
     HttpServletRequest request = (HttpServletRequest) webRequest.getNativeRequest();
-    String token = jwtTokenProvider.extractToken(request, null);
+    String token = jwtTokenProvider.extractToken(request);
 
     if (!jwtTokenProvider.validateToken(token)) {
       throw new CustomException(ErrorCode.UNAUTHORIZED);
+
     }
 
-    Authentication authentication = jwtTokenProvider.getAuthentication(token);
-    if (authentication == null || authentication.getName() == null) {
+    // JWT에서 memberId 추출
+    Long memberId = jwtTokenProvider.extractMemberId(token);
+    if (memberId == null) {
       throw new CustomException(ErrorCode.UNAUTHORIZED);
+
     }
 
-    return Long.valueOf(authentication.getName());
+    return memberId;
   }
 }

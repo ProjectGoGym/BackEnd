@@ -23,7 +23,7 @@ public class RedisUtil {
   public void delete(String key) {
     redisTemplate.delete(key);
   }
-  
+
   public void lpush(String key, String value) {
     redisTemplate.opsForList().leftPush(key, value);
   }
@@ -31,13 +31,12 @@ public class RedisUtil {
   public List<String> lrange(String key, long start, long end) {
     return redisTemplate.opsForList().range(key, start, end);
   }
-  
+
   public boolean addToSet(String key, String value, long ttl) {
     Long result = redisTemplate.opsForSet().add(key, value);
     if (result == 0) {
       return false;
     }
-
     setTTL(key, ttl);
     return true;
   }
@@ -47,5 +46,5 @@ public class RedisUtil {
       redisTemplate.expire(key, Duration.ofSeconds(ttl));
     }
   }
-  
+
 }
