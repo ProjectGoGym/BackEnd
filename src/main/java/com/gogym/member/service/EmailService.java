@@ -19,7 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Service
-@RequiredArgsConstructor
+@RequiredArgsConstructor 
 public class EmailService {
 
   private static final long TOKEN_EXPIRATION_TIME = 60 * 60 * 1000; // 1시간

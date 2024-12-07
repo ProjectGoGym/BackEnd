@@ -31,7 +31,7 @@ public class MemberService {
   public Member findById(Long id) {
     return memberRepository.findById(id)
         .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
-  }
+  } 
   
   /*
 

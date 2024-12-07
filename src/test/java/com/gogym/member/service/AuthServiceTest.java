@@ -42,7 +42,7 @@ class AuthServiceTest {
   @Mock
   private PasswordEncoder passwordEncoder;
 
-  @Mock
+  @Mock 
   private JwtTokenProvider jwtTokenProvider;
 
   @Mock
