@@ -1,6 +1,7 @@
 package com.gogym.exception;
 
 import org.hibernate.exception.ConstraintViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -30,7 +31,7 @@ public class GlobalExceptionHandler {
 
     log.error("Unexpected Exception: {}", e.getMessage(), e);
 
-    return ResponseEntity.ok(response);
+    return ResponseEntity.status(ErrorCode.INTERNAL_SERVER_ERROR.getHttpStatus()).body(response);
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -43,7 +44,7 @@ public class GlobalExceptionHandler {
 
     log.error("MethodArgumentNotValidException: {}, Request URI: {}", errorMessage, requestURI);
 
-    return ResponseEntity.ok(response);
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
   }
 
   @ExceptionHandler(ConstraintViolationException.class)
@@ -56,9 +57,9 @@ public class GlobalExceptionHandler {
 
     log.error("ConstraintViolationException: {}, Request URI: {}", errorMessage, requestURI);
 
-    return ResponseEntity.ok(response);
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
   }
-  
+
   @ExceptionHandler(WebClientResponseException.class)
   public ResponseEntity<ErrorResponse> handleWebClientResponseException(
       HttpServletRequest request, WebClientResponseException e) {

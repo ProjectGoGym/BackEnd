@@ -14,9 +14,9 @@ public record PostRequestDto(
     String title,
     @NotBlank(message = "내용은 필수 입력입니다.")
     String content,
-    @NotBlank(message = "게시글 상태를 설정해 주세요.")
+    @NotNull(message = "게시글 상태를 설정해 주세요.")
     PostType postType,
-    @NotBlank(message = "회원권 상태를 설정해 주세요.")
+    @NotNull(message = "회원권 상태를 설정해 주세요.")
     MembershipType membershipType,
     @Future(message = "현재 날짜 이후만 설정이 가능합니다.")
     LocalDate expirationDate,
