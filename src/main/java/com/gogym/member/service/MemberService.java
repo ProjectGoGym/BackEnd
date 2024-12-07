@@ -2,8 +2,8 @@ package com.gogym.member.service;
 
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
-import com.gogym.member.dto.MemberProfileResponse;
-import com.gogym.member.dto.UpdateMemberRequest;
+//import com.gogym.member.dto.MemberProfileResponse;
+//import com.gogym.member.dto.UpdateMemberRequest;
 import com.gogym.member.entity.Member;
 import com.gogym.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +32,8 @@ public class MemberService {
     return memberRepository.findById(id)
         .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
   }
+  
+  /*
 
   // 내 정보 조회
   public MemberProfileResponse getMyProfileById(Long memberId) {
@@ -51,7 +53,7 @@ public class MemberService {
     Member member = findById(memberId);
     member.updateProfile(request.getName(), request.getNickname(), request.getPhone(), request.getProfileImageUrl());
   }
-
+*/
   // 회원 탈퇴
   @Transactional
   public void deleteMyAccountById(Long memberId) {
