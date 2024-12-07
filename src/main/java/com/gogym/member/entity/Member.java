@@ -4,7 +4,7 @@ import com.gogym.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
- 
+
 @Entity
 @Table(name = "members")
 @Getter
@@ -17,7 +17,7 @@ public class Member extends BaseEntity {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "member_id")
   private Long id;
-  
+
   @Column(name = "member_name", nullable = false)
   private String name;
 
@@ -53,10 +53,10 @@ public class Member extends BaseEntity {
 
   // 이메일 인증 여부 확인 메서드
   public boolean isVerified() {
-    return this.verifiedAt != null; // 인증 시간이 null이 아니면 인증됨
+    return this.verifiedAt != null;
   }
-  
-  //프로필 업데이트 메서드
+
+  // 프로필 업데이트 메서드
   public void updateProfile(String name, String nickname, String phone, String profileImageUrl) {
     this.name = name;
     this.nickname = nickname;

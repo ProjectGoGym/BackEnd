@@ -9,7 +9,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import com.gogym.member.entity.Member;
- 
+
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -41,17 +41,10 @@ public class SignUpRequest {
   private Role role;
 
   public Member toEntity(String encodedPassword) {
-    return Member.builder()
-      .name(this.name)
-      .email(this.email)
-      .nickname(this.nickname)
-      .phone(this.phone)
-      .password(encodedPassword)
-      .role(Role.USER)
-      .profileImageUrl(this.profileImageUrl)
-      .regionId1(this.regionId1)
-      .regionId2(this.regionId2)
-      .build();
+    return Member.builder().name(this.name).email(this.email).nickname(this.nickname)
+        .phone(this.phone).password(encodedPassword).role(Role.USER)
+        .profileImageUrl(this.profileImageUrl).regionId1(this.regionId1).regionId2(this.regionId2)
+        .build();
   }
 }
 

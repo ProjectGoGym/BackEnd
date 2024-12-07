@@ -32,6 +32,9 @@ import com.gogym.member.entity.Member;
 import com.gogym.member.entity.Role;
 import com.gogym.member.jwt.JwtTokenProvider;
 import com.gogym.member.repository.MemberRepository;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import redis.embedded.RedisServer;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
@@ -42,7 +45,7 @@ class AuthServiceTest {
   @Mock
   private PasswordEncoder passwordEncoder;
 
-  @Mock 
+  @Mock
   private JwtTokenProvider jwtTokenProvider;
 
   @Mock
@@ -61,30 +64,32 @@ class AuthServiceTest {
   private SignUpRequest signUpRequest;
   private SignInRequest signInRequest;
   private ResetPasswordRequest resetPasswordRequest;
+  private static RedisServer redisServer;
 
   @BeforeEach
   void setUp() {
-    member = Member.builder()
-        .id(1L)
-        .email("0123@example.com")
-        .password("encodedPassword")
-        .role(Role.USER)
-        .verifiedAt(LocalDateTime.now())
-        .build();
+    member = Member.builder().id(1L).email("0123@example.com").password("encodedPassword")
+        .role(Role.USER).verifiedAt(LocalDateTime.now()).build();
 
-    signUpRequest = SignUpRequest.builder()
-        .email("0123@example.com")
-        .password("TestPassword123!")
-        .name("aaa")
-        .nickname("tomato")
-        .phone("010-1234-5678")
-        .build();
+    signUpRequest = SignUpRequest.builder().email("0123@example.com").password("TestPassword123!")
+        .name("aaa").nickname("tomato").phone("010-1234-5678").build();
 
     signInRequest = new SignInRequest("0123@example.com", "TestPassword123!");
-    resetPasswordRequest = ResetPasswordRequest.builder()
-        .email("0123@example.com")
-        .newPassword("NewPassword123!")
-        .build();
+    resetPasswordRequest = ResetPasswordRequest.builder().email("0123@example.com")
+        .newPassword("NewPassword123!").build();
+  }
+
+  @BeforeAll
+  static void startRedis() {
+    redisServer = new RedisServer(6380); // 로컬
+    redisServer.start();
+  }
+
+  @AfterAll
+  static void stopRedis() {
+    if (redisServer != null) {
+      redisServer.stop(); // 중지
+    }
   }
 
   @Test
@@ -100,7 +105,7 @@ class AuthServiceTest {
   void 이미_존재하는_닉네임으로_중복확인을_시도하면_예외가_발생한다() {
     when(memberRepository.existsByNickname(signUpRequest.getNickname())).thenReturn(true);
 
-    CustomException e = assertThrows(CustomException.class, 
+    CustomException e = assertThrows(CustomException.class,
         () -> authService.validateNickname(signUpRequest.getNickname()));
 
     assertEquals(e.getErrorCode(), ErrorCode.DUPLICATE_NICKNAME);
@@ -117,7 +122,7 @@ class AuthServiceTest {
   void 이미_존재하는_이메일로_중복확인을_시도하면_예외가_발생한다() {
     when(memberRepository.existsByEmail(signUpRequest.getEmail())).thenReturn(true);
 
-    CustomException e = assertThrows(CustomException.class, 
+    CustomException e = assertThrows(CustomException.class,
         () -> emailService.validateEmail(signUpRequest.getEmail()));
 
     assertNotNull(e);
@@ -136,7 +141,8 @@ class AuthServiceTest {
     when(mockMember.getPassword()).thenReturn(member.getPassword());
 
     when(memberService.findByEmail(signInRequest.getEmail())).thenReturn(mockMember);
-    when(passwordEncoder.matches(signInRequest.getPassword(), mockMember.getPassword())).thenReturn(false);
+    when(passwordEncoder.matches(signInRequest.getPassword(), mockMember.getPassword()))
+        .thenReturn(false);
 
     CustomException e = assertThrows(CustomException.class, () -> authService.login(signInRequest));
 
@@ -145,7 +151,8 @@ class AuthServiceTest {
 
   @Test
   void 비밀번호_재설정이_성공한다() {
-    when(memberRepository.findByEmail(resetPasswordRequest.getEmail())).thenReturn(Optional.of(member));
+    when(memberRepository.findByEmail(resetPasswordRequest.getEmail()))
+        .thenReturn(Optional.of(member));
 
     authService.resetPassword(resetPasswordRequest.getEmail(), resetPasswordRequest);
 
@@ -163,13 +170,14 @@ class AuthServiceTest {
   @Test
   void 인증된_이메일과_요청된_이메일이_다르면_예외가_발생한다() throws Exception {
     // Reflection을 이용한 private 메서드 접근
-    Method method = AuthService.class.getDeclaredMethod("validateAuthenticatedEmail", String.class, String.class);
+    Method method = AuthService.class.getDeclaredMethod("validateAuthenticatedEmail", String.class,
+        String.class);
     method.setAccessible(true); // private 메서드 접근 허용
 
-    InvocationTargetException exception = assertThrows(InvocationTargetException.class, 
+    InvocationTargetException exception = assertThrows(InvocationTargetException.class,
         () -> method.invoke(authService, "authenticated@example.com", "requested@example.com"));
 
-    //예외를 추출
+    // 예외를 추출
     Throwable cause = exception.getCause();
     assertTrue(cause instanceof CustomException);
     assertEquals(ErrorCode.FORBIDDEN, ((CustomException) cause).getErrorCode());
@@ -204,7 +212,8 @@ class AuthServiceTest {
     when(memberService.findByEmail(member.getEmail())).thenReturn(member);
 
     // Reflection으로 private 메서드 접근
-    Method method = AuthService.class.getDeclaredMethod("updatePassword", String.class, String.class);
+    Method method =
+        AuthService.class.getDeclaredMethod("updatePassword", String.class, String.class);
     method.setAccessible(true); // private 메서드 접근 허용
 
     method.invoke(authService, member.getEmail(), "UpdatedPassword!");
