@@ -1,4 +1,4 @@
-package com.gogym.member.jwt;
+package com.gogym.config;
 
 import java.util.List;
 import org.springframework.context.annotation.Bean;
@@ -10,6 +10,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import com.gogym.member.jwt.JwtAuthenticationFilter;
+import com.gogym.member.jwt.JwtTokenProvider;
 
 @Configuration
 public class SecurityConfig {
@@ -47,7 +49,8 @@ public class SecurityConfig {
             "/api/auth/check-nickname",
             "/api/auth/verify-email",
             "/api/auth/reset-password",
-            "/api/auth/send-verification-email"
+            "/api/auth/send-verification-email",
+            "/api/regions"
             ).permitAll()
         // 그 외의 모든 요청은 인증 필요
         .anyRequest().authenticated()
@@ -73,8 +76,8 @@ public class SecurityConfig {
         "/api/auth/check-nickname",
         "/api/auth/verify-email",
         "/api/auth/reset-password",
-        "/api/auth/send-verification-email"
-        
+        "/api/auth/send-verification-email"  
         );
     }
 }
+

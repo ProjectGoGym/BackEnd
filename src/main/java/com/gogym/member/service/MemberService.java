@@ -84,7 +84,7 @@ public class MemberService {
     // TODO 최근 본 게시글 로직 유노님이랑 구현해야하는 부분
     return List.of("View 1", "View 2", "View 3", "View 4", "View 5");
   }
-
+  
 }
 
 
