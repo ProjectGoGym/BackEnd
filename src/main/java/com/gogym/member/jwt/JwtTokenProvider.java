@@ -58,8 +58,7 @@ public class JwtTokenProvider {
   //id 추출
   public Long extractMemberId(String token) {
     Claims claims = getClaims(token);
-    return Long.valueOf(claims.getSubject()); // "id"를 Long 타입으로 추출
-    
+    return Long.valueOf(claims.get("id").toString());
   }
   
   // JWT에서 인증 정보 추출

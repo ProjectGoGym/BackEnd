@@ -27,7 +27,7 @@ public class LoginMemberIdHandler implements HandlerMethodArgumentResolver {
   public boolean supportsParameter(MethodParameter parameter) {
     return parameter.hasParameterAnnotation(LoginMemberId.class);
   }
-
+ 
   @Override
   public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
                                 NativeWebRequest webRequest, WebDataBinderFactory binderFactory) {
