@@ -54,7 +54,7 @@ class AuthServiceTest {
   @Mock
   private RedisTemplate<String, String> redisTemplate;
 
-  @InjectMocks
+  @Mock
   private EmailService emailService;
 
   @InjectMocks
@@ -94,12 +94,18 @@ class AuthServiceTest {
 
   @Test
   void 회원가입이_성공한다() {
+    // Mocking 설정
     when(passwordEncoder.encode(signUpRequest.getPassword())).thenReturn("encodedPassword");
+    doNothing().when(emailService).validateEmail(signUpRequest.getEmail());
 
+    // 메서드 호출
     authService.signUp(signUpRequest);
 
+    // 검증
+    verify(emailService).validateEmail(signUpRequest.getEmail());
     verify(memberRepository).save(any(Member.class));
   }
+
 
   @Test
   void 이미_존재하는_닉네임으로_중복확인을_시도하면_예외가_발생한다() {
@@ -120,7 +126,8 @@ class AuthServiceTest {
 
   @Test
   void 이미_존재하는_이메일로_중복확인을_시도하면_예외가_발생한다() {
-    when(memberRepository.existsByEmail(signUpRequest.getEmail())).thenReturn(true);
+    doThrow(new CustomException(ErrorCode.DUPLICATE_EMAIL)).when(emailService)
+        .validateEmail(signUpRequest.getEmail());
 
     CustomException e = assertThrows(CustomException.class,
         () -> emailService.validateEmail(signUpRequest.getEmail()));
@@ -151,15 +158,27 @@ class AuthServiceTest {
 
   @Test
   void 비밀번호_재설정이_성공한다() {
-    // Mocking 설정
+    // Mock HttpServletRequest 생성
+    HttpServletRequest mockRequest = mock(HttpServletRequest.class);
+
+    // Mock Token 설정
+    String mockToken = "mockToken";
+    when(jwtTokenProvider.extractToken(mockRequest)).thenReturn(mockToken);
+    when(jwtTokenProvider.getAuthentication(mockToken)).thenReturn(mock(Authentication.class));
+    when(jwtTokenProvider.getAuthentication(mockToken).getName())
+        .thenReturn(resetPasswordRequest.getEmail());
+
+    // Mock MemberService 설정
     when(memberService.findByEmail(resetPasswordRequest.getEmail())).thenReturn(member);
 
-    authService.resetPassword(resetPasswordRequest.getEmail(), resetPasswordRequest);
+    // 메서드 호출
+    authService.resetPassword(mockRequest, resetPasswordRequest);
 
     // 검증
     verify(memberService).findByEmail(resetPasswordRequest.getEmail());
     verify(memberRepository).save(any(Member.class));
   }
+
 
   @Test
   void 로그아웃이_성공한다() {

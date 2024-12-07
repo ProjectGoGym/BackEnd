@@ -29,7 +29,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
       FilterChain filterChain) throws ServletException, IOException {
-    
+
+    String method = request.getMethod();
+    String uri = request.getRequestURI();
+    logger.info("Request received: [Method: " + method + ", URI: " + uri + "]");
+
     // 요청 헤더에서 JWT 토큰 추출
     String token = jwtTokenProvider.extractToken(request);
 
@@ -48,16 +52,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
           SecurityContextHolder.getContext().setAuthentication(authenticationToken);
         }
       } else if (token == null) {
-        logger.warn("Authorization 헤더가 누락되었습니다.");
+        logger.warn("Authorization 헤더가 누락되었습니다. [Method: " + method + ", URI: " + uri + "]");
         // SecurityContextHolder.clearContext();
         // return;
       } else {
-        logger.warn("유효하지 않은 토큰입니다.");
+        logger.warn("유효하지 않은 토큰입니다. [Method: " + method + ", URI: " + uri + "]");
       }
 
     } catch (Exception e) {
-      //SecurityContextHolder.clearContext();
-      logger.error("JWT 인증 과정에서 예외 발생", e);
+      // SecurityContextHolder.clearContext();
+      logger.error("JWT 인증 과정에서 예외 발생 [Method: " + method + ", URI: " + uri + "]", e);
     }
     // 인증이 실패했더라도 다음 필터로 전달
     filterChain.doFilter(request, response);

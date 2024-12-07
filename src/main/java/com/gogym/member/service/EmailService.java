@@ -52,6 +52,7 @@ public class EmailService {
 
     // 인증 URL 생성
     String verificationUrl = SERVER_URL + "api/auth/verify-email?token=" + token;
+    logger.info("인증 URL: {}", verificationUrl);
 
     // 이메일 발송 (HTML 사용해서)
     try {

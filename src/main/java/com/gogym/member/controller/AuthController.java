@@ -63,8 +63,9 @@ public class AuthController {
 
   // 비밀번호 재설정
   @PutMapping("/reset-password")
-  public ResponseEntity<Void> resetPassword(@RequestBody @Valid ResetPasswordRequest request) {
-    authService.resetPassword(request.getEmail(), request);
+  public ResponseEntity<Void> resetPassword(HttpServletRequest request,
+      @RequestBody @Valid ResetPasswordRequest resetRequest) {
+    authService.resetPassword(request, resetRequest);
     return ResponseEntity.ok().build();
   }
 

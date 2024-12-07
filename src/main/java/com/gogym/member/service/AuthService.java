@@ -2,7 +2,6 @@ package com.gogym.member.service;
 
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
-import com.gogym.member.dto.LoginResponse;
 import com.gogym.member.dto.ResetPasswordRequest;
 import com.gogym.member.dto.SignInRequest;
 import com.gogym.member.dto.SignUpRequest;
@@ -12,7 +11,6 @@ import com.gogym.member.repository.MemberRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -29,13 +27,17 @@ public class AuthService {
   private final MemberRepository memberRepository;
   private final PasswordEncoder passwordEncoder;
   private final JwtTokenProvider jwtTokenProvider;
-  private final RedisTemplate<String, String> redisTemplate;
+  private final EmailService emailService;
 
   // 회원가입 처리
   @Transactional
   public void signUp(SignUpRequest request) {
+    // 이메일 중복 확인
+    emailService.validateEmail(request.getEmail());
+
     // Dto에서 Entity 변환
     Member member = request.toEntity(passwordEncoder.encode(request.getPassword()));
+
     // 회원 데이터 저장
     memberRepository.save(member);
   }
@@ -67,13 +69,30 @@ public class AuthService {
 
   // 비밀번호 재설정 처리
   @Transactional
-  public void resetPassword(String email, ResetPasswordRequest request) {
-    Member member = memberService.findByEmail(email);
+  public void resetPassword(HttpServletRequest request, ResetPasswordRequest resetRequest) {
+    // JWT 토큰 추출
+    String token = jwtTokenProvider.extractToken(request);
+    if (token == null || token.isEmpty()) {
+      throw new CustomException(ErrorCode.UNAUTHORIZED);
+    }
 
-    // 새 비밀번호 암호화 후 저장
-    member.setPassword(passwordEncoder.encode(request.getNewPassword()));
+    // 인증 정보 추출
+    Authentication authentication = jwtTokenProvider.getAuthentication(token);
+    if (authentication == null || authentication.getName() == null) {
+      throw new CustomException(ErrorCode.UNAUTHORIZED);
+    }
+
+    String authenticatedEmail = authentication.getName();
+
+    // 요청 이메일과 인증된 이메일 비교
+    if (!authenticatedEmail.equals(resetRequest.getEmail())) {
+      throw new CustomException(ErrorCode.FORBIDDEN);
+    }
+
+    // 이메일로 사용자 조회 및 비밀번호 재설정
+    Member member = memberService.findByEmail(resetRequest.getEmail());
+    member.setPassword(passwordEncoder.encode(resetRequest.getNewPassword()));
     memberRepository.save(member);
-
   }
 
   // 인증된 이메일과 요청된 이메일 비교
