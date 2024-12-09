@@ -195,15 +195,16 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     // Redis에서 채팅 메시지 조회
     List<String> redisMessages = this.chatRedisService.getMessages(chatRoomId);
     
-    // Redis 메시지를 DB에 저장
+    // Redis에 메시지가 존재할 경우 DB에 메시지 저장 및 Redis에서 삭제
     if (redisMessages != null && !redisMessages.isEmpty()) {
       this.forceSaveMessages(chatRoomId, redisMessages);
+      this.chatRedisService.deleteMessages(chatRoomId);
     }
     
     // 회원별 채팅방 활성화 상태 업데이트
     if (chatRoom.getPost().getMember().getId().equals(memberId)) {
       chatRoom.setPostAuthorActive(false);
-    } else {
+    } else if (chatRoom.getRequestor().getId().equals(memberId)) {
       chatRoom.setRequestorActive(false);
     }
     
@@ -239,9 +240,6 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
     // DB에 저장
     this.chatMessageRepository.saveAll(chatMessages);
-
-    // Redis 메시지 삭제
-    this.chatRedisService.deleteMessages(chatRoomId);
   }
 
 }
