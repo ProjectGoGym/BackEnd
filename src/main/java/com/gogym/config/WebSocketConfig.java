@@ -21,7 +21,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
   @Override
   public void registerStompEndpoints(StompEndpointRegistry registry) {
     // WebSocket 연결 endpoint 설정(SockJS 사용)
-    registry.addEndpoint("/ws").setAllowedOriginPatterns("http://localhost:3000").withSockJS();
+    registry.addEndpoint("/ws").setAllowedOriginPatterns("https://gogym-eight.vercel.app/").withSockJS();
   }
   
 }
