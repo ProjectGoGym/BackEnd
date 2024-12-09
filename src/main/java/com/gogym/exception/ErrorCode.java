@@ -30,6 +30,8 @@ public enum ErrorCode {
   CHAT_MESSAGE_NOT_FOUND(NOT_FOUND, "채팅 메시지를 찾을 수 없습니다."),
   CITY_NOT_FOUND(NOT_FOUND, "도시를 찾을 수 없습니다."),
   DISTRICT_NOT_FOUND(NOT_FOUND, "지역을 찾을 수 없습니다."),
+  POST_NOT_FOUND(NOT_FOUND, "게시글을 찾을 수 없습니다."),
+  DELETED_POST(NOT_FOUND, "삭제된 게시글입니다."),
   GYM_PAY_NOT_FOUND(NOT_FOUND, "짐페이를 찾을 수 없습니다. 짐페이를 개설해주세요."),
   PAYMENT_NOT_FOUND(NOT_FOUND, "결제 정보를 찾을 수 없습니다."),
 
