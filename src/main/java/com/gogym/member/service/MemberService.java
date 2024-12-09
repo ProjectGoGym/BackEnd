@@ -1,18 +1,21 @@
 package com.gogym.member.service;
 
-import com.gogym.exception.CustomException;
-import com.gogym.exception.ErrorCode;
-// import com.gogym.member.dto.MemberProfileResponse;
-// import com.gogym.member.dto.UpdateMemberRequest;
-import com.gogym.member.entity.Member;
-import com.gogym.member.repository.MemberRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-
-import java.util.List;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import com.gogym.exception.CustomException;
+import com.gogym.exception.ErrorCode;
+import com.gogym.member.dto.MemberProfileResponse;
+import com.gogym.member.dto.UpdateMemberRequest;
+import com.gogym.member.entity.Member;
+import com.gogym.member.repository.MemberRepository;
+import com.gogym.post.dto.PostResponseDto;
+import com.gogym.post.repository.FavoriteRepository;
+import com.gogym.post.repository.PostRepository;
+import com.gogym.post.repository.ViewHistoryRepository;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +23,9 @@ import java.util.List;
 public class MemberService {
 
   private final MemberRepository memberRepository;
+  private final FavoriteRepository favoriteRepository;
+  private final ViewHistoryRepository viewHistoryRepository;
+  private final PostRepository postRepository;
 
   // 이메일로 사용자 조회
   public Member findByEmail(String email) {
@@ -33,49 +39,44 @@ public class MemberService {
         .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
   }
 
-  /*
-   * 
-   * // 내 정보 조회 public MemberProfileResponse getMyProfileById(Long memberId) { Member member =
-   * findById(memberId); return new MemberProfileResponse( member.getEmail(), member.getName(),
-   * member.getNickname(), member.getPhone(), member.getProfileImageUrl() ); }
-   * 
-   * // 내 정보 수정
-   * 
-   * @Transactional public void updateMyProfileById(Long memberId, UpdateMemberRequest request) {
-   * Member member = findById(memberId); member.updateProfile(request.getName(),
-   * request.getNickname(), request.getPhone(), request.getProfileImageUrl()); }
-   */
-  // 회원 탈퇴
+  @Transactional(readOnly = true)
+  public MemberProfileResponse getMyProfileById(Long memberId) {
+    Member member = findById(memberId);
+    return new MemberProfileResponse(member.getEmail(), member.getName(), member.getNickname(),
+        member.getPhone(), member.getProfileImageUrl());
+  }
+
+  @Transactional
+  public void updateMyProfileById(Long memberId, UpdateMemberRequest request) {
+    Member member = findById(memberId);
+    member.updateProfile(request.name(), request.nickname(), request.phone(),
+        request.profileImageUrl());
+  }
+
   @Transactional
   public void deleteMyAccountById(Long memberId) {
     Member member = findById(memberId);
-    memberRepository.delete(member);
+    memberRepository.delete(member); // Soft delete 방식으로 처리 시 변경 필요
   }
 
-
-  // TODO - 아래 전부 페이징 처리해야함
-  // 내가 작성한 게시글 조회
-  public List<String> getMyPostsById(Long memberId, int page, int size) {
-    Member member = findById(memberId);
-    Pageable pageable = PageRequest.of(page, Math.min(size, 5));
-    // TODO 내가 작성한 게시글 로직 유노님이랑 구현해야하는 부분
-    return List.of("Post 1", "Post 2", "Post 3", "Post 4", "Post 5");
+  // 내가 작성한 게시글
+  public Page<PostResponseDto> getMyPostsById(Long memberId, int page, int size) {
+    Pageable pageable = PageRequest.of(page, size);
+    return postRepository.findByMember_Id(memberId, pageable).map(PostResponseDto::fromEntity);
   }
 
-  // 내가 찜한 게시글 조회
-  public List<String> getMyFavoritesById(Long memberId, int page, int size) {
-    Member member = findById(memberId);
-    Pageable pageable = PageRequest.of(page, Math.min(size, 5));
-    // TODO 찜한 게시글 로직 유노님이랑 구현해야하는 부분
-    return List.of("Favorite 1", "Favorite 2", "Favorite 3", "Favorite 4", "Favorite 5");
+  // 내가 찜한 게시글
+  public Page<PostResponseDto> getMyFavoritesById(Long memberId, int page, int size) {
+    Pageable pageable = PageRequest.of(page, size);
+    return favoriteRepository.findFavoritesByMemberId(memberId, pageable)
+        .map(PostResponseDto::fromEntity);
   }
 
-  // 최근 본 게시글 조회
-  public List<String> getRecentViewsById(Long memberId, int page, int size) {
-    Member member = findById(memberId);
-    Pageable pageable = PageRequest.of(page, Math.min(size, 5));
-    // TODO 최근 본 게시글 로직 유노님이랑 구현해야하는 부분
-    return List.of("View 1", "View 2", "View 3", "View 4", "View 5");
+  // 최근 본 게시글
+  public Page<PostResponseDto> getRecentViewsById(Long memberId, int page, int size) {
+    Pageable pageable = PageRequest.of(page, size);
+    return viewHistoryRepository.findRecentViewsByMemberId(memberId, pageable)
+        .map(PostResponseDto::fromEntity);
   }
-
 }
+
