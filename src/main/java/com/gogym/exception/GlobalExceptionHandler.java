@@ -1,12 +1,14 @@
 package com.gogym.exception;
 
-import jakarta.servlet.http.HttpServletRequest;
-import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.ConstraintViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestControllerAdvice
@@ -29,7 +31,7 @@ public class GlobalExceptionHandler {
 
     log.error("Unexpected Exception: {}", e.getMessage(), e);
 
-    return ResponseEntity.ok(response);
+    return ResponseEntity.status(ErrorCode.INTERNAL_SERVER_ERROR.getHttpStatus()).body(response);
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -42,11 +44,12 @@ public class GlobalExceptionHandler {
 
     log.error("MethodArgumentNotValidException: {}, Request URI: {}", errorMessage, requestURI);
 
-    return ResponseEntity.ok(response);
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
   }
 
   @ExceptionHandler(ConstraintViolationException.class)
-  public ResponseEntity<ErrorResponse> handleConstraintViolationException(HttpServletRequest request, ConstraintViolationException e) {
+  public ResponseEntity<ErrorResponse> handleConstraintViolationException(
+      HttpServletRequest request, ConstraintViolationException e) {
     String errorMessage = e.getMessage();
     String requestURI = request.getRequestURI();
 
@@ -54,7 +57,21 @@ public class GlobalExceptionHandler {
 
     log.error("ConstraintViolationException: {}, Request URI: {}", errorMessage, requestURI);
 
-    return ResponseEntity.ok(response);
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+  }
+
+  @ExceptionHandler(WebClientResponseException.class)
+  public ResponseEntity<ErrorResponse> handleWebClientResponseException(
+      HttpServletRequest request, WebClientResponseException e) {
+    String errorMessage = e.getResponseBodyAsString();
+    String requestURI = request.getRequestURI();
+
+    ErrorResponse response = ErrorResponse.withMessage(ErrorCode.PORTONE_API_CALL_FAILED, errorMessage);
+
+    log.error("WebClientResponseException: {}, Status: {}, Request URI: {}", errorMessage,
+        e.getStatusCode(), requestURI);
+
+    return ResponseEntity.status(e.getStatusCode()).body(response);
   }
 }
 
