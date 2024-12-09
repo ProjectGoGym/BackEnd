@@ -99,15 +99,22 @@ class MemberServiceTest {
   }
 
   @Test
-  void 회원_탈퇴를_처리한다() {
+  void 회원_탈퇴를_소프트로_처리한다() {
     // given
+    Member mockMember = Member.builder().id(1L).name("Test Name").nickname("Test Nickname")
+        .email("test@example.com").phone("010-1234-5678").profileImageUrl("profile.jpg").build();
+
     when(memberRepository.findById(anyLong())).thenReturn(Optional.of(mockMember));
 
     // when
-    memberService.deleteMyAccountById(1L);
+    memberService.deactivateMyAccountById(1L);
 
     // then
-    assertThat(mockMember).isNotNull();
+    assertThat(mockMember.getName()).isEqualTo("탈퇴한 사용자");
+    assertThat(mockMember.getNickname()).isEqualTo("탈퇴한 사용자");
+    assertThat(mockMember.getEmail()).contains("deleted1@example.com");
+    assertThat(mockMember.getPhone()).isNull();
+    assertThat(mockMember.getProfileImageUrl()).isNull();
   }
 
   @Test

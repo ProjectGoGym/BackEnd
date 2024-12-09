@@ -40,8 +40,8 @@ public class MemberController {
 
   // 회원 탈퇴
   @DeleteMapping("/withdrow")
-  public ResponseEntity<Void> deleteMyAccount(@LoginMemberId Long memberId) {
-    memberService.deleteMyAccountById(memberId);
+  public ResponseEntity<Void> deactivateMyAccount(@LoginMemberId Long memberId) {
+    memberService.deactivateMyAccountById(memberId);
     return ResponseEntity.ok().build();
   }
 

@@ -51,6 +51,9 @@ public class Member extends BaseEntity {
   @Column(name = "verified_at")
   private LocalDateTime verifiedAt; // 이메일 인증 시간을 저장
 
+  @Column(name = "is_active", nullable = false)
+  private boolean isActive = true;
+
   // 이메일 인증 여부 확인 메서드
   public boolean isVerified() {
     return this.verifiedAt != null;
@@ -62,5 +65,15 @@ public class Member extends BaseEntity {
     this.nickname = nickname;
     this.phone = phone;
     this.profileImageUrl = profileImageUrl;
+  }
+
+  // 탈퇴 처리 메서드
+  public void deactivate() {
+    this.isActive = false;
+    this.name = "탈퇴한 사용자";
+    this.nickname = "탈퇴한 사용자";
+    this.email = "deleted" + this.id + "@example.com";
+    this.phone = null;
+    this.profileImageUrl = null;
   }
 }

@@ -39,6 +39,7 @@ public class MemberService {
         .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
   }
 
+  // 마이페이지 조회
   @Transactional(readOnly = true)
   public MemberProfileResponse getMyProfileById(Long memberId) {
     Member member = findById(memberId);
@@ -46,6 +47,7 @@ public class MemberService {
         member.getPhone(), member.getProfileImageUrl());
   }
 
+  // 마이페이지 수정
   @Transactional
   public void updateMyProfileById(Long memberId, UpdateMemberRequest request) {
     Member member = findById(memberId);
@@ -53,26 +55,28 @@ public class MemberService {
         request.profileImageUrl());
   }
 
+  // 회원 탈퇴 (소프트)
   @Transactional
-  public void deleteMyAccountById(Long memberId) {
+  public void deactivateMyAccountById(Long memberId) {
     Member member = findById(memberId);
-    memberRepository.delete(member); // Soft delete 방식으로 처리 시 변경 필요
+    member.deactivate(); // 탈퇴상태로 변경
+    memberRepository.save(member); // 저장
   }
 
-  // 내가 작성한 게시글
+  // 내가 작성한 게시글 조회
   public Page<PostResponseDto> getMyPostsById(Long memberId, int page, int size) {
     Pageable pageable = PageRequest.of(page, size);
     return postRepository.findByMember_Id(memberId, pageable).map(PostResponseDto::fromEntity);
   }
 
-  // 내가 찜한 게시글
+  // 내가 찜한 게시글 조회
   public Page<PostResponseDto> getMyFavoritesById(Long memberId, int page, int size) {
     Pageable pageable = PageRequest.of(page, size);
     return favoriteRepository.findFavoritesByMemberId(memberId, pageable)
         .map(PostResponseDto::fromEntity);
   }
 
-  // 최근 본 게시글
+  // 최근 본 게시글 조회
   public Page<PostResponseDto> getRecentViewsById(Long memberId, int page, int size) {
     Pageable pageable = PageRequest.of(page, size);
     return viewHistoryRepository.findRecentViewsByMemberId(memberId, pageable)
