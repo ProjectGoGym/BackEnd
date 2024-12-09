@@ -12,29 +12,29 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
    * 특정 게시글과 요청자의 채팅방 존재 여부 확인.
    *
    * @param postId 게시글 ID
-   * @param requestId 요청자 ID
+   * @param requestorId 요청자 ID
    * @return 채팅방 존재 여부
    */
-  boolean existsByPostIdAndRequestId(Long postId, Long requestId);
+  boolean existsByPostIdAndRequestorId(Long postId, Long requestorId);
   
   /**
    * 특정 사용자가 참여한 채팅방 목록 조회.
    *
-   * @param postId 게시글 ID
-   * @param requestId 요청자 ID
+   * @param postAuthorId 게시글 작성자 ID
+   * @param requestorId 요청자 ID
    * @param pageable 페이징 정보
    * @return 참여한 채팅방 목록 (Page)
    */
-  Page<ChatRoom> findByPostIdOrRequestId(Long postId, Long requestId, Pageable pageable);
+  Page<ChatRoom> findByPostMemberIdOrRequestorIdAndIsDeletedFalse(Long postAuthorId, Long requestorId, Pageable pageable);
   
   /**
    * 사용자가 참여한 특정 채팅방 조회.
    *
    * @param chatRoomId 채팅방 ID
-   * @param postId 게시글 ID
-   * @param requestId 요청자 ID
+   * @param postAuthorId 게시글 작성자 ID
+   * @param requestorId 요청자 ID
    * @return 특정 채팅방 (Optional)
    */
-  Optional<ChatRoom> findByIdAndPostIdOrRequestId(Long chatRoomId, Long postId, Long requestId);
+  Optional<ChatRoom> findByIdAndPostMemberIdOrRequestorId(Long chatRoomId, Long postAuthorId, Long requestorId);
   
 }
