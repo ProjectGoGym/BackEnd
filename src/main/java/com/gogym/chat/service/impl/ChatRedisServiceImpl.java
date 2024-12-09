@@ -2,6 +2,7 @@ package com.gogym.chat.service.impl;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.gogym.chat.dto.ChatMessageDto.ChatMessageHistory;
@@ -40,7 +41,7 @@ public class ChatRedisServiceImpl implements ChatRedisService {
     String messageJson = JsonUtil.serialize(messageHistory);
 
     // Redis에 저장
-    this.redisUtil.lpush(redisKey, messageJson);
+    this.redisUtil.rpush(redisKey, messageJson);
 
     // 메시지 저장 결과 반환
     return new ChatMessageResponse(
@@ -48,6 +49,18 @@ public class ChatRedisServiceImpl implements ChatRedisService {
         messageRequest.senderId(),
         messageRequest.content(),
         LocalDateTime.parse(createdAt, DATE_TIME_FORMATTER));
+  }
+  
+  @Override
+  public List<String> getMessages(Long chatRoomId) {
+    String redisKey = this.getRedisChatroomMessageKeyPrefix() + chatRoomId;
+    return this.redisUtil.lrange(redisKey, 0, -1);
+  }
+  
+  @Override
+  public void deleteMessages(Long chatRoomId) {
+    String redisKey = this.getRedisChatroomMessageKeyPrefix() + chatRoomId;
+    this.redisUtil.delete(redisKey);
   }
 
   @Override
