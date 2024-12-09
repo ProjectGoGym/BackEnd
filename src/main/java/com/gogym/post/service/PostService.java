@@ -9,7 +9,6 @@ import static com.gogym.post.type.PostStatus.POSTING;
 import com.gogym.exception.CustomException;
 import com.gogym.member.entity.Member;
 import com.gogym.member.service.MemberService;
-import com.gogym.notification.service.NotificationService;
 import com.gogym.post.dto.PostFilterRequestDto;
 import com.gogym.post.dto.PostPageResponseDto;
 import com.gogym.post.dto.PostRequestDto;
@@ -20,7 +19,6 @@ import com.gogym.post.filter.PostFilterBuilder;
 import com.gogym.post.repository.GymRepository;
 import com.gogym.post.repository.PostRepository;
 import com.gogym.post.repository.PostRepositoryCustom;
-import com.gogym.post.repository.WishRepository;
 import com.gogym.region.dto.RegionResponseDto;
 import com.gogym.region.service.RegionService;
 import com.querydsl.core.BooleanBuilder;
@@ -50,10 +48,6 @@ public class PostService {
   private final PostFilterBuilder postFilterBuilder;
 
   private final PostRepositoryCustom postRepositoryCustom;
-
-  private final WishRepository wishRepository;
-
-  private final NotificationService notificationService;
 
   @Transactional
   public PostResponseDto createPost(Long memberId, PostRequestDto postRequestDto) {
