@@ -41,7 +41,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
   private final PostService postService;
   
   @Override
-  public ChatRoomResponse createChatroom(Long memberId, Long postId) {
+  public ChatRoomResponse createChatRoom(Long memberId, Long postId) {
     // 게시글 작성자 존재 여부 확인
     Member postAuthor = this.postService.getPostAuthor(postId);
     

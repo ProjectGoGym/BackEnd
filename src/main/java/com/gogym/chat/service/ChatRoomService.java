@@ -13,7 +13,7 @@ public interface ChatRoomService {
    * @param postId 게시글 ID
    * @return 생성된 채팅방 정보
    */
-  ChatRoomResponse createChatroom(Long memberId, Long postId);
+  ChatRoomResponse createChatRoom(Long memberId, Long postId);
   
   /**
    * 사용자가 참여한 채팅방 목록 조회

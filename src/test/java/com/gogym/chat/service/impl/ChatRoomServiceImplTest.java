@@ -121,7 +121,7 @@ class ChatRoomServiceImplTest {
     });
 
     // When
-    ChatRoomResponse response = this.chatRoomService.createChatroom(this.postAuthor.getId(), postId);
+    ChatRoomResponse response = this.chatRoomService.createChatRoom(this.postAuthor.getId(), postId);
 
     // Then
     assertNotNull(response);
@@ -139,7 +139,7 @@ class ChatRoomServiceImplTest {
     // When
     CustomException exception = assertThrows(
         CustomException.class,
-        () -> this.chatRoomService.createChatroom(this.postAuthor.getId(), postId));
+        () -> this.chatRoomService.createChatRoom(this.postAuthor.getId(), postId));
 
     // Then
     assertEquals(ErrorCode.CHATROOM_ALREADY_EXISTS, exception.getErrorCode());

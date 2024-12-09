@@ -37,7 +37,7 @@ public class ChatRoomController {
   public ResponseEntity<ChatRoomResponse> createChatRoom(
       @LoginMemberId Long memberId,
       @PathVariable("post-id") Long postId) {
-    return ResponseEntity.ok(this.chatRoomService.createChatroom(memberId, postId));
+    return ResponseEntity.ok(this.chatRoomService.createChatRoom(memberId, postId));
   }
   
   /**
