@@ -33,6 +33,7 @@ public class PaymentService {
   private final ApplicationEventPublisher eventPublisher;
 
   private final MemberService memberService;
+  private final GymPayService gymPayService;
   private final PortOneService portOneService;
 
   private final PaymentRepository paymentRepository;
@@ -76,7 +77,7 @@ public class PaymentService {
     paymentRepository.save(payment);
 
     if (result.status().equals(Status.PAID))
-    member.getGymPay().charge(result.amount().total());
+    gymPayService.charge(member, result.amount().paid());
 
     publishPaymentStatusChangedEvent(payment.getId(), webhookPayload.type(),
         new FailureResponse(result.failure().reason(), result.failure().pgCode(),
