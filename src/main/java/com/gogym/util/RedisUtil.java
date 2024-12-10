@@ -27,6 +27,10 @@ public class RedisUtil {
   public void lpush(String key, String value) {
     redisTemplate.opsForList().leftPush(key, value);
   }
+  
+  public void rpush(String key, String value) {
+    redisTemplate.opsForList().rightPush(key, value);
+  }
 
   public List<String> lrange(String key, long start, long end) {
     return redisTemplate.opsForList().range(key, start, end);
