@@ -25,13 +25,13 @@ public class MemberController {
   private final MemberService memberService;
 
   // 내 정보 조회
-  @GetMapping("/me")
+  @GetMapping("/me/profile")
   public ResponseEntity<MemberProfileResponse> getMyProfile(@LoginMemberId Long memberId) {
     return ResponseEntity.ok(memberService.getMyProfileById(memberId));
   }
 
   // 내 정보 수정
-  @PutMapping("/me")
+  @PutMapping("/me/profile")
   public ResponseEntity<Void> updateMyProfile(@LoginMemberId Long memberId,
       @RequestBody @Valid UpdateMemberRequest request) {
     memberService.updateMyProfileById(memberId, request);
@@ -39,30 +39,9 @@ public class MemberController {
   }
 
   // 회원 탈퇴
-  @DeleteMapping("/withdrow")
+  @DeleteMapping("/me")
   public ResponseEntity<Void> deactivateMyAccount(@LoginMemberId Long memberId) {
     memberService.deactivateMyAccountById(memberId);
     return ResponseEntity.ok().build();
-  }
-
-  // 내가 작성한 게시글
-  @GetMapping("/my-posts")
-  public ResponseEntity<Page<PostResponseDto>> getMyPosts(@LoginMemberId Long memberId,
-      @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
-    return ResponseEntity.ok(memberService.getMyPostsById(memberId, page, size));
-  }
-
-  // 내가 찜한 게시글
-  @GetMapping("/wishlist")
-  public ResponseEntity<Page<PostResponseDto>> getMyFavorites(@LoginMemberId Long memberId,
-      @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
-    return ResponseEntity.ok(memberService.getMyFavoritesById(memberId, page, size));
-  }
-
-  // 최근 본 게시글
-  @GetMapping("/recent-view")
-  public ResponseEntity<Page<PostResponseDto>> getRecentViews(@LoginMemberId Long memberId,
-      @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
-    return ResponseEntity.ok(memberService.getRecentViewsById(memberId, page, size));
   }
 }

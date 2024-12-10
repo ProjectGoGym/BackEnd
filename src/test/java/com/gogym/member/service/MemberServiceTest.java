@@ -1,31 +1,20 @@
 package com.gogym.member.service;
 
 import com.gogym.exception.CustomException;
-import com.gogym.exception.ErrorCode;
 import com.gogym.member.dto.MemberProfileResponse;
 import com.gogym.member.dto.UpdateMemberRequest;
 import com.gogym.member.entity.Member;
+import com.gogym.member.repository.BanNicknameRepository;
 import com.gogym.member.repository.MemberRepository;
-import com.gogym.post.dto.PostResponseDto;
-import com.gogym.post.entity.Post;
-import com.gogym.post.repository.FavoriteRepository;
-import com.gogym.post.repository.PostRepository;
-import com.gogym.post.repository.ViewHistoryRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import com.gogym.post.entity.Gym;
-import java.util.List;
+
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
@@ -37,33 +26,41 @@ class MemberServiceTest {
   @Mock
   private MemberRepository memberRepository;
 
-  @Mock
-  private PostRepository postRepository;
-
-  @Mock
-  private FavoriteRepository favoriteRepository;
-
-  @Mock
-  private ViewHistoryRepository viewHistoryRepository;
-
   private Member mockMember;
-  private Post mockPost;
-  private Pageable pageable;
+
+  private BanNicknameRepository banNicknameRepository;
+
+  private String maskString(String input) {
+    if (input == null || input.isEmpty()) {
+      return input;
+    }
+    StringBuilder masked = new StringBuilder(input);
+    for (int i = 0; i < input.length(); i++) {
+      if (i % 2 == 1) {
+        masked.setCharAt(i, '*');
+      }
+    }
+    return masked.toString();
+  }
+
+  private String maskEmail(String email) {
+    if (email == null || email.isEmpty()) {
+      return email;
+    }
+    String[] parts = email.split("@");
+    if (parts.length != 2) {
+      return email;
+    }
+    parts[0] = maskString(parts[0]);
+    return String.join("@", parts);
+  }
 
   @BeforeEach
   void setUp() {
     MockitoAnnotations.openMocks(this);
 
-    Gym mockGym = Gym.builder().gymName("Test Gym").latitude(37.0000).longitude(125.0000)
-        .gymKakaoUrl("http://test-gym.com").regionId(1L).build();
-
     mockMember = Member.builder().id(1L).email("test@example.com").name("Tester")
         .nickname("Test Nickname").phone("010-1234-5678").profileImageUrl("profile.jpg").build();
-
-    mockPost = Post.builder().title("게시글 제목").content("게시글 내용").amount(1000L).gym(mockGym)
-        .member(mockMember).build();
-
-    pageable = PageRequest.of(0, 10);
   }
 
   @Test
@@ -85,7 +82,9 @@ class MemberServiceTest {
   void 내_정보를_수정한다() {
     // given
     UpdateMemberRequest request =
-        new UpdateMemberRequest("New Name", "New Nickname", "010-9876-5432", "new-profile.jpg");
+        new UpdateMemberRequest("New Name", "New Nickname", "010-9876-5432", "new-profile.jpg", 1L, // regionId1
+            2L // regionId2
+        );
 
     when(memberRepository.findById(anyLong())).thenReturn(Optional.of(mockMember));
 
@@ -101,60 +100,22 @@ class MemberServiceTest {
   @Test
   void 회원_탈퇴를_소프트로_처리한다() {
     // given
-    Member mockMember = Member.builder().id(1L).name("Test Name").nickname("Test Nickname")
-        .email("test@example.com").phone("010-1234-5678").profileImageUrl("profile.jpg").build();
-
     when(memberRepository.findById(anyLong())).thenReturn(Optional.of(mockMember));
+
+    // 예상 마스킹 결과
+    String expectedMaskedName = maskString(mockMember.getName());
+    String expectedMaskedNickname = maskString(mockMember.getNickname());
+    String expectedMaskedEmail = maskEmail(mockMember.getEmail());
 
     // when
     memberService.deactivateMyAccountById(1L);
 
     // then
-    assertThat(mockMember.getName()).isEqualTo("탈퇴한 사용자");
-    assertThat(mockMember.getNickname()).isEqualTo("탈퇴한 사용자");
-    assertThat(mockMember.getEmail()).contains("deleted1@example.com");
+    assertThat(mockMember.getName()).isEqualTo(expectedMaskedName);
+    assertThat(mockMember.getNickname()).isEqualTo(expectedMaskedNickname);
+    assertThat(mockMember.getEmail()).isEqualTo(expectedMaskedEmail);
     assertThat(mockMember.getPhone()).isNull();
     assertThat(mockMember.getProfileImageUrl()).isNull();
   }
-
-  @Test
-  void 내가_작성한_게시글을_조회한다() {
-    // given
-    Page<Post> mockPosts = new PageImpl<>(List.of(mockPost), pageable, 1);
-    when(postRepository.findByMember_Id(anyLong(), any(Pageable.class))).thenReturn(mockPosts);
-
-    // when
-    Page<PostResponseDto> result = memberService.getMyPostsById(1L, 0, 10);
-
-    // then
-    assertThat(result.getContent().get(0).title()).isEqualTo("게시글 제목");
-  }
-
-  @Test
-  void 내가_찜한_게시글을_조회한다() {
-    // given
-    Page<Post> mockFavorites = new PageImpl<>(List.of(mockPost), pageable, 1);
-    when(favoriteRepository.findFavoritesByMemberId(anyLong(), any(Pageable.class)))
-        .thenReturn(mockFavorites);
-
-    // when
-    Page<PostResponseDto> result = memberService.getMyFavoritesById(1L, 0, 10);
-
-    // then
-    assertThat(result.getContent().get(0).title()).isEqualTo("게시글 제목");
-  }
-
-  @Test
-  void 최근_본_게시글을_조회() {
-    // given
-    Page<Post> mockViews = new PageImpl<>(List.of(mockPost), pageable, 1);
-    when(viewHistoryRepository.findRecentViewsByMemberId(anyLong(), any(Pageable.class)))
-        .thenReturn(mockViews);
-
-    // when
-    Page<PostResponseDto> result = memberService.getRecentViewsById(1L, 0, 10);
-
-    // then
-    assertThat(result.getContent().get(0).title()).isEqualTo("게시글 제목");
-  }
 }
+

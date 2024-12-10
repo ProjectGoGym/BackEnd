@@ -6,5 +6,8 @@ public record UpdateMemberRequest(
     @NotBlank String name, 
     @NotBlank String nickname,
     @NotBlank String phone, 
-    String profileImageUrl) {
+    String profileImageUrl,
+    Long regionId1,
+    Long regionId2    
+    ) {
 }
