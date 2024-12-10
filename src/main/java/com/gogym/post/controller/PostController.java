@@ -44,7 +44,7 @@ class PostController {
   @GetMapping
   public ResponseEntity<Page<PostPageResponseDto>> getAllPosts(Pageable pageable) {
 
-    Page<PostPageResponseDto> page = postService.getAllPostsOfGuest(pageable);
+    Page<PostPageResponseDto> page = postService.getAllPosts(null, pageable);
 
     return ResponseEntity.ok(page);
   }
@@ -54,7 +54,7 @@ class PostController {
   public ResponseEntity<Page<PostPageResponseDto>> getAllPostsOfMember(
       @LoginMemberId Long memberId, Pageable pageable) {
 
-    Page<PostPageResponseDto> page = postService.getAllPostsOfMember(memberId, pageable);
+    Page<PostPageResponseDto> page = postService.getAllPosts(memberId, pageable);
 
     return ResponseEntity.ok(page);
   }
@@ -72,7 +72,7 @@ class PostController {
     PostFilterRequestDto postFilterRequestDto = new PostFilterRequestDto(postType, membershipType,
         status, monthsType, ptType);
 
-    Page<PostPageResponseDto> page = postService.getFilterPostsOfGuest(postFilterRequestDto,
+    Page<PostPageResponseDto> page = postService.getFilterPosts(null, postFilterRequestDto,
         pageable);
 
     return ResponseEntity.ok(page);
@@ -92,7 +92,7 @@ class PostController {
     PostFilterRequestDto postFilterRequestDto = new PostFilterRequestDto(postType, membershipType,
         status, monthsType, ptType);
 
-    Page<PostPageResponseDto> page = postService.getFilterPostsOfMember(memberId,
+    Page<PostPageResponseDto> page = postService.getFilterPosts(memberId,
         postFilterRequestDto,
         pageable);
 

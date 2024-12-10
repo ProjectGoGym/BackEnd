@@ -150,7 +150,7 @@ class PostServiceTest {
 
     when(postRepository.findAllByStatus(pageable, POSTING)).thenReturn(posts);
     // when
-    Page<PostPageResponseDto> result = postService.getAllPostsOfGuest(pageable);
+    Page<PostPageResponseDto> result = postService.getAllPosts(null, pageable);
     // then
     assertNotNull(result);
     assertEquals(result.getTotalElements(), 1);
@@ -166,7 +166,7 @@ class PostServiceTest {
     when(postRepository.findAllByStatusAndRegionIds(POSTING, pageable, regionIds)).thenReturn(
         posts);
     // when
-    Page<PostPageResponseDto> result = postService.getAllPostsOfMember(member.getId(), pageable);
+    Page<PostPageResponseDto> result = postService.getAllPosts(member.getId(), pageable);
     // then
     assertNotNull(result);
     assertEquals(result.getTotalElements(), 1);
@@ -185,7 +185,7 @@ class PostServiceTest {
 
     when(memberService.findById(member.getId())).thenReturn(member);
     // when
-    Page<PostPageResponseDto> result = postService.getAllPostsOfMember(member.getId(), pageable);
+    Page<PostPageResponseDto> result = postService.getAllPosts(member.getId(), pageable);
     // then
     assertNotNull(result);
     assertEquals(result.getTotalElements(), 0);

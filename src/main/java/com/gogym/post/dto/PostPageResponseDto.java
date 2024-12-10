@@ -10,7 +10,7 @@ public record PostPageResponseDto(
 
     Long postId,
     String title,
-    PostStatus postStatus,
+    PostStatus status,
     Long amount,
     String imageUrl1,
     String imageUrl2,
@@ -27,7 +27,7 @@ public record PostPageResponseDto(
     return PostPageResponseDto.builder()
         .postId(post.getId())
         .title(post.getTitle())
-        .postStatus(post.getStatus())
+        .status(post.getStatus())
         .amount(post.getAmount())
         .imageUrl1(post.getImageUrl1())
         .imageUrl2(post.getImageUrl2())

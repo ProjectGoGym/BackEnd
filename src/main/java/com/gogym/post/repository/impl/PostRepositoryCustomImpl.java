@@ -1,7 +1,9 @@
 package com.gogym.post.repository.impl;
 
+import com.gogym.post.dto.PostFilterRequestDto;
 import com.gogym.post.entity.Post;
 import com.gogym.post.entity.QPost;
+import com.gogym.post.filter.PostFilterBuilder;
 import com.gogym.post.repository.PostRepositoryCustom;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -21,10 +23,16 @@ public class PostRepositoryCustomImpl implements PostRepositoryCustom {
 
   private final JPAQueryFactory queryFactory;
 
+  private final PostFilterBuilder postFilterBuilder;
+
   @Override
-  public Page<Post> findAllWithFilter(BooleanBuilder filter, Pageable sortedByDate) {
+  public Page<Post> findAllWithFilter(List<Long> regionIds,
+      PostFilterRequestDto postFilterRequestDto, Pageable sortedByDate) {
 
     QPost post = QPost.post;
+
+    BooleanBuilder filter = postFilterBuilder.builderFilters(regionIds, postFilterRequestDto);
+
     List<Post> posts = queryFactory.selectFrom(post)
         .where(filter)
         .offset(sortedByDate.getOffset())

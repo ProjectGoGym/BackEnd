@@ -15,13 +15,11 @@ import com.gogym.post.dto.PostRequestDto;
 import com.gogym.post.dto.PostResponseDto;
 import com.gogym.post.entity.Gym;
 import com.gogym.post.entity.Post;
-import com.gogym.post.filter.PostFilterBuilder;
 import com.gogym.post.repository.GymRepository;
 import com.gogym.post.repository.PostRepository;
 import com.gogym.post.repository.PostRepositoryCustom;
 import com.gogym.region.dto.RegionResponseDto;
 import com.gogym.region.service.RegionService;
-import com.querydsl.core.BooleanBuilder;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -44,8 +42,6 @@ public class PostService {
   private final GymRepository gymRepository;
 
   private final RegionService regionService;
-
-  private final PostFilterBuilder postFilterBuilder;
 
   private final PostRepositoryCustom postRepositoryCustom;
 
@@ -76,16 +72,10 @@ public class PostService {
         .orElseGet(() -> gymRepository.save(Gym.createGym(postRequestDto, regionId)));
   }
 
-  // 로그인 하지 않은 일반 회원이 게시글 목록을 보는 상황입니다.
-  public Page<PostPageResponseDto> getAllPostsOfGuest(Pageable pageable) {
+  // 회원 ID 가 null 이면 비회원, null 이 아니면 회원이 게시글 목록을 보는 상황입니다.
+  public Page<PostPageResponseDto> getAllPosts(Long memberId, Pageable pageable) {
 
-    return fetchPosts(null, pageable);
-  }
-
-  // 로그인 된 회원이 게시글 목록을 보는 상황입니다.
-  public Page<PostPageResponseDto> getAllPostsOfMember(Long memberId, Pageable pageable) {
-
-    List<Long> regionIds = getRegionIds(memberId);
+    List<Long> regionIds = memberId != null ? getRegionIds(memberId) : null;
 
     return fetchPosts(regionIds, pageable);
   }
@@ -102,17 +92,11 @@ public class PostService {
     return posts != null ? posts.map(PostPageResponseDto::fromEntity) : Page.empty();
   }
 
-  // 비회원이 게시글을 필터링 하는 경우
-  public Page<PostPageResponseDto> getFilterPostsOfGuest(PostFilterRequestDto postFilterRequestDto,
-      Pageable pageable) {
-    return fetchFilterPosts(null, postFilterRequestDto, pageable);
-  }
-
-  // 회원이 게시글을 필터링 하는 경우
-  public Page<PostPageResponseDto> getFilterPostsOfMember(Long memberId,
+  // 회원 ID 가 null 이면 비회원, null 이 아니면 회원이 게시글을 필터링 하는 상황입니다.
+  public Page<PostPageResponseDto> getFilterPosts(Long memberId,
       PostFilterRequestDto postFilterRequestDto, Pageable pageable) {
 
-    List<Long> regionIds = getRegionIds(memberId);
+    List<Long> regionIds = memberId != null ? getRegionIds(memberId) : null;
 
     return fetchFilterPosts(regionIds, postFilterRequestDto, pageable);
   }
@@ -124,10 +108,8 @@ public class PostService {
 
     Pageable sortedByDate = getSortPageable(pageable);
 
-    // 필터 설정
-    BooleanBuilder filter = postFilterBuilder.builderFilters(regionIds, postFilterRequestDto);
-
-    Page<Post> filteredPosts = postRepositoryCustom.findAllWithFilter(filter, sortedByDate);
+    // 필터링 설정
+    Page<Post> filteredPosts = postRepositoryCustom.findAllWithFilter(regionIds, postFilterRequestDto, sortedByDate);
 
     return filteredPosts != null ? filteredPosts.map(PostPageResponseDto::fromEntity)
         : Page.empty();
@@ -138,7 +120,7 @@ public class PostService {
 
     Post post = findById(postId);
 
-    // 숨김처리(삭제) 된 게시글은 조회가 불가능합니다.
+    // 숨김처리 된 게시글은 조회가 불가능합니다.
     if (post.getStatus() == HIDDEN) {
       throw new CustomException(DELETED_POST);
     }
@@ -187,5 +169,11 @@ public class PostService {
     } else {
       return findById(postId).getMember();
     }
+  }
+
+  // 회원 본인이 작성한 게시글을 찾는 로직입니다.
+  public Page<Post> findByMemberId(Long memberId, Pageable pageable) {
+
+    return postRepository.findByMemberIdOrderByCreatedAtDesc(memberId, pageable);
   }
 }

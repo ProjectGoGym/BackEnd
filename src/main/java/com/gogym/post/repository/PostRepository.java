@@ -16,4 +16,6 @@ public interface PostRepository extends JpaRepository<Post, Long>, PostRepositor
   @Query("SELECT p FROM Post p WHERE p.status = :status AND p.gym.regionId IN :regionIds")
   Page<Post> findAllByStatusAndRegionIds(@Param("status") PostStatus status,
       Pageable sortedByDate, @Param("regionIds") List<Long> regionIds);
+
+  Page<Post> findByMemberIdOrderByCreatedAtDesc(Long memberId, Pageable pageable);
 }
