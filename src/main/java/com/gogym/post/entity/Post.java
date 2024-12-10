@@ -46,6 +46,7 @@ public class Post extends BaseEntity {
   private String content;
 
   @Column(name = "post_type", nullable = false)
+  @Enumerated(EnumType.STRING)
   private PostType postType;
 
   @Column(nullable = false)
