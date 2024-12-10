@@ -14,24 +14,24 @@ public class SSEService {
 
   private final Map<String, SseEmitter> emitters = new ConcurrentHashMap<>();
 
-  public SseEmitter subscribe(String merchantUid) {
+  public SseEmitter subscribe(String paymentId) {
     SseEmitter emitter = new SseEmitter(60 * 1000L);
-    emitters.put(merchantUid, emitter);
-    emitter.onCompletion(() -> emitters.remove(merchantUid));
-    emitter.onTimeout(() -> emitters.remove(merchantUid));
+    emitters.put(paymentId, emitter);
+    emitter.onCompletion(() -> emitters.remove(paymentId));
+    emitter.onTimeout(() -> emitters.remove(paymentId));
 
     return emitter;
   }
 
-  public void sendUpdate(String merchantId, String eventName, FailureResponse response) {
-    if (!emitters.containsKey(merchantId)) {
+  public void sendUpdate(String paymentId, String eventName, FailureResponse response) {
+    if (!emitters.containsKey(paymentId)) {
       throw new CustomException(ErrorCode.SSE_SUBSCRIPTION_NOT_FOUND);
     }
 
-    SseEmitter emitter = emitters.get(merchantId);
+    SseEmitter emitter = emitters.get(paymentId);
     try {
       SseEmitter.SseEventBuilder eventBuilder = SseEmitter.event()
-          .id(merchantId)
+          .id(paymentId)
           .name(eventName)
           .reconnectTime(3000);
 

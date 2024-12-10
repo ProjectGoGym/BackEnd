@@ -80,9 +80,9 @@ public class PortOneService {
     redisUtil.save(REFRESH_TOKEN_KEY, tokenInfo.refreshToken(), 60 * 60 * 24 * 7);
   }
 
-  public void preRegisterPayment(String merchantUid, int amount) {
+  public void preRegisterPayment(String paymentId, int amount) {
     portOneClient.post()
-        .uri("/payments/" + merchantUid + "/pre-register")
+        .uri("/payments/" + paymentId + "/pre-register")
         .headers(headers -> headers.setBearerAuth(getAccessToken()))
         .bodyValue(Map.of("totalAmount", amount))
         .retrieve()

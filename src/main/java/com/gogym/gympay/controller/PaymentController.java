@@ -44,9 +44,9 @@ public class PaymentController {
   }
 
 
-  @GetMapping(value = "/sse/subscribe/{merchant-id}", produces = TEXT_EVENT_STREAM_VALUE)
-  public SseEmitter subscribe(@PathVariable("merchant-id") String merchantId) {
-    return sseService.subscribe(merchantId);
+  @GetMapping(value = "/sse/subscribe/{payment-id}", produces = TEXT_EVENT_STREAM_VALUE)
+  public SseEmitter subscribe(@PathVariable("payment-id") String paymentId) {
+    return sseService.subscribe(paymentId);
   }
 
   @PostMapping("/webhook")
