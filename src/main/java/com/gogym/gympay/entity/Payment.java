@@ -37,10 +37,10 @@ public class Payment {
   private String id; // 결제 건 id (=주문 번호)
 
   @Setter
-  @Column(name = "transaction_id")
+  @Column(name = "transaction_id", nullable = false)
   private String transactionId; // 결제 건 포트원 채번 아이디 (=결제 고유번호)
 
-  @Column(name = "merchant_id")
+  @Column(name = "merchant_id", nullable = false)
   private String merchantId;
 
   @Enumerated(EnumType.STRING)

@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = PROTECTED)
 public class PaymentAmount {
 
+  @Column(nullable = false)
   private Long total;
 
   @Column(name = "tax_free")
