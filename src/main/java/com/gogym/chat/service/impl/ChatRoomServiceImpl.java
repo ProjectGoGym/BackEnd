@@ -72,7 +72,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
   @Override
   public List<ChatRoomResponse> getChatRooms(Long memberId, int page, int size) {
     // 페이징 조건으로 사용자가 참여한 채팅방 목록 조회
-    Page<ChatRoom> chatRooms = this.chatRoomRepository.findByPostMemberIdOrRequestorIdAndIsDeletedFalse(
+    Page<ChatRoom> chatRooms = this.chatRoomRepository.findChatRoomsSortedByLastMessage(
         memberId,
         memberId,
         PageRequest.of(page, size));

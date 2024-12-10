@@ -156,7 +156,7 @@ class ChatRoomServiceImplTest {
     idField.set(this.chatRoom, 1L);
 
     Page<ChatRoom> mockPage = new PageImpl<>(List.of(this.chatRoom));
-    when(this.chatRoomRepository.findByPostMemberIdOrRequestorIdAndIsDeletedFalse(
+    when(this.chatRoomRepository.findChatRoomsSortedByLastMessage(
         eq(memberId),
         eq(memberId),
         any(Pageable.class))).thenReturn(mockPage);
@@ -178,7 +178,7 @@ class ChatRoomServiceImplTest {
     assertEquals("test message", response.lastMessage());
     assertEquals(5, response.unreadMessageCount());
     
-    verify(this.chatRoomRepository).findByPostMemberIdOrRequestorIdAndIsDeletedFalse(
+    verify(this.chatRoomRepository).findChatRoomsSortedByLastMessage(
         eq(memberId),
         eq(memberId),
         any(Pageable.class));
