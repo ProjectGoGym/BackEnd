@@ -52,6 +52,9 @@ class PostServiceTest {
   private MemberRepository memberRepository;
 
   @Mock
+  private GymService gymService;
+
+  @Mock
   private GymRepository gymRepository;
 
   @Mock
@@ -119,27 +122,11 @@ class PostServiceTest {
   void 헬스장이_존재하는_경우_성공적으로_게시글을_작성한다() {
     // given
     when(memberService.findById(member.getId())).thenReturn(member);
-    when(gymRepository.findByLatitudeAndLongitude(postRequestDto.latitude(),
-        postRequestDto.longitude())).thenReturn(Optional.of(gym));
+    when(gymService.findOrCreateGym(postRequestDto)).thenReturn(gym);
     when(regionService.findById(gym.getRegionId())).thenReturn(regionResponseDto);
     // when
     postService.createPost(member.getId(), postRequestDto);
     // then
-    verify(postRepository).save(any());
-  }
-
-  @Test
-  void 헬스장이_존재하지_않는_경우_헬스장을_저장한다() {
-    // given
-    when(memberService.findById(member.getId())).thenReturn(member);
-    when(gymRepository.findByLatitudeAndLongitude(postRequestDto.latitude(),
-        postRequestDto.longitude())).thenReturn(Optional.empty());
-    when(gymRepository.save(any(Gym.class))).thenReturn(gym);
-    when(regionService.findById(gym.getRegionId())).thenReturn(regionResponseDto);
-    // when
-    postService.createPost(member.getId(), postRequestDto);
-    // then
-    verify(gymRepository).save(any(Gym.class));
     verify(postRepository).save(any());
   }
 

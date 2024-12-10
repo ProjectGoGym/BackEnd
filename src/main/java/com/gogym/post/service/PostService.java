@@ -15,12 +15,13 @@ import com.gogym.post.dto.PostRequestDto;
 import com.gogym.post.dto.PostResponseDto;
 import com.gogym.post.entity.Gym;
 import com.gogym.post.entity.Post;
-import com.gogym.post.repository.GymRepository;
 import com.gogym.post.repository.PostRepository;
 import com.gogym.post.repository.PostRepositoryCustom;
 import com.gogym.region.dto.RegionResponseDto;
 import com.gogym.region.service.RegionService;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -39,7 +40,7 @@ public class PostService {
 
   private final MemberService memberService;
 
-  private final GymRepository gymRepository;
+  private final GymService gymService;
 
   private final RegionService regionService;
 
@@ -50,7 +51,7 @@ public class PostService {
 
     Member member = memberService.findById(memberId);
 
-    Gym gym = findOrCreateGym(postRequestDto);
+    Gym gym = gymService.findOrCreateGym(postRequestDto);
 
     Post post = Post.of(member, gym, postRequestDto);
 
@@ -59,17 +60,6 @@ public class PostService {
     RegionResponseDto regionResponseDto = regionService.findById(post.getGym().getRegionId());
 
     return PostResponseDto.fromEntity(post, regionResponseDto);
-  }
-
-  private Gym findOrCreateGym(PostRequestDto postRequestDto) {
-
-    Long regionId = regionService.getChildRegionId(postRequestDto.city(),
-        postRequestDto.district());
-
-    // 위도와 경도 기준으로 저장된 헬스장이 있는지 확인 후 없으면 새로 생성합니다.
-    return gymRepository.findByLatitudeAndLongitude(postRequestDto.latitude(),
-            postRequestDto.longitude())
-        .orElseGet(() -> gymRepository.save(Gym.createGym(postRequestDto, regionId)));
   }
 
   // 회원 ID 가 null 이면 비회원, null 이 아니면 회원이 게시글 목록을 보는 상황입니다.
@@ -109,7 +99,8 @@ public class PostService {
     Pageable sortedByDate = getSortPageable(pageable);
 
     // 필터링 설정
-    Page<Post> filteredPosts = postRepositoryCustom.findAllWithFilter(regionIds, postFilterRequestDto, sortedByDate);
+    Page<Post> filteredPosts = postRepositoryCustom.findAllWithFilter(regionIds,
+        postFilterRequestDto, sortedByDate);
 
     return filteredPosts != null ? filteredPosts.map(PostPageResponseDto::fromEntity)
         : Page.empty();
@@ -135,18 +126,11 @@ public class PostService {
 
     Member member = memberService.findById(memberId);
 
-    // 회원의 지역을 추출
-    Long regionId1 = member.getRegionId1();
-    Long regionId2 = member.getRegionId2();
+    List<Long> regionIds = Stream.of(member.getRegionId1(), member.getRegionId2())
+        .filter(Objects::nonNull)
+        .toList();
 
-    // 관심지역을 설정하지 않은 경우 모든 목록 반환
-    if (regionId1 == null && regionId2 == null) {
-      return null;
-    }
-
-    // 관심지역 1과 2 중 둘중 하나만 설정되었거나, 둘다 설정된 경우 값 반환
-    return regionId1 == null ? List.of(regionId2)
-        : regionId2 == null ? List.of(regionId1) : List.of(regionId1, regionId2);
+    return regionIds.isEmpty() ? null : regionIds;
   }
 
   // 게시글이 생성된 시간(날짜) 기준으로 역정렬 합니다.
