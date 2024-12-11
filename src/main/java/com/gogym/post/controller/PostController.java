@@ -40,48 +40,19 @@ class PostController {
     return ResponseEntity.ok(createdPost);
   }
 
-  // 비회원의 게시글 목록 조회 입니다.
-  @GetMapping
-  public ResponseEntity<Page<PostPageResponseDto>> getAllPosts(Pageable pageable) {
-
-    Page<PostPageResponseDto> page = postService.getAllPosts(null, pageable);
-
-    return ResponseEntity.ok(page);
-  }
-
-  // 회원의 게시글 목록 조회 입니다.
-  @GetMapping("/members")
+  // 토큰이 존재하면 회원, 존재하지 않으면 비회원의 게시글 목록 조회 입니다.
+  @GetMapping("/views")
   public ResponseEntity<Page<PostPageResponseDto>> getAllPostsOfMember(
-      @LoginMemberId Long memberId, Pageable pageable) {
-
+      @LoginMemberId(required = false) Long memberId, Pageable pageable) {
     Page<PostPageResponseDto> page = postService.getAllPosts(memberId, pageable);
 
     return ResponseEntity.ok(page);
   }
 
-  // 비회원의 필터링 된 게시글 목록 조회 입니다. 쿼리 파라미터로 값을 받습니다.
-  @GetMapping("/guests/filters")
-  public ResponseEntity<Page<PostPageResponseDto>> getFilterPostsOfGuest(
-      @RequestParam(value = "post-type", required = false) PostType postType,
-      @RequestParam(value = "membership-type", required = false) MembershipType membershipType,
-      @RequestParam(value = "status", required = false) PostStatus status,
-      @RequestParam(value = "months-type", required = false) FilterMonthsType monthsType,
-      @RequestParam(value = "pt-type", required = false) FilterPtType ptType
-      , Pageable pageable) {
-
-    PostFilterRequestDto postFilterRequestDto = new PostFilterRequestDto(postType, membershipType,
-        status, monthsType, ptType);
-
-    Page<PostPageResponseDto> page = postService.getFilterPosts(null, postFilterRequestDto,
-        pageable);
-
-    return ResponseEntity.ok(page);
-  }
-
-  // 회원의 필터링 된 게시글 목록 조회 입니다. 쿼리 파라미터로 값을 받습니다.
-  @GetMapping("/members/filters")
+  // 토큰이 존재하면 회원, 존재하지 않으면 비회원의 필터링 된 게시글 목록 조회 입니다. 쿼리 파라미터로 값을 받습니다.
+  @GetMapping("/filters")
   public ResponseEntity<Page<PostPageResponseDto>> getFilterPostsOfMember(
-      @LoginMemberId Long memberId,
+      @LoginMemberId(required = false) Long memberId,
       @RequestParam(value = "post-type", required = false) PostType postType,
       @RequestParam(value = "membership-type", required = false) MembershipType membershipType,
       @RequestParam(value = "status", required = false) PostStatus status,
