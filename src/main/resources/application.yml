@@ -2,10 +2,14 @@ server:
   port: 8080
 
 spring:
+  mvc:
+    async:
+      request-timeout: 60000
+
   application:
     name: GoGym
   profiles:
-    active: prod
+    active: dev
 
   data:
     redis:
@@ -29,6 +33,11 @@ spring:
     secret: ENC(sz14IJLNwiaaHMqAtImz76SKb3nSkiq8FlPPYwToQFyAs1uMSprSqv21vvqUl1An)
     validity: ENC(iSNAc2YD8ecXGkZWP+5f0A==)
 
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
 logging:
   level:
     org:
@@ -42,6 +51,18 @@ jasypt:
     password: ${JASYPT_ENCRYPTOR_PASSWORD}
 
 portone:
-  secret: ENC(Yae9m6UdFdavIg+60o/aoAP5jG7K4gwTIIy/I8FLCsp8PYOcIb0sfwr3wd8Z37XGke+83s1e4VTEv9OtMwV3wmnOWTeXJJ1JqxmGc8VKHFzyR6FJ4YoSPfwKjsBrUwB1)
+  secret: ENC(EpRw1xyNsEfEArSn8H91SeUZR2M+HGVHKRqZ4bVDlKdW6sANl9+3ZmgJK/AI+GU7/G94pNpcAzDQpfdMWrkqJ5GcxR3TCKFscazOpT1ZM30RD+OVOgdpd3XQ/yErUozs)
   webhook:
     secret: ENC(rNgfIF0802rxis0Md6mRpdGH3WpdHA7XxabMdLFZXV6TWgeXAyUjfsFdffaqMBOfJlKSro6UCy3Krc2nOUfRNw==)
+
+cloud:
+  aws:
+    credentials:
+      access-key: ENC(FQO19gAuU2P7csP5hfomdMovGImuxHYq5LvlalfYMzE=)
+      secret-key: ENC(X3c52PgIRV7t9j/hYqjDLsTOqKMnVvL6u1/++8efNWQR428eaMzePDJ81ONHbHA4R7KP53z8ORs=)
+    S3:
+      bucket: ENC(GzhWzOfXoVXPUdHytq5szeRWxAbUpiVY)
+    region:
+      static: ENC(eilntHEIo5VEIK4m88ADKT/huIwY7Ijx)
+    stack:
+      auto: false
