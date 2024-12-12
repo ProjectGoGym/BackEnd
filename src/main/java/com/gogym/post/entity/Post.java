@@ -1,10 +1,13 @@
 package com.gogym.post.entity;
 
+import static com.gogym.exception.ErrorCode.REQUEST_VALIDATION_FAIL;
 import static com.gogym.post.type.PostStatus.POSTING;
 
 import com.gogym.common.entity.BaseEntity;
+import com.gogym.exception.CustomException;
 import com.gogym.member.entity.Member;
 import com.gogym.post.dto.PostRequestDto;
+import com.gogym.post.dto.PostUpdateRequestDto;
 import com.gogym.post.type.MembershipType;
 import com.gogym.post.type.PostStatus;
 import com.gogym.post.type.PostType;
@@ -16,6 +19,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -66,6 +70,7 @@ public class Post extends BaseEntity {
   private String imageUrl3;
 
   @Column(name = "wish_count")
+  @NotNull
   private Long wishCount;
 
   @Column(name = "membership_type", nullable = false)
@@ -96,5 +101,33 @@ public class Post extends BaseEntity {
         .expirationDate(postRequestDto.expirationDate())
         .remainingSessions(postRequestDto.remainingSessions())
         .build();
+  }
+
+  public void update(PostUpdateRequestDto postUpdateRequestDto) {
+
+    title = postUpdateRequestDto.title();
+    content = postUpdateRequestDto.content();
+    postType = postUpdateRequestDto.postType();
+    status = postUpdateRequestDto.status();
+    membershipType = postUpdateRequestDto.membershipType();
+    expirationDate = postUpdateRequestDto.expirationDate();
+    remainingSessions = postUpdateRequestDto.remainingSession();
+    amount = postUpdateRequestDto.amount();
+    imageUrl1 = postUpdateRequestDto.imageUrl1();
+    imageUrl2 = postUpdateRequestDto.imageUrl2();
+    imageUrl3 = postUpdateRequestDto.imageUrl3();
+  }
+
+  // 엔티티에서 Not Null 로 설정해두어 별도의 null 값 체크는 없습니다.
+  public void increaseWishCount() {
+    wishCount++;
+  }
+
+  public void decreaseWishCount() {
+
+    if (wishCount < 1) {
+      throw new CustomException(REQUEST_VALIDATION_FAIL);
+    }
+    wishCount--;
   }
 }

@@ -1,11 +1,13 @@
 package com.gogym.post.service;
 
 import static com.gogym.exception.ErrorCode.DELETED_POST;
+import static com.gogym.exception.ErrorCode.FORBIDDEN;
 import static com.gogym.exception.ErrorCode.MEMBER_NOT_FOUND;
 import static com.gogym.exception.ErrorCode.POST_NOT_FOUND;
 import static com.gogym.post.type.PostStatus.HIDDEN;
 import static com.gogym.post.type.PostStatus.POSTING;
 
+import com.gogym.common.paging.SortPage;
 import com.gogym.exception.CustomException;
 import com.gogym.member.entity.Member;
 import com.gogym.member.service.MemberService;
@@ -13,6 +15,7 @@ import com.gogym.post.dto.PostFilterRequestDto;
 import com.gogym.post.dto.PostPageResponseDto;
 import com.gogym.post.dto.PostRequestDto;
 import com.gogym.post.dto.PostResponseDto;
+import com.gogym.post.dto.PostUpdateRequestDto;
 import com.gogym.post.entity.Gym;
 import com.gogym.post.entity.Post;
 import com.gogym.post.repository.PostRepository;
@@ -24,10 +27,7 @@ import java.util.Objects;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,6 +45,10 @@ public class PostService {
   private final RegionService regionService;
 
   private final PostRepositoryCustom postRepositoryCustom;
+
+  private final RecentViewService recentViewService;
+
+  private final SortPage sortPage;
 
   @Transactional
   public PostResponseDto createPost(Long memberId, PostRequestDto postRequestDto) {
@@ -73,7 +77,7 @@ public class PostService {
   // 회원과 비회원의 기준으로 보여주는 게시글을 찾습니다. 회원의 경우 설정된 관심지역을 기준으로 보여집니다.
   private Page<PostPageResponseDto> fetchPosts(List<Long> regionIds, Pageable pageable) {
 
-    Pageable sortedByDate = getSortPageable(pageable);
+    Pageable sortedByDate = sortPage.getSortPageable(pageable);
 
     Page<Post> posts = regionIds == null
         ? postRepository.findAllByStatus(sortedByDate, POSTING)
@@ -96,7 +100,7 @@ public class PostService {
       PostFilterRequestDto postFilterRequestDto,
       Pageable pageable) {
 
-    Pageable sortedByDate = getSortPageable(pageable);
+    Pageable sortedByDate = sortPage.getSortPageable(pageable);
 
     // 필터링 설정
     Page<Post> filteredPosts = postRepositoryCustom.findAllWithFilter(regionIds,
@@ -106,8 +110,8 @@ public class PostService {
         : Page.empty();
   }
 
-  // 게시글의 상세 페이지를 조회합니다.
-  public PostResponseDto getDetailPost(Long postId) {
+  // 게시글의 상세 페이지를 조회합니다. 비회원의 경우 읽기 처리만 하고, 회원의 경우 최근본 게시글로 저장이 됩니다.
+  public PostResponseDto getDetailPost(Long memberId, Long postId) {
 
     Post post = findById(postId);
 
@@ -116,6 +120,35 @@ public class PostService {
       throw new CustomException(DELETED_POST);
     }
 
+    // 최근 본 게시글은 저장처리 됩니다.
+    if (memberId != null) {
+      Member member = memberService.findById(memberId);
+
+      recentViewService.saveRecentView(member, post);
+    }
+
+    RegionResponseDto regionResponseDto = regionService.findById(post.getGym().getRegionId());
+
+    return PostResponseDto.fromEntity(post, regionResponseDto);
+  }
+
+  // 게시글 수정 메서드입니다
+  @Transactional
+  public PostResponseDto updatePost(Long memberId, Long postId,
+      PostUpdateRequestDto postUpdateRequestDto) {
+
+    Member member = memberService.findById(memberId);
+
+    Post post = findById(postId);
+
+    // 게시글 작성자만 게시글 수정 권한이 있습니다
+    if (post.getMember() != member) {
+      throw new CustomException(FORBIDDEN);
+    }
+
+    post.update(postUpdateRequestDto);
+
+    // 게시글의 전체 필드를 반환합니다.
     RegionResponseDto regionResponseDto = regionService.findById(post.getGym().getRegionId());
 
     return PostResponseDto.fromEntity(post, regionResponseDto);
@@ -131,12 +164,6 @@ public class PostService {
         .toList();
 
     return regionIds.isEmpty() ? null : regionIds;
-  }
-
-  // 게시글이 생성된 시간(날짜) 기준으로 역정렬 합니다.
-  private Pageable getSortPageable(Pageable pageable) {
-    return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
-        Sort.by(Direction.DESC, "createdAt"));
   }
 
   // 주어진 게시글 ID 로 게시글을 찾습니다.
@@ -156,7 +183,7 @@ public class PostService {
   }
 
   // 회원 본인이 작성한 게시글을 찾는 로직입니다.
-  public Page<Post> findByMemberId(Long memberId, Pageable pageable) {
+  public Page<Post> getByMemberId(Long memberId, Pageable pageable) {
 
     return postRepository.findByMemberIdOrderByCreatedAtDesc(memberId, pageable);
   }
