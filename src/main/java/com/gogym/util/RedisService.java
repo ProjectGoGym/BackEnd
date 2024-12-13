@@ -5,11 +5,9 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.stereotype.Component;
 
-@Component
 @RequiredArgsConstructor
-public class RedisUtil {
+public class RedisService {
 
   private final StringRedisTemplate redisTemplate;
 
