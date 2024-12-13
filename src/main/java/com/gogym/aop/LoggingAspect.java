@@ -23,7 +23,7 @@ import org.springframework.web.util.ContentCachingRequestWrapper;
 @Component
 public class LoggingAspect {
 
-  @Pointcut("execution(* com.gogym..controller..*(..))")
+  @Pointcut("execution(* com.gogym..controller..*(..)) && !within(com.gogym.chat.controller.WebSocketChatController)")
   public void apiLayer() {
   }
 
@@ -33,6 +33,10 @@ public class LoggingAspect {
 
   @Around("apiLayer()")
   public Object logApiCall(ProceedingJoinPoint joinPoint) throws Throwable {
+    if (!(RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes)) {
+      return joinPoint.proceed();
+    }
+    
     String transactionId = createTransactionId();
     HttpServletRequest originalRequest = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
 
@@ -130,15 +134,23 @@ public class LoggingAspect {
   }
 
   private String createTransactionId() {
-    String transactionId = UUID.randomUUID().toString().substring(0, 8);
-    RequestContextHolder.getRequestAttributes()
-        .setAttribute("transactionId", transactionId, RequestAttributes.SCOPE_REQUEST);
-    return transactionId;
+    if (RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes) {
+      String transactionId = UUID.randomUUID().toString().substring(0, 8);
+      RequestContextHolder.getRequestAttributes()
+      .setAttribute("transactionId", transactionId, RequestAttributes.SCOPE_REQUEST);
+      return transactionId;
+    } else {
+      return UUID.randomUUID().toString();
+    }
   }
 
   private String getTransactionId() {
-    Object transactionId = RequestContextHolder.getRequestAttributes()
-        .getAttribute("transactionId", RequestAttributes.SCOPE_REQUEST);
-    return transactionId != null ? transactionId.toString() : UUID.randomUUID().toString();
+    RequestAttributes attributes = RequestContextHolder.getRequestAttributes();
+    if (attributes != null) {
+      Object transactionId = attributes.getAttribute("transactionId", RequestAttributes.SCOPE_REQUEST);
+      return transactionId != null ? transactionId.toString() : UUID.randomUUID().toString();
+    } else {
+      return UUID.randomUUID().toString();
+    }
   }
 }
