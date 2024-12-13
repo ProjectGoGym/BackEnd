@@ -66,7 +66,10 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         postAuthor.getNickname(), // counterpartyNickname
         0, // unreadMessageCount
         null, // lastMessage
-        null); // lastMessageAt
+        null,// lastMessageAt
+        newChatRoom.getPostAuthorActive(), // postAuthorActive
+        newChatRoom.getRequestorActive() // requestorActive
+    );
   }
   
   @Override
@@ -140,7 +143,10 @@ public class ChatRoomServiceImpl implements ChatRoomService {
           counterparty.getNickname(), // counterpartyNickname
           unreadMessageCount, // unreadMessageCount
           lastMessage != null ? lastMessage.getContent() : null, // lastMessage
-          lastMessageAt); // lastMessageAt
+          lastMessageAt, // lastMessageAt
+          chatRoom.getPostAuthorActive(), // postAuthorActive
+          chatRoom.getRequestorActive() // requestorActive
+      );
     });
   }
   
