@@ -1,7 +1,6 @@
 package com.gogym.member.service;
 
 import java.util.List;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -10,7 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
-
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
 import com.gogym.member.dto.KakaoProfileResponse;
@@ -21,14 +19,11 @@ import com.gogym.member.entity.Role;
 import com.gogym.member.jwt.JwtTokenProvider;
 import com.gogym.member.repository.KakaoMemberRepository;
 import com.gogym.member.repository.MemberRepository;
-
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-@Slf4j
 public class KakaoService {
 
   private final MemberRepository memberRepository;

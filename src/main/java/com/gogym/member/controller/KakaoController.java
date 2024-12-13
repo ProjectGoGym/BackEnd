@@ -17,7 +17,7 @@ public class KakaoController {
 
   private final KakaoService kakaoService;
 
-  @GetMapping("/callback")
+  @GetMapping("/sign-in")
   public ResponseEntity<String> kakaoCallback(@RequestParam("code") String code) {
     // 카카오 로그인 처리 및 JWT 토큰 생성
     kakaoService.handleKakaoCallback(code);

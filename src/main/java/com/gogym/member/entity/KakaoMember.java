@@ -19,7 +19,7 @@ public class KakaoMember {
   @JoinColumn(name = "member_id", nullable = false)
   private Member member;
 
-  @Column(name = "uuid", nullable = false, unique = true)
+  @Column(nullable = false, unique = true)
   private String uuid;
 
 }
