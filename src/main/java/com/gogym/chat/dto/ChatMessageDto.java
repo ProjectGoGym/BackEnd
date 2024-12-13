@@ -8,7 +8,6 @@ public class ChatMessageDto {
 
   public record ChatMessageRequest(
       @NotNull Long chatRoomId,
-      @NotNull Long senderId,
       @NotBlank String content) {}
 
   public record ChatMessageResponse(
