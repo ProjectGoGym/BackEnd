@@ -1,6 +1,7 @@
 package com.gogym.chat.controller;
 
 import java.security.Principal;
+import java.util.UUID;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
@@ -15,10 +16,12 @@ import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * WebSocket을 통한 실시간 채팅 메시지 처리를 담당하는 컨트롤러.
  */
+@Slf4j
 @Controller
 @RequiredArgsConstructor
 public class WebSocketChatController {
@@ -61,6 +64,16 @@ public class WebSocketChatController {
     
     // 메시지를 Redis에 저장
     ChatMessageResponse savedMessage = this.chatRedisService.saveMessageToRedis(messageRequest, memberId);
+    
+    // 고유 트랜잭션 ID 추출
+    String transactionId = UUID.randomUUID().toString().substring(0, 8);
+    
+    // WebSocket 로깅
+    log.info("[WebSocket] TransactionId: {}, SenderId: {}, ChatRoomId: {}, Content: {}",
+        transactionId,
+        memberId,
+        savedMessage.chatRoomId(),
+        savedMessage.content());
     
     // 메시지 브로드캐스트
     this.messagingTemplate.convertAndSend(
