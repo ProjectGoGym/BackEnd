@@ -24,7 +24,7 @@ public class ChatRedisServiceImpl implements ChatRedisService {
   private final RedisUtil redisUtil;
 
   @Override
-  public ChatMessageResponse saveMessageToRedis(ChatMessageRequest messageRequest) {
+  public ChatMessageResponse saveMessageToRedis(ChatMessageRequest messageRequest, Long memberId) {
     // Redis Key 생성
     String redisKey = this.getRedisChatroomMessageKeyPrefix() + messageRequest.chatRoomId();
 
@@ -34,7 +34,7 @@ public class ChatRedisServiceImpl implements ChatRedisService {
     // Redis에 저장할 메시지 객체 생성
     ChatMessageHistory messageHistory = new ChatMessageHistory(
         messageRequest.content(),
-        messageRequest.senderId(),
+        memberId,
         createdAt);
 
     // 메시지 객체를 JSON 문자열로 직렬화
@@ -46,7 +46,7 @@ public class ChatRedisServiceImpl implements ChatRedisService {
     // 메시지 저장 결과 반환
     return new ChatMessageResponse(
         messageRequest.chatRoomId(),
-        messageRequest.senderId(),
+        memberId,
         messageRequest.content(),
         LocalDateTime.parse(createdAt, DATE_TIME_FORMATTER));
   }
