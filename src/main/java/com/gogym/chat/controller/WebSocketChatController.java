@@ -48,7 +48,7 @@ public class WebSocketChatController {
     
     // 사용자 인증이 세션에 유지되고 있는지를 확인하기 위한 방어 로직
     if (principal == null) {
-      throw new CustomException(ErrorCode.UNAUTHORIZED);
+      throw new CustomException(ErrorCode.WEBSOCKET_UNAUTHORIZED);
     }
     
     // 사용자 ID 추출

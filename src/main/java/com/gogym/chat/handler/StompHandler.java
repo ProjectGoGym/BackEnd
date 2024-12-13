@@ -38,29 +38,29 @@ public class StompHandler implements ChannelInterceptor {
     if (StompCommand.CONNECT.equals(accessor.getCommand())) {
       String token = accessor.getFirstNativeHeader("Authorization");
       
-      // JWT가 존재하고 "Bearer "로 시작하는 경우에만 처리
-      if (token != null && token.startsWith("Bearer ")) {
-        token = token.substring(7); // "Bearer " 제거
-        
-        // JWT 유효성 검증
-        if (this.jwtTokenProvider.validateToken(token)) {
-          // 사용자 ID 추출
-          Long memberId = this.jwtTokenProvider.extractMemberId(token);
-          
-          // 인증된 사용자 정보를 나타내는 Principal 객체 생성
-          Principal principal = () -> String.valueOf(memberId);
-          
-          // STOMP 세션에 Principal 저장
-          accessor.getSessionAttributes().put("principal", principal);
-          
-          // STOMP 메시지의 사용자 정보 설정
-          accessor.setUser(principal);
-        } else {
-          throw new CustomException(ErrorCode.INVALID_TOKEN);
-        }
-      } else {
-        throw new CustomException(ErrorCode.INVALID_TOKEN);
+      // 헤더가 없거나 잘못된 경우
+      if (token == null || !token.startsWith("Bearer ")) {
+        throw new CustomException(ErrorCode.WEBSOCKET_UNAUTHORIZED);
       }
+      
+      token = token.substring(7); // "Bearer " 제거
+      
+      // 토큰 검증이 실패한 경우
+      if (!this.jwtTokenProvider.validateToken(token)) {
+        throw new CustomException(ErrorCode.WEBSOCKET_UNAUTHORIZED);
+      }
+      
+      // 사용자 ID 추출
+      Long memberId = this.jwtTokenProvider.extractMemberId(token);
+      
+      // 인증된 사용자 정보를 나타내는 Principal 객체 생성
+      Principal principal = () -> String.valueOf(memberId);
+      
+      // STOMP 세션에 Principal 저장
+      accessor.getSessionAttributes().put("principal", principal);
+      
+      // STOMP 메시지의 사용자 정보 설정
+      accessor.setUser(principal);
     }
     
     return message;
