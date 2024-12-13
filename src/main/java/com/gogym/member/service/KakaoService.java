@@ -91,8 +91,7 @@ public class KakaoService {
   @Transactional
   private Member findOrCreateMember(KakaoProfileResponse profile,
       KakaoTokenResponse tokenResponse) {
-    if (profile.getKakaoAccount() == null
-        || !Boolean.TRUE.equals(profile.getKakaoAccount().getHasEmail())) {
+    if (profile.getKakaoAccount() == null || !profile.getKakaoAccount().getHasEmail()) {
       throw new CustomException(ErrorCode.UNAUTHORIZED);
     }
 
