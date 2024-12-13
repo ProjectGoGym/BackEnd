@@ -42,4 +42,13 @@ public interface ChatRoomService {
    */
   void deleteChatRoom(Long memberId, Long chatRoomId);
   
+  /**
+   * 사용자가 특정 채팅방에 참여 중인지 확인
+   * 
+   * @param chatRoomId 확인할 채팅방 ID
+   * @param memberId 확인할 사용자 ID
+   * @return true: 사용자가 해당 채팅방에 참여 중인 경우, false: 참여하지 않은 경우
+   */
+  boolean isMemberInChatRoom(Long chatRoomId, Long memberId);
+  
 }

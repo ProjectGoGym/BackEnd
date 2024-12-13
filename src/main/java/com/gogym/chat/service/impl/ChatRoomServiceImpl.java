@@ -214,6 +214,11 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     }
   }
   
+  @Override
+  public boolean isMemberInChatRoom(Long chatRoomId, Long memberId) {
+    return this.chatRoomRepository.existsByChatRoomIdAndMemberId(chatRoomId, memberId);
+  }
+  
   /**
    * Redis에 저장된 메시지들을 강제로 DB에 저장.
    * 
