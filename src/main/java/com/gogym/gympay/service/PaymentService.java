@@ -12,11 +12,12 @@ import com.gogym.gympay.event.PaymentStatusChangedEvent;
 import com.gogym.gympay.repository.PaymentRepository;
 import com.gogym.member.entity.Member;
 import com.gogym.member.service.MemberService;
-import com.gogym.util.RedisUtil;
+import com.gogym.util.RedisService;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -29,7 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class PaymentService {
 
-  private final RedisUtil redisUtil;
+  private final RedisService redisService;
   private final ApplicationEventPublisher eventPublisher;
 
   private final MemberService memberService;
@@ -45,14 +46,11 @@ public class PaymentService {
     String paymentId = generateId();
 
     portOneService.preRegisterPayment(paymentId, request.amount());
-    redisUtil.saveHash(
-        PAYMENT_ID_PREFIX + paymentId + ":pre-payment",
-        Map.of(
-            "member-id", String.valueOf(memberId),
-            "amount", String.valueOf(request.amount())
-        ),
-        60 * 10
-    );
+    Map<String, String> preRegisteredPayment = new HashMap<>();
+    preRegisteredPayment.put("member-id", memberId.toString());
+    preRegisteredPayment.put("amount", String.valueOf(request.amount()));
+
+    redisService.saveHash(PAYMENT_ID_PREFIX + paymentId, preRegisteredPayment, 60 * 5);
 
     return new PreRegisterResponse(paymentId);
   }
@@ -76,8 +74,9 @@ public class PaymentService {
     Payment payment = result.toEntity(member);
     paymentRepository.save(payment);
 
-    if (result.status().equals(Status.PAID))
-    gymPayService.charge(member, result.amount().paid());
+    if (result.status().equals(Status.PAID)) {
+      gymPayService.charge(member, result.amount().paid());
+    }
 
     publishPaymentStatusChangedEvent(payment.getId(), webhookPayload.type(),
         new FailureResponse(result.failure().reason(), result.failure().pgCode(),
@@ -86,18 +85,10 @@ public class PaymentService {
 
   private String generateId() {
     String date = new SimpleDateFormat("yyyyMMdd").format(new Date());
-    Random random = new Random();
+    String uuid = UUID.randomUUID().toString().replaceAll("-", "");
+    String timestamp = String.valueOf(System.currentTimeMillis());
 
-    while (true) {
-      int randomNumber = random.nextInt(1000000);
-      String formattedNumber = String.format("%06d", randomNumber);
-
-      boolean isAdded = redisUtil.addToSet(PAYMENT_ID_PREFIX + "ids:" + date, formattedNumber,
-          60 * 60 * 24);
-      if (isAdded) {
-        return date + "-" + formattedNumber;
-      }
-    }
+    return date + "-" + uuid + "-" + timestamp;
   }
 
   private void verifyAmount(long paidAmount, long expectedAmount) {
@@ -107,8 +98,10 @@ public class PaymentService {
   }
 
   private Map<Object, Object> getPrePaymentData(String paymentId) {
-    Map<Object, Object> prePayment = redisUtil.getHash(
-        PAYMENT_ID_PREFIX + paymentId + ":pre-payment");
+    Map<Object, Object> prePayment = redisService.getHash(
+        PAYMENT_ID_PREFIX + paymentId);
+    redisService.deleteHash(PAYMENT_ID_PREFIX + paymentId);
+
     if (prePayment == null || prePayment.isEmpty()) {
       throw new CustomException(ErrorCode.PAYMENT_NOT_FOUND);
     }

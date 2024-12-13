@@ -2,7 +2,7 @@ package com.gogym.gympay.service;
 
 import com.gogym.gympay.dto.PaymentResult;
 import com.gogym.gympay.dto.TokenInfo;
-import com.gogym.util.RedisUtil;
+import com.gogym.util.RedisService;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,7 +15,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class PortOneService {
 
   private final WebClient portOneClient;
-  private final RedisUtil redisUtil;
+  private final RedisService redisService;
 
   @Value("${port-one.secret}")
   private String secretKey;
@@ -23,13 +23,14 @@ public class PortOneService {
   public static final String ACCESS_TOKEN_KEY = "portone:access-token";
   public static final String REFRESH_TOKEN_KEY = "portone:refresh-token";
 
-  public PortOneService(@Qualifier("portOneClient") WebClient portOneClient, RedisUtil redisUtil) {
+  public PortOneService(@Qualifier("portOneClient") WebClient portOneClient,
+      RedisService redisService) {
     this.portOneClient = portOneClient;
-    this.redisUtil = redisUtil;
+    this.redisService = redisService;
   }
 
   public String getAccessToken() {
-    String accessToken = redisUtil.get(ACCESS_TOKEN_KEY);
+    String accessToken = redisService.get(ACCESS_TOKEN_KEY);
 
     if (accessToken != null && !accessToken.isEmpty()) {
       return accessToken;
@@ -39,7 +40,7 @@ public class PortOneService {
   }
 
   private String refreshAccessToken() {
-    String refreshToken = redisUtil.get(REFRESH_TOKEN_KEY);
+    String refreshToken = redisService.get(REFRESH_TOKEN_KEY);
 
     if (refreshToken == null || refreshToken.isEmpty()) {
       return signIn();
@@ -74,10 +75,9 @@ public class PortOneService {
     return tokenInfo.accessToken();
   }
 
-  private void storeTokens(TokenInfo tokenInfo) {
-
-    redisUtil.save(ACCESS_TOKEN_KEY, tokenInfo.accessToken(), 60 * 60 * 24);
-    redisUtil.save(REFRESH_TOKEN_KEY, tokenInfo.refreshToken(), 60 * 60 * 24 * 7);
+  public synchronized void storeTokens(TokenInfo tokenInfo) {
+    redisService.save(ACCESS_TOKEN_KEY, tokenInfo.accessToken(), 60 * 30);
+    redisService.save(REFRESH_TOKEN_KEY, tokenInfo.refreshToken(), 60 * 60 * 24);
   }
 
   public void preRegisterPayment(String paymentId, int amount) {

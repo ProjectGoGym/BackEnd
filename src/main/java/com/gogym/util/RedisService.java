@@ -5,7 +5,9 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Service;
 
+@Service
 @RequiredArgsConstructor
 public class RedisService {
 
@@ -57,5 +59,9 @@ public class RedisService {
 
   public Map<Object, Object> getHash(String key) {
     return redisTemplate.opsForHash().entries(key);
+  }
+
+  public void deleteHash(String key) {
+    redisTemplate.delete(key);
   }
 }
