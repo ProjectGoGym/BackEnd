@@ -22,5 +22,5 @@ public class KakaoTokenResponse {
   @JsonProperty("refresh_token_expires_in")
   private int refreshTokenExpiresIn;
 
-  private String scope;
+  private String scope; //권한 범위
 }

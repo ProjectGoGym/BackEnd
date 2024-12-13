@@ -1,30 +1,26 @@
 package com.gogym.member.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class KakaoProfileResponse {
   private Long id;
-
-  @JsonProperty("connected_at")
   private String connectedAt;
-
-  @JsonProperty("kakao_account")
   private KakaoAccount kakaoAccount;
 
   @Getter
   @NoArgsConstructor
+  @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
   public static class KakaoAccount {
     private String email;
-
-    @JsonProperty("has_email")
     private Boolean hasEmail;
-
-    @JsonProperty("email_needs_agreement")
     private Boolean emailNeedsAgreement;
   }
 }
+
 

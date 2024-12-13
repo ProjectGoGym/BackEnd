@@ -1,6 +1,7 @@
 package com.gogym.member.service;
 
 import java.util.List;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -9,8 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
-import com.gogym.exception.CustomException;
-import com.gogym.exception.ErrorCode;
 import com.gogym.member.dto.KakaoProfileResponse;
 import com.gogym.member.dto.KakaoTokenResponse;
 import com.gogym.member.entity.KakaoMember;
@@ -29,6 +28,7 @@ public class KakaoService {
   private final MemberRepository memberRepository;
   private final KakaoMemberRepository kakaoMemberRepository;
   private final JwtTokenProvider jwtTokenProvider;
+  private final MemberService memberService;
 
   @Value("${kakao.rest-api-key}")
   private String kakaoClientId;
@@ -40,7 +40,8 @@ public class KakaoService {
   public String handleKakaoCallback(String code) {
     KakaoTokenResponse tokenResponse = getAccessToken(code);
     KakaoProfileResponse profileResponse = getProfile(tokenResponse.getAccessToken());
-    Member member = findOrCreateMember(profileResponse, tokenResponse);
+
+    Member member = findOrCreateMember(profileResponse);
     String token = jwtTokenProvider.createToken(member.getEmail(), member.getId(),
         List.of(member.getRole().name()));
 
@@ -74,47 +75,29 @@ public class KakaoService {
   }
 
   @Transactional
-  private KakaoMember registerKakaoMember(KakaoProfileResponse profileResponse) {
-    Member newMember = Member.builder().email(profileResponse.getKakaoAccount().getEmail())
-        .name(profileResponse.getKakaoAccount().getEmail().split("@")[0])
-        .nickname("고짐이_" + (int) (Math.random() * 10000)).isKakao(true).memberStatus("APPROVED")
-        .build();
+  private Member createMember(KakaoProfileResponse profile) {
+    String email = profile.getKakaoAccount().getEmail();
+    String nickname = "고짐이_" + (int) (Math.random() * 10000);
+
+    Member newMember = Member.builder().email(email).nickname(nickname).name(email.split("@")[0])
+        .role(Role.USER).password("") // 비밀번호 없음
+        .phone("") // 기본값
+        .isKakao(true).memberStatus("APPROVED").build();
 
     memberRepository.save(newMember);
 
-    KakaoMember kakaoMember = KakaoMember.builder().kakaoId(profileResponse.getId())
-        .member(newMember).uuid(java.util.UUID.randomUUID().toString()).build();
+    KakaoMember kakaoMember = KakaoMember.builder().kakaoId(profile.getId()).member(newMember)
+        .uuid(java.util.UUID.randomUUID().toString()).build();
 
-    return kakaoMemberRepository.save(kakaoMember);
+    kakaoMemberRepository.save(kakaoMember);
+
+    return newMember;
   }
 
-  @Transactional
-  private Member findOrCreateMember(KakaoProfileResponse profile,
-      KakaoTokenResponse tokenResponse) {
-    if (profile.getKakaoAccount() == null || !profile.getKakaoAccount().getHasEmail()) {
-      throw new CustomException(ErrorCode.UNAUTHORIZED);
-    }
+  private Member findOrCreateMember(KakaoProfileResponse profile) {
+    String email = profile.getKakaoAccount().getEmail();
 
-    if (profile.getKakaoAccount().getEmail() == null) {
-      throw new CustomException(ErrorCode.UNAUTHORIZED);
-    }
-
-    // 회원 생성 또는 조회
-    return memberRepository.findByEmail(profile.getKakaoAccount().getEmail()).orElseGet(() -> {
-      Member newMember = Member.builder().email(profile.getKakaoAccount().getEmail())
-          .nickname("고짐이_" + (int) (Math.random() * 100000))
-          .name(profile.getKakaoAccount().getEmail().split("@")[0]).role(Role.USER).password("")
-          .phone("").isKakao(true).memberStatus("APPROVED").build();
-
-      memberRepository.save(newMember);
-
-      KakaoMember kakaoMember = KakaoMember.builder().kakaoId(profile.getId()).member(newMember)
-          .uuid(java.util.UUID.randomUUID().toString()).build();
-
-      kakaoMemberRepository.save(kakaoMember);
-
-      return newMember;
-    });
+    return memberRepository.findByEmail(email).orElseGet(() -> createMember(profile));
   }
 }
 
