@@ -1,6 +1,7 @@
 package com.gogym.member.entity;
 
 import com.gogym.common.entity.BaseEntity;
+import com.gogym.gympay.entity.GymPay;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -50,6 +51,10 @@ public class Member extends BaseEntity {
   @Setter
   @Column(name = "verified_at")
   private LocalDateTime verifiedAt; // 이메일 인증 시간을 저장
+
+  @OneToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "gym_pay_id")
+  private GymPay gymPay;
 
   // 이메일 인증 여부 확인 메서드
   public boolean isVerified() {
