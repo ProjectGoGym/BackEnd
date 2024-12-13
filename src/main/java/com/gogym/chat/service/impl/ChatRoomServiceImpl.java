@@ -70,7 +70,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
   }
   
   @Override
-  public List<ChatRoomResponse> getChatRooms(Long memberId, int page, int size) {
+  public Page<ChatRoomResponse> getChatRooms(Long memberId, int page, int size) {
     // 페이징 조건으로 사용자가 참여한 채팅방 목록 조회
     Page<ChatRoom> chatRooms = this.chatRoomRepository.findChatRoomsSortedByLastMessage(
         memberId,
@@ -78,7 +78,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         PageRequest.of(page, size));
     
     // 채팅방 목록 데이터 반환
-    return chatRooms.stream().map(chatRoom -> {
+    return chatRooms.map(chatRoom -> {
       // 상대방 정보 조회
       Member counterparty = chatRoom.getRequestor().getId().equals(memberId)
           ? chatRoom.getPost().getMember() // 게시글 작성자가 상대방인 경우
@@ -141,7 +141,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
           unreadMessageCount, // unreadMessageCount
           lastMessage != null ? lastMessage.getContent() : null, // lastMessage
           lastMessageAt); // lastMessageAt
-    }).collect(Collectors.toList());
+    });
   }
   
   @Override
