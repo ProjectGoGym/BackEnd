@@ -31,7 +31,7 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
       SELECT cr
       FROM ChatRoom cr
       LEFT JOIN ChatMessage cm ON cm.chatRoom.id = cr.id
-      WHERE (cr.post.id = :postAuthorId OR cr.requestor.id = :requestorId)
+      WHERE (cr.post.member.id = :postAuthorId OR cr.requestor.id = :requestorId)
         AND cr.isDeleted = false
       GROUP BY cr.id
       ORDER BY MAX(cm.createdAt) DESC
@@ -50,8 +50,7 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
    * @param requestorId 요청자 ID
    * @return 특정 채팅방 (Optional)
    */
-  Optional<ChatRoom> findByIdAndPostMemberIdOrRequestorId(Long chatRoomId, Long postAuthorId, Long requestorId);
-  
+  Optional<ChatRoom> findByIdAndPost_MemberIdOrRequestor_Id(Long chatRoomId, Long postAuthorId, Long requestorId);
   
   /**
    * 특정 사용자가 특정 채팅방에 참여 중인지 확인.
