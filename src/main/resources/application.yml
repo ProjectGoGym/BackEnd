@@ -5,7 +5,7 @@ spring:
   application:
     name: GoGym
   profiles:
-    active: dev
+    active: prod
 
   data:
     redis:
