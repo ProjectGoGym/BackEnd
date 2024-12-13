@@ -24,11 +24,11 @@ import lombok.Setter;
 @Builder
 public class ChatRoom extends BaseEntity {
   
-  @JoinColumn(name = "post", nullable = false)
+  @JoinColumn(name = "post_id", nullable = false)
   @ManyToOne(fetch = FetchType.LAZY)
   private Post post; // 게시글 작성자
   
-  @JoinColumn(name = "requestor", nullable = false)
+  @JoinColumn(name = "requestor_id", nullable = false)
   @ManyToOne(fetch = FetchType.LAZY)
   private Member requestor; // 채팅 요청자
   
