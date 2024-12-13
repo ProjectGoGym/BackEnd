@@ -5,7 +5,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import com.gogym.chat.dto.ChatMessageDto.ChatMessageHistory;
 import com.gogym.chat.dto.ChatRoomDto.ChatRoomResponse;
@@ -70,12 +70,12 @@ public class ChatRoomServiceImpl implements ChatRoomService {
   }
   
   @Override
-  public Page<ChatRoomResponse> getChatRooms(Long memberId, int page, int size) {
+  public Page<ChatRoomResponse> getChatRooms(Long memberId, Pageable pageable) {
     // 페이징 조건으로 사용자가 참여한 채팅방 목록 조회
     Page<ChatRoom> chatRooms = this.chatRoomRepository.findChatRoomsSortedByLastMessage(
         memberId,
         memberId,
-        PageRequest.of(page, size));
+        pageable);
     
     // 채팅방 목록 데이터 반환
     return chatRooms.map(chatRoom -> {

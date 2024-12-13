@@ -1,6 +1,7 @@
 package com.gogym.chat.service;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import com.gogym.chat.dto.ChatRoomDto.ChatRoomResponse;
 import com.gogym.chat.dto.ChatRoomDto.LeaveRequest;
 
@@ -19,11 +20,10 @@ public interface ChatRoomService {
    * 사용자가 참여한 채팅방 목록 조회
    * 
    * @param memberId 요청자 ID
-   * @param page 페이지 번호
-   * @param size 페이지당 항목 수
+   * @param pageable 페이징 정보
    * @return 사용자가 참여한 채팅 목록
    */
-  Page<ChatRoomResponse> getChatRooms(Long memberId, int page, int size);
+  Page<ChatRoomResponse> getChatRooms(Long memberId, Pageable pageable);
   
   /**
    * 채팅방 나가기
