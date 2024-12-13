@@ -49,8 +49,16 @@ public class Member extends BaseEntity {
 
   @Setter
   @Column(name = "verified_at")
-  private LocalDateTime verifiedAt; // 이메일 인증 시간을 저장
+  private LocalDateTime verifiedAt;
 
+  @Column(name = "is_kakao", nullable = false)
+  @Builder.Default
+  private Boolean isKakao = false; // 카카오 로그인 여부
+  
+  @Setter
+  @Column(name = "member_status", nullable = false)
+  private String memberStatus; // 회원 상태
+  
   // 이메일 인증 여부 확인 메서드
   public boolean isVerified() {
     return this.verifiedAt != null;
@@ -61,6 +69,5 @@ public class Member extends BaseEntity {
     this.name = name;
     this.nickname = nickname;
     this.phone = phone;
-    this.profileImageUrl = profileImageUrl;
   }
 }
