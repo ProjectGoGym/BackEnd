@@ -23,7 +23,7 @@ public class GymPay extends BaseEntity {
   @OneToOne(mappedBy = "gymPay")
   private Member member;
 
-  public void charge(long amount) {
+  public void charge(int amount) {
     this.balance += amount;
   }
 }

@@ -27,7 +27,7 @@ public class GymPayService {
   }
 
   @Transactional
-  public void charge(Member member, Long amount) {
+  public void charge(Member member, int amount) {
     GymPay gymPay = member.getGymPay();
 
     gymPay.charge(amount);

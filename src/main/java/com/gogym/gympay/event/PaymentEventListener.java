@@ -12,13 +12,12 @@ public class PaymentEventListener {
   private final SSEService sseService;
 
   @EventListener
-  public void handlePaymentStatusChanged(PaymentStatusChangedEvent event) {
-    switch (event.type()) {
-      case "transaction.paid" ->
-          sseService.sendUpdate(event.paymentId(), "Transaction Paid", null);
-      case "transaction.failed" -> {
-        sseService.sendUpdate(event.paymentId(), "Transaction Failed", event.failureResponse());
-      }
-    }
+  public void handlePaymentPaid(PaidEvent event) {
+    sseService.sendUpdate(event.paymentId(), event.sseEventName());
+  }
+
+  @EventListener
+  public void handlePaymentFailed(FailedEvent event) {
+    sseService.sendUpdate(event.paymentId(), event.sseEventName(), event.failureReason());
   }
 }
