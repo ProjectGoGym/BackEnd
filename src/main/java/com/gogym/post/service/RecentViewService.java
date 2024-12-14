@@ -1,6 +1,5 @@
 package com.gogym.post.service;
 
-import com.gogym.common.paging.SortPage;
 import com.gogym.member.entity.Member;
 import com.gogym.post.dto.PostPageResponseDto;
 import com.gogym.post.entity.Post;
@@ -19,8 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class RecentViewService {
 
   private final RecentViewRepository recentViewRepository;
-
-  private final SortPage sortPage;
 
   private static final int MAX_RECENT_VIEWS = 5;
 
@@ -57,9 +54,8 @@ public class RecentViewService {
   // 최근 본 게시글 목록을 반환합니다.
   public Page<PostPageResponseDto> getRecentViews(Long memberId, Pageable pageable) {
 
-    Pageable sortedByDate = sortPage.getSortPageable(pageable);
-
-    Page<RecentView> recentViewPage = recentViewRepository.findByMemberId(memberId, sortedByDate);
+    Page<RecentView> recentViewPage = recentViewRepository.findByMemberIdOrderByCreatedAtDesc(
+        memberId, pageable);
 
     return recentViewPage.map(recentView -> {
       Post post = recentView.getPost();

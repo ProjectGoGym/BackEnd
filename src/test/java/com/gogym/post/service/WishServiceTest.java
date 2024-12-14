@@ -1,13 +1,14 @@
 package com.gogym.post.service;
 
 import static com.gogym.exception.ErrorCode.REQUEST_VALIDATION_FAIL;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.gogym.common.paging.SortPage;
 import com.gogym.exception.CustomException;
 import com.gogym.member.entity.Member;
 import com.gogym.member.service.MemberService;
@@ -43,9 +44,6 @@ class WishServiceTest {
   private PostService postService;
 
   @Mock
-  private SortPage sortPage;
-
-  @Mock
   private NotificationService notificationService;
 
   @InjectMocks
@@ -64,8 +62,8 @@ class WishServiceTest {
 
     member = Member.builder().id(1L).build();
     gym = Gym.builder().gymName("헬스장").build();
-    post = Post.builder().member(member).gym(gym).wishCount(1L).build();
-    post2 = Post.builder().member(member).gym(gym).wishCount(1L).build();
+    post = Post.builder().author(member).gym(gym).wishCount(1L).build();
+    post2 = Post.builder().author(member).gym(gym).wishCount(1L).build();
     wish = new Wish(member, post);
     wish2 = new Wish(member, post2);
     pageable = PageRequest.of(0, 10);
@@ -117,9 +115,8 @@ class WishServiceTest {
   @Test
   void 회원의_찜이_존재하면_찜_목록을_반환한다() {
     // given
-    when(sortPage.getSortPageable(pageable)).thenReturn(pageable);
     List<Wish> wishList = List.of(wish, wish2);
-    when(wishRepository.findByMemberId(member.getId(), pageable)).thenReturn(new PageImpl<>(
+    when(wishRepository.findByMemberIdOrderByCreatedAtDesc(member.getId(), pageable)).thenReturn(new PageImpl<>(
         wishList, pageable, wishList.size()));
     // when
     Page<PostPageResponseDto> wishPosts = wishService.getWishList(member.getId(), pageable);

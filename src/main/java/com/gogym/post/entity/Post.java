@@ -19,7 +19,6 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -35,9 +34,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Post extends BaseEntity {
 
-  @JoinColumn(name = "member_id", nullable = false)
+  @JoinColumn(name = "author_id", nullable = false)
   @ManyToOne(fetch = FetchType.LAZY)
-  private Member member;
+  private Member author;
 
   @JoinColumn(name = "gym_id", nullable = false)
   @ManyToOne(fetch = FetchType.LAZY)
@@ -69,8 +68,7 @@ public class Post extends BaseEntity {
   @Column(name = "image_url_3")
   private String imageUrl3;
 
-  @Column(name = "wish_count")
-  @NotNull
+  @Column(name = "wish_count", nullable = false)
   private Long wishCount;
 
   @Column(name = "membership_type", nullable = false)
@@ -86,7 +84,7 @@ public class Post extends BaseEntity {
   public static Post of (Member member, Gym gym, PostRequestDto postRequestDto) {
 
     return Post.builder()
-        .member(member)
+        .author(member)
         .gym(gym)
         .title(postRequestDto.title())
         .content(postRequestDto.content())
@@ -111,7 +109,7 @@ public class Post extends BaseEntity {
     status = postUpdateRequestDto.status();
     membershipType = postUpdateRequestDto.membershipType();
     expirationDate = postUpdateRequestDto.expirationDate();
-    remainingSessions = postUpdateRequestDto.remainingSession();
+    remainingSessions = postUpdateRequestDto.remainingSessions();
     amount = postUpdateRequestDto.amount();
     imageUrl1 = postUpdateRequestDto.imageUrl1();
     imageUrl2 = postUpdateRequestDto.imageUrl2();
@@ -119,11 +117,11 @@ public class Post extends BaseEntity {
   }
 
   // 엔티티에서 Not Null 로 설정해두어 별도의 null 값 체크는 없습니다.
-  public void increaseWishCount() {
+  public void addWish() {
     wishCount++;
   }
 
-  public void decreaseWishCount() {
+  public void removeWish() {
 
     if (wishCount < 1) {
       throw new CustomException(REQUEST_VALIDATION_FAIL);

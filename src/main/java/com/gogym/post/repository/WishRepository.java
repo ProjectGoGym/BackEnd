@@ -12,5 +12,5 @@ public interface WishRepository extends JpaRepository<Wish, Long> {
 
   Optional<Wish> findByMemberAndPost(Member member, Post post);
 
-  Page<Wish> findByMemberId(Long memberId, Pageable pageable);
+  Page<Wish> findByMemberIdOrderByCreatedAtDesc(Long memberId, Pageable pageable);
 }

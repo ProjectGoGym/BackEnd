@@ -6,14 +6,15 @@ import com.gogym.post.type.PostStatus;
 import com.gogym.post.type.PostType;
 import com.gogym.region.dto.RegionResponseDto;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import lombok.Builder;
 
 @Builder
 public record PostResponseDto(
 
     Long postId,
-    Long memberId,
-    String memberNickname,
+    Long authorId,
+    String authorNickname,
     String title,
     String content,
     PostType postType,
@@ -30,7 +31,8 @@ public record PostResponseDto(
     String gymName,
     String gymKakaoUrl,
     String city,
-    String district
+    String district,
+    LocalDateTime createdAt
 
 ) {
 
@@ -38,8 +40,8 @@ public record PostResponseDto(
 
     return PostResponseDto.builder()
         .postId(post.getId())
-        .memberId(post.getMember().getId())
-        .memberNickname(post.getMember().getNickname())
+        .authorId(post.getAuthor().getId())
+        .authorNickname(post.getAuthor().getNickname())
         .title(post.getTitle())
         .content(post.getContent())
         .postType(post.getPostType())
@@ -57,6 +59,7 @@ public record PostResponseDto(
         .gymKakaoUrl(post.getGym().getGymKakaoUrl())
         .city(regionResponseDto.city())
         .district(regionResponseDto.district())
+        .createdAt(post.getCreatedAt())
         .build();
   }
 }

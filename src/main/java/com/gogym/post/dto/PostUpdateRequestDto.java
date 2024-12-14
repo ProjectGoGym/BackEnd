@@ -22,7 +22,7 @@ public record PostUpdateRequestDto(
     MembershipType membershipType,
     @Future(message = "현재 날짜 이후만 설정이 가능합니다.")
     LocalDate expirationDate,
-    Long remainingSession,
+    Long remainingSessions,
     @NotNull
     @Min(value = 1000, message = "최소 1000원 이상 입력해 주세요.")
     Long amount,

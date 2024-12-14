@@ -2,7 +2,6 @@ package com.gogym.post.service;
 
 import static com.gogym.notification.type.NotificationType.ADD_WISHLIST_MY_POST;
 
-import com.gogym.common.paging.SortPage;
 import com.gogym.member.entity.Member;
 import com.gogym.member.service.MemberService;
 import com.gogym.notification.dto.NotificationDto;
@@ -31,8 +30,6 @@ public class WishService {
 
   private final NotificationService notificationService;
 
-  private final SortPage sortPage;
-
   // 회원이 게시글을 찜 합니다.
   @Transactional
   public void toggleWish(Long memberId, Long postId) {
@@ -57,7 +54,7 @@ public class WishService {
     Wish wish = new Wish(member, post);
     wishRepository.save(wish);
     // 게시글의 찜 횟수를 올립니다.
-    post.increaseWishCount();
+    post.addWish();
     // 게시글의 작성자에게 알림을 보냅니다.
     sendNotification(member, post);
   }
@@ -65,7 +62,7 @@ public class WishService {
   private void removeWish(Wish existingWish, Post post) {
 
     // 게시글의 찜 횟수를 줄입니다.
-    post.decreaseWishCount();
+    post.removeWish();
     wishRepository.delete(existingWish);
   }
 
@@ -77,19 +74,17 @@ public class WishService {
         ADD_WISHLIST_MY_POST,
         member.getNickname() + "님이 " + post.getTitle() + "에 찜을 하였습니다.",
         LocalDateTime.now());
-    notificationService.createNotification(post.getMember().getId(), notificationDto);
+    notificationService.createNotification(post.getAuthor().getId(), notificationDto);
   }
 
   // 회원의 찜 목록을 받아오는 메서드입니다.
   public Page<PostPageResponseDto> getWishList(Long memberId, Pageable pageable) {
 
-    Pageable sortedByDate = sortPage.getSortPageable(pageable);
-
-    Page<Wish> wishPosts = wishRepository.findByMemberId(memberId, sortedByDate);
+    Page<Wish> wishPosts = wishRepository.findByMemberIdOrderByCreatedAtDesc(memberId, pageable);
 
     return wishPosts.map(wish -> {
-          Post post = wish.getPost();
-          return PostPageResponseDto.fromEntity(post);
-        });
+      Post post = wish.getPost();
+      return PostPageResponseDto.fromEntity(post);
+    });
   }
 }

@@ -15,7 +15,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.gogym.common.paging.SortPage;
 import com.gogym.exception.CustomException;
 import com.gogym.member.entity.Member;
 import com.gogym.member.repository.MemberRepository;
@@ -72,9 +71,6 @@ class PostServiceTest {
   private RegionResponseDto regionResponseDto;
 
   @Mock
-  private SortPage sortPage;
-
-  @Mock
   private RecentViewService recentViewService;
 
   @InjectMocks
@@ -124,7 +120,7 @@ class PostServiceTest {
 
     post = Post.builder()
         .title("게시글 제목")
-        .member(member)
+        .author(member)
         .gym(gym)
         .build();
 
@@ -154,8 +150,7 @@ class PostServiceTest {
     // given
     posts = new PageImpl<>(List.of(post), pageable, 1);
 
-    when(sortPage.getSortPageable(pageable)).thenReturn(pageable);
-    when(postRepository.findAllByStatus(pageable, POSTING)).thenReturn(posts);
+    when(postRepository.findAllByStatusOrderByCreatedAtDesc(pageable, POSTING)).thenReturn(posts);
     // when
     Page<PostPageResponseDto> result = postService.getAllPosts(null, pageable);
     // then
@@ -169,7 +164,6 @@ class PostServiceTest {
     // given
     posts = new PageImpl<>(List.of(post), pageable, 1);
 
-    when(sortPage.getSortPageable(pageable)).thenReturn(pageable);
     when(memberService.findById(member.getId())).thenReturn(member);
     when(postRepository.findAllByStatusAndRegionIds(POSTING, pageable, regionIds)).thenReturn(
         posts);
@@ -191,7 +185,6 @@ class PostServiceTest {
         .regionId2(null)
         .build();
 
-    when(sortPage.getSortPageable(pageable)).thenReturn(pageable);
     when(memberService.findById(member.getId())).thenReturn(member);
     // when
     Page<PostPageResponseDto> result = postService.getAllPosts(member.getId(), pageable);

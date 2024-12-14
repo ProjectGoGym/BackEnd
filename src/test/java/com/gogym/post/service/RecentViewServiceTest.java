@@ -1,12 +1,12 @@
 package com.gogym.post.service;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.gogym.common.paging.SortPage;
 import com.gogym.member.entity.Member;
 import com.gogym.post.dto.PostPageResponseDto;
 import com.gogym.post.entity.Gym;
@@ -31,13 +31,9 @@ class RecentViewServiceTest {
   @Mock
   private RecentViewRepository recentViewRepository;
 
-  @Mock
-  private SortPage sortPage;
-
   @InjectMocks
   private RecentViewService recentViewService;
 
-  private static final int MAX_RECENT_VIEWS = 5;
   private Pageable pageable;
   private Member member;
   private Post post;
@@ -49,7 +45,7 @@ class RecentViewServiceTest {
     pageable = PageRequest.of(0, 10);
     member = Member.builder().id(1L).build();
     gym = Gym.builder().gymName("헬스장").build();
-    post = Post.builder().member(member).gym(gym).build();
+    post = Post.builder().author(member).gym(gym).build();
   }
 
   @Test
@@ -88,9 +84,9 @@ class RecentViewServiceTest {
   @Test
   void 최근본_게시글_목록을_반환한다() {
     // given
-    when(sortPage.getSortPageable(pageable)).thenReturn(pageable);
     List<RecentView> recentViews = List.of(new RecentView(member, post));
-    when(recentViewRepository.findByMemberId(member.getId(), pageable)).thenReturn(new PageImpl<>(recentViews, pageable, recentViews.size()));
+    when(recentViewRepository.findByMemberIdOrderByCreatedAtDesc(member.getId(),
+        pageable)).thenReturn(new PageImpl<>(recentViews, pageable, recentViews.size()));
     // when
     Page<PostPageResponseDto> recentViewPage = recentViewService.getRecentViews(member.getId(),
         pageable);

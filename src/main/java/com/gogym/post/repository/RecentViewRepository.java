@@ -12,7 +12,7 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface RecentViewRepository extends JpaRepository<RecentView, Long> {
 
-  Page<RecentView> findByMemberId(Long memberId, Pageable pageable);
+  Page<RecentView> findByMemberIdOrderByCreatedAtDesc(Long memberId, Pageable pageable);
 
   boolean existsByMemberAndPost(Member member, Post post);
 
@@ -22,5 +22,5 @@ public interface RecentViewRepository extends JpaRepository<RecentView, Long> {
   @Query(value = "DELETE rv FROM recent_views rv JOIN ("
       + "SELECT id FROM recent_views WHERE member_id = :memberId ORDER BY id LIMIT 1"
       + ") tmp ON rv.id = tmp.id", nativeQuery = true)
-  void deleteOldestByMember(@Param("memberId") Long memberId);
+  void deleteOldestByMember(@Param("authorId") Long memberId);
 }
