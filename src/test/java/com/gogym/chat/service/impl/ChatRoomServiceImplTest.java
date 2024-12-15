@@ -162,7 +162,7 @@ class ChatRoomServiceImplTest {
         eq(memberId),
         any(Pageable.class))).thenReturn(mockPage);
 
-    String redisMessageJson = "{\"content\":\"test message\",\"senderId\":1,\"createdAt\":\"2024-12-10 12:00:00\"}";
+    String redisMessageJson = "{\"content\":\"안녕하세요!\",\"senderId\":123,\"createdAt\":\"2024-12-03T12:00:00\"}";
     when(this.chatRedisService.getMessages(chatRoomId)).thenReturn(List.of(redisMessageJson));
     when(this.chatMessageReadRepository.countUnreadMessages(eq(chatRoomId), eq(memberId))).thenReturn(5);
 
@@ -176,7 +176,7 @@ class ChatRoomServiceImplTest {
     ChatRoomResponse response = responses.getContent().get(0);
     
     assertEquals(chatRoomId, response.chatRoomId());
-    assertEquals("test message", response.lastMessage());
+    assertEquals("안녕하세요!", response.lastMessage());
     assertEquals(5, response.unreadMessageCount());
     assertEquals(1, responses.getTotalElements());
     assertEquals(1, responses.getTotalPages());
