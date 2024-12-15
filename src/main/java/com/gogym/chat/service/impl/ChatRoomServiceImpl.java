@@ -83,7 +83,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     return chatRooms.map(chatRoom -> {
       // 상대방 정보 조회
       Member counterparty = chatRoom.getRequestor().getId().equals(memberId)
-          ? chatRoom.getPost().getMember() // 게시글 작성자가 상대방인 경우
+          ? chatRoom.getPost().getAuthor() // 게시글 작성자가 상대방인 경우
           : chatRoom.getRequestor(); // 요청자가 상대방인 경우
       
       // 상대방 정보가 없을 경우 추가 방어 로직
@@ -154,7 +154,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         .orElseThrow(() -> new CustomException(ErrorCode.CHATROOM_NOT_FOUND));
     
     // 요청자가 채팅방에 속해 있는지 확인
-    if (!chatRoom.getPost().getMember().getId().equals(memberId)
+    if (!chatRoom.getPost().getAuthor().getId().equals(memberId)
         && !chatRoom.getRequestor().getId().equals(memberId)) {
       throw new CustomException(ErrorCode.FORBIDDEN);
     }
@@ -190,7 +190,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         .orElseThrow(() -> new CustomException(ErrorCode.CHATROOM_NOT_FOUND));
     
     // 회원이 해당 채팅방에 속해 있는지 확인
-    if (!chatRoom.getPost().getMember().getId().equals(memberId)
+    if (!chatRoom.getPost().getAuthor().getId().equals(memberId)
         && !chatRoom.getRequestor().getId().equals(memberId)) {
       throw new CustomException(ErrorCode.FORBIDDEN);
     }
@@ -205,7 +205,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     }
     
     // 회원별 채팅방 활성화 상태 업데이트
-    if (chatRoom.getPost().getMember().getId().equals(memberId)) {
+    if (chatRoom.getPost().getAuthor().getId().equals(memberId)) {
       chatRoom.setPostAuthorActive(false);
     } else if (chatRoom.getRequestor().getId().equals(memberId)) {
       chatRoom.setRequestorActive(false);

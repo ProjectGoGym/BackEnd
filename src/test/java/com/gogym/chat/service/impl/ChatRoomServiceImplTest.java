@@ -82,7 +82,7 @@ class ChatRoomServiceImplTest {
         .build();
     
     this.post = Post.builder()
-        .member(this.postAuthor)
+        .author(this.postAuthor)
         .build();
     
     this.chatRoom = ChatRoom.builder()
