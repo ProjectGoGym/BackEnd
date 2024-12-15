@@ -8,7 +8,6 @@ public class ChatMessageDto {
 
   public record ChatMessageRequest(
       @NotNull Long chatRoomId,
-      @NotNull Long senderId,
       @NotBlank String content) {}
 
   public record ChatMessageResponse(
@@ -20,6 +19,6 @@ public class ChatMessageDto {
   public record ChatMessageHistory(
       String content,
       Long senderId,
-      String createdAt) {}
+      LocalDateTime createdAt) {}
 
 }

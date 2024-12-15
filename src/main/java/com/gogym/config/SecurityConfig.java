@@ -44,7 +44,9 @@ public class SecurityConfig {
             .requestMatchers("/api/auth/sign-up", "/api/auth/sign-in", "/api/auth/check-email",
                 "/api/auth/check-nickname", "/api/auth/verify-email", "/api/auth/reset-password",
                 "/api/auth/send-verification-email", "/api/regions",
-                "api/posts/views", "api/posts/filters", "api/posts/details/*", "/api/payments/webhook")
+                "api/posts/views", "api/posts/filters", "api/posts/details/*", "/api/payments/webhook",
+                "api/payments/sse/subscribe/**", "api/images",
+                "/ws/**")
             .permitAll()
             // 그 외의 모든 요청은 인증 필요
             .anyRequest().authenticated())
@@ -65,7 +67,9 @@ public class SecurityConfig {
     return List.of("/api/auth/sign-up", "/api/auth/sign-in", "/api/auth/check-email",
         "/api/auth/check-nickname", "/api/auth/verify-email", "/api/auth/reset-password",
         "/api/auth/send-verification-email", "/api/regions",
-        "api/posts/views", "api/posts/filters", "api/posts/details/*", "/api/payments/webhook"
+        "api/posts/views", "api/posts/filters", "api/posts/details/*", "/api/payments/webhook",
+        "api/payments/sse/subscribe/**", "api/images",
+        "/ws/**"
     );
   }
 }

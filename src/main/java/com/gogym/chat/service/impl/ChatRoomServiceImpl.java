@@ -1,11 +1,10 @@
 package com.gogym.chat.service.impl;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import com.gogym.chat.dto.ChatMessageDto.ChatMessageHistory;
 import com.gogym.chat.dto.ChatRoomDto.ChatRoomResponse;
@@ -66,19 +65,22 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         postAuthor.getNickname(), // counterpartyNickname
         0, // unreadMessageCount
         null, // lastMessage
-        null); // lastMessageAt
+        null,// lastMessageAt
+        newChatRoom.getPostAuthorActive(), // postAuthorActive
+        newChatRoom.getRequestorActive() // requestorActive
+    );
   }
   
   @Override
-  public List<ChatRoomResponse> getChatRooms(Long memberId, int page, int size) {
+  public Page<ChatRoomResponse> getChatRooms(Long memberId, Pageable pageable) {
     // 페이징 조건으로 사용자가 참여한 채팅방 목록 조회
     Page<ChatRoom> chatRooms = this.chatRoomRepository.findChatRoomsSortedByLastMessage(
         memberId,
         memberId,
-        PageRequest.of(page, size));
+        pageable);
     
     // 채팅방 목록 데이터 반환
-    return chatRooms.stream().map(chatRoom -> {
+    return chatRooms.map(chatRoom -> {
       // 상대방 정보 조회
       Member counterparty = chatRoom.getRequestor().getId().equals(memberId)
           ? chatRoom.getPost().getMember() // 게시글 작성자가 상대방인 경우
@@ -107,11 +109,9 @@ public class ChatRoomServiceImpl implements ChatRoomService {
               .senderId(lastMessageHistory.senderId())
               .chatRoom(chatRoom)
               .build();
-
+          
           // 메시지 생성 시간 설정
-          lastMessageAt = LocalDateTime.parse(
-              lastMessageHistory.createdAt(),
-              DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+          lastMessageAt = lastMessageHistory.createdAt();
         }
       }
 
@@ -140,8 +140,11 @@ public class ChatRoomServiceImpl implements ChatRoomService {
           counterparty.getNickname(), // counterpartyNickname
           unreadMessageCount, // unreadMessageCount
           lastMessage != null ? lastMessage.getContent() : null, // lastMessage
-          lastMessageAt); // lastMessageAt
-    }).collect(Collectors.toList());
+          lastMessageAt, // lastMessageAt
+          chatRoom.getPostAuthorActive(), // postAuthorActive
+          chatRoom.getRequestorActive() // requestorActive
+      );
+    });
   }
   
   @Override
@@ -212,6 +215,11 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     if (!chatRoom.getPostAuthorActive() && !chatRoom.getRequestorActive()) {
       chatRoom.setIsDeleted(true);
     }
+  }
+  
+  @Override
+  public boolean isMemberInChatRoom(Long chatRoomId, Long memberId) {
+    return this.chatRoomRepository.existsByChatRoomIdAndMemberId(chatRoomId, memberId);
   }
   
   /**

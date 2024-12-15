@@ -13,7 +13,9 @@ public class ChatRoomDto {
       String counterpartyNickname,
       int unreadMessageCount,
       String lastMessage,
-      LocalDateTime lastMessageAt) {}
+      LocalDateTime lastMessageAt,
+      boolean postAuthorActive,
+      boolean requestorActive) {}
 
   public record LeaveRequest(@NotNull Long lastReadMessageId) {}
 

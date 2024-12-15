@@ -22,6 +22,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import com.gogym.chat.dto.ChatRoomDto.ChatRoomResponse;
 import com.gogym.chat.dto.ChatRoomDto.LeaveRequest;
@@ -166,17 +167,20 @@ class ChatRoomServiceImplTest {
     when(this.chatMessageReadRepository.countUnreadMessages(eq(chatRoomId), eq(memberId))).thenReturn(5);
 
     // When
-    List<ChatRoomResponse> responses = this.chatRoomService.getChatRooms(memberId, 0, 10);
+    Page<ChatRoomResponse> responses = this.chatRoomService.getChatRooms(memberId, PageRequest.of(0, 10));
 
     // Then
     assertNotNull(responses);
-    assertEquals(1, responses.size());
+    assertEquals(1, responses.getContent().size());
 
-    ChatRoomResponse response = responses.get(0);
+    ChatRoomResponse response = responses.getContent().get(0);
     
     assertEquals(chatRoomId, response.chatRoomId());
     assertEquals("test message", response.lastMessage());
     assertEquals(5, response.unreadMessageCount());
+    assertEquals(1, responses.getTotalElements());
+    assertEquals(1, responses.getTotalPages());
+    assertFalse(responses.hasNext());
     
     verify(this.chatRoomRepository).findChatRoomsSortedByLastMessage(
         eq(memberId),
