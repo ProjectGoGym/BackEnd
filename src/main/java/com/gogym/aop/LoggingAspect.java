@@ -16,7 +16,8 @@ public class LoggingAspect {
   public void apiLayer() {}
 
   @Pointcut("execution(* com.gogym..service..*(..)) && !execution(* com.gogym..schedule..*(..))")
-  public void serviceLayer() {}
+  public void serviceLayer() {
+  }
 
   @Around("apiLayer()")
   public Object logApiCall(ProceedingJoinPoint joinPoint) throws Throwable {
