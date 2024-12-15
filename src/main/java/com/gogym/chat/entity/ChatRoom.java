@@ -48,7 +48,7 @@ public class ChatRoom extends BaseEntity {
   
   // 게시글 작성자 반환 메서드
   public Member getPostAuthor() {
-    return this.post.getMember();
+    return this.post.getAuthor();
   }
   
 }
