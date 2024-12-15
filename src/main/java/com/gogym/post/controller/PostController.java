@@ -5,7 +5,9 @@ import com.gogym.post.dto.PostFilterRequestDto;
 import com.gogym.post.dto.PostPageResponseDto;
 import com.gogym.post.dto.PostRequestDto;
 import com.gogym.post.dto.PostResponseDto;
+import com.gogym.post.dto.PostUpdateRequestDto;
 import com.gogym.post.service.PostService;
+import com.gogym.post.service.WishService;
 import com.gogym.post.type.FilterMonthsType;
 import com.gogym.post.type.FilterPtType;
 import com.gogym.post.type.MembershipType;
@@ -19,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -27,9 +30,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/posts")
 @RequiredArgsConstructor
-class PostController {
+public class PostController {
 
   private final PostService postService;
+
+  private final WishService wishService;
 
   @PostMapping
   public ResponseEntity<PostResponseDto> createPost(@LoginMemberId Long memberId,
@@ -72,10 +77,35 @@ class PostController {
 
   // 게시글 상세 조회 입니다.
   @GetMapping("/details/{post-id}")
-  public ResponseEntity<PostResponseDto> getDetailPost(@PathVariable("post-id") Long postId) {
+  public ResponseEntity<PostResponseDto> getDetailPost(
+      @LoginMemberId(required = false) Long memberId,
+      @PathVariable("post-id") Long postId) {
 
-    PostResponseDto postResponseDto = postService.getDetailPost(postId);
+    PostResponseDto postResponseDto = postService.getDetailPost(memberId, postId);
 
     return ResponseEntity.ok(postResponseDto);
+  }
+
+  // 게시글 수정과 삭제를 처리(Soft Delete) 합니다.
+  @PutMapping("/{post-id}")
+  public ResponseEntity<PostResponseDto> updatePost(@LoginMemberId Long memberId,
+      @PathVariable("post-id") Long postId,
+      @Valid @RequestBody PostUpdateRequestDto postUpdateRequestDto
+  ) {
+
+    PostResponseDto postResponseDto = postService.updatePost(memberId, postId,
+        postUpdateRequestDto);
+
+    return ResponseEntity.ok(postResponseDto);
+  }
+
+  // 게시글을 찜 추가, 삭제 합니다.
+  @PostMapping("{post-id}/wishes")
+  public ResponseEntity<Void> toggleWish(@LoginMemberId Long memberId,
+      @PathVariable("post-id") Long postId) {
+
+    wishService.toggleWish(memberId, postId);
+
+    return ResponseEntity.ok().build();
   }
 }

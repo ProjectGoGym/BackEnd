@@ -1,10 +1,13 @@
 package com.gogym.post.entity;
 
+import static com.gogym.exception.ErrorCode.REQUEST_VALIDATION_FAIL;
 import static com.gogym.post.type.PostStatus.POSTING;
 
 import com.gogym.common.entity.BaseEntity;
+import com.gogym.exception.CustomException;
 import com.gogym.member.entity.Member;
 import com.gogym.post.dto.PostRequestDto;
+import com.gogym.post.dto.PostUpdateRequestDto;
 import com.gogym.post.type.MembershipType;
 import com.gogym.post.type.PostStatus;
 import com.gogym.post.type.PostType;
@@ -31,9 +34,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Post extends BaseEntity {
 
-  @JoinColumn(name = "member_id", nullable = false)
+  @JoinColumn(name = "author_id", nullable = false)
   @ManyToOne(fetch = FetchType.LAZY)
-  private Member member;
+  private Member author;
 
   @JoinColumn(name = "gym_id", nullable = false)
   @ManyToOne(fetch = FetchType.LAZY)
@@ -65,7 +68,7 @@ public class Post extends BaseEntity {
   @Column(name = "image_url_3")
   private String imageUrl3;
 
-  @Column(name = "wish_count")
+  @Column(name = "wish_count", nullable = false)
   private Long wishCount;
 
   @Column(name = "membership_type", nullable = false)
@@ -81,7 +84,7 @@ public class Post extends BaseEntity {
   public static Post of (Member member, Gym gym, PostRequestDto postRequestDto) {
 
     return Post.builder()
-        .member(member)
+        .author(member)
         .gym(gym)
         .title(postRequestDto.title())
         .content(postRequestDto.content())
@@ -96,5 +99,33 @@ public class Post extends BaseEntity {
         .expirationDate(postRequestDto.expirationDate())
         .remainingSessions(postRequestDto.remainingSessions())
         .build();
+  }
+
+  public void update(PostUpdateRequestDto postUpdateRequestDto) {
+
+    title = postUpdateRequestDto.title();
+    content = postUpdateRequestDto.content();
+    postType = postUpdateRequestDto.postType();
+    status = postUpdateRequestDto.status();
+    membershipType = postUpdateRequestDto.membershipType();
+    expirationDate = postUpdateRequestDto.expirationDate();
+    remainingSessions = postUpdateRequestDto.remainingSessions();
+    amount = postUpdateRequestDto.amount();
+    imageUrl1 = postUpdateRequestDto.imageUrl1();
+    imageUrl2 = postUpdateRequestDto.imageUrl2();
+    imageUrl3 = postUpdateRequestDto.imageUrl3();
+  }
+
+  // 엔티티에서 Not Null 로 설정해두어 별도의 null 값 체크는 없습니다.
+  public void addWish() {
+    wishCount++;
+  }
+
+  public void removeWish() {
+
+    if (wishCount < 1) {
+      throw new CustomException(REQUEST_VALIDATION_FAIL);
+    }
+    wishCount--;
   }
 }
