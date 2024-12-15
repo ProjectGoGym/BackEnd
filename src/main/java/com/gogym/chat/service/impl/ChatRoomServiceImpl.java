@@ -1,7 +1,6 @@
 package com.gogym.chat.service.impl;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
@@ -110,11 +109,9 @@ public class ChatRoomServiceImpl implements ChatRoomService {
               .senderId(lastMessageHistory.senderId())
               .chatRoom(chatRoom)
               .build();
-
+          
           // 메시지 생성 시간 설정
-          lastMessageAt = LocalDateTime.parse(
-              lastMessageHistory.createdAt(),
-              DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+          lastMessageAt = lastMessageHistory.createdAt();
         }
       }
 
