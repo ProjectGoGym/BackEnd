@@ -19,6 +19,6 @@ public class ChatMessageDto {
   public record ChatMessageHistory(
       String content,
       Long senderId,
-      String createdAt) {}
+      LocalDateTime createdAt) {}
 
 }
