@@ -33,7 +33,7 @@ public class ChatMessageController {
       @LoginMemberId Long memberId,
       @PathVariable("chatroom-id") Long chatRoomId,
       Pageable pageable) {
-    return ResponseEntity.ok(this.chatMessageService.getMessagesWithPostStatus(chatRoomId, pageable));
+    return ResponseEntity.ok(this.chatMessageService.getMessagesWithPostStatus(memberId, chatRoomId, pageable));
   }
   
 }
