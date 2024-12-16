@@ -81,15 +81,12 @@ class AuthServiceTest {
 
   @BeforeAll
   static void startRedis() {
-    redisServer = new RedisServer(6380); // 로컬
-    redisServer.start();
+    
   }
 
   @AfterAll
   static void stopRedis() {
-    if (redisServer != null) {
-      redisServer.stop(); // 중지
-    }
+
   }
 
   @Test
