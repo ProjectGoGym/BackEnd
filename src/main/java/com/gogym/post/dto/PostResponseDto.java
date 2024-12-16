@@ -4,12 +4,17 @@ import com.gogym.post.entity.Post;
 import com.gogym.post.type.MembershipType;
 import com.gogym.post.type.PostStatus;
 import com.gogym.post.type.PostType;
+import com.gogym.region.dto.RegionResponseDto;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import lombok.Builder;
 
 @Builder
 public record PostResponseDto(
 
+    Long postId,
+    Long authorId,
+    String authorNickname,
     String title,
     String content,
     PostType postType,
@@ -18,18 +23,25 @@ public record PostResponseDto(
     String imageUrl1,
     String imageUrl2,
     String imageUrl3,
-    String gymName,
     Long wishCount,
     MembershipType membershipType,
     LocalDate expirationDate,
     Long remainingSessions,
-    String gymKakaoUrl
+    Long gymId,
+    String gymName,
+    String gymKakaoUrl,
+    String city,
+    String district,
+    LocalDateTime createdAt
 
 ) {
 
-  public static PostResponseDto fromEntity(Post post) {
+  public static PostResponseDto fromEntity(Post post, RegionResponseDto regionResponseDto) {
 
     return PostResponseDto.builder()
+        .postId(post.getId())
+        .authorId(post.getAuthor().getId())
+        .authorNickname(post.getAuthor().getNickname())
         .title(post.getTitle())
         .content(post.getContent())
         .postType(post.getPostType())
@@ -38,12 +50,16 @@ public record PostResponseDto(
         .imageUrl1(post.getImageUrl1())
         .imageUrl2(post.getImageUrl2())
         .imageUrl3(post.getImageUrl3())
-        .gymName(post.getGym().getGymName())
         .wishCount(post.getWishCount())
         .membershipType(post.getMembershipType())
         .expirationDate(post.getExpirationDate())
         .remainingSessions(post.getRemainingSessions())
+        .gymId(post.getGym().getId())
+        .gymName(post.getGym().getGymName())
         .gymKakaoUrl(post.getGym().getGymKakaoUrl())
+        .city(regionResponseDto.city())
+        .district(regionResponseDto.district())
+        .createdAt(post.getCreatedAt())
         .build();
   }
 }

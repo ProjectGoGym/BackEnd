@@ -22,6 +22,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   @Override
   protected boolean shouldNotFilter(HttpServletRequest request) {
     String path = request.getRequestURI();
+    
+    // WebSocket 초기 연결 요청 시에는 Interceptor에서 확인
+    if (path.startsWith("/ws")) {
+      return true;
+    }
+    
     // 인증이 필요 없는 경로 확인
     return exemptUrls.contains(path);
   }
