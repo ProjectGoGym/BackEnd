@@ -15,6 +15,7 @@ import com.gogym.chat.repository.ChatMessageRepository;
 import com.gogym.chat.repository.ChatRoomRepository;
 import com.gogym.chat.service.ChatMessageService;
 import com.gogym.chat.service.ChatRedisService;
+import com.gogym.chat.service.ChatRoomService;
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
 import com.gogym.post.service.PostService;
@@ -32,10 +33,16 @@ public class ChatMessageServiceImpl implements ChatMessageService {
   private final ChatRoomRepository chatRoomRepository;
   
   private final ChatRedisService chatRedisService;
+  private final ChatRoomService chatRoomService;
   private final PostService postService;
   
   @Override
-  public ChatRoomMessagesResponse getMessagesWithPostStatus(Long chatRoomId, Pageable pageable) {
+  public ChatRoomMessagesResponse getMessagesWithPostStatus(Long memberId, Long chatRoomId, Pageable pageable) {
+    // 회원이 해당 채팅방에 속해 있는지 확인
+    if (!this.chatRoomService.isMemberInChatRoom(chatRoomId, memberId)) {
+        throw new CustomException(ErrorCode.FORBIDDEN);
+    }
+    
     // Redis와 DB에서 메시지를 조회 및 변환
     List<ChatMessageHistory> combinedMessages = this.getCombinedMessages(chatRoomId, pageable);
 

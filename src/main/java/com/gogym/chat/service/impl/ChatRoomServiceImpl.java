@@ -149,14 +149,13 @@ public class ChatRoomServiceImpl implements ChatRoomService {
   
   @Override
   public void leaveChatRoom(Long memberId, Long chatRoomId, LeaveRequest request) {
-    // 나가려는 채팅방 존재 여부 확인
+    // 채팅방 존재 여부 확인
     ChatRoom chatRoom = this.chatRoomRepository.findById(chatRoomId)
         .orElseThrow(() -> new CustomException(ErrorCode.CHATROOM_NOT_FOUND));
     
-    // 요청자가 채팅방에 속해 있는지 확인
-    if (!chatRoom.getPost().getAuthor().getId().equals(memberId)
-        && !chatRoom.getRequestor().getId().equals(memberId)) {
-      throw new CustomException(ErrorCode.FORBIDDEN);
+    // 회원이 해당 채팅방에 속해 있는지 확인
+    if (!this.isMemberInChatRoom(chatRoomId, memberId)) {
+        throw new CustomException(ErrorCode.FORBIDDEN);
     }
     
     // Redis에서 메시지 목록 조회
@@ -190,9 +189,8 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         .orElseThrow(() -> new CustomException(ErrorCode.CHATROOM_NOT_FOUND));
     
     // 회원이 해당 채팅방에 속해 있는지 확인
-    if (!chatRoom.getPost().getAuthor().getId().equals(memberId)
-        && !chatRoom.getRequestor().getId().equals(memberId)) {
-      throw new CustomException(ErrorCode.FORBIDDEN);
+    if (!this.isMemberInChatRoom(chatRoomId, memberId)) {
+        throw new CustomException(ErrorCode.FORBIDDEN);
     }
     
     // Redis에서 채팅 메시지 조회
