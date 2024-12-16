@@ -5,7 +5,7 @@ spring:
   application:
     name: GoGym
   profiles:
-    active: prod
+    active: dev
 
   data:
     redis:
@@ -39,9 +39,24 @@ logging:
 
 jasypt:
   encryptor:
-    password: ${JASYPT_ENCRYPTOR_PASSWORD}
+    password: Rhwla123!
 
 portone:
   secret: ENC(Yae9m6UdFdavIg+60o/aoAP5jG7K4gwTIIy/I8FLCsp8PYOcIb0sfwr3wd8Z37XGke+83s1e4VTEv9OtMwV3wmnOWTeXJJ1JqxmGc8VKHFzyR6FJ4YoSPfwKjsBrUwB1)
-  webhook:
+  webhook: 
     secret: ENC(rNgfIF0802rxis0Md6mRpdGH3WpdHA7XxabMdLFZXV6TWgeXAyUjfsFdffaqMBOfJlKSro6UCy3Krc2nOUfRNw==)
+
+cloud:
+  aws:
+    credentials:
+      access-key: ENC(FQO19gAuU2P7csP5hfomdMovGImuxHYq5LvlalfYMzE=)
+      secret-key: ENC(X3c52PgIRV7t9j/hYqjDLsTOqKMnVvL6u1/++8efNWQR428eaMzePDJ81ONHbHA4R7KP53z8ORs=)
+    S3:
+      bucket: ENC(GzhWzOfXoVXPUdHytq5szeRWxAbUpiVY)
+    region:
+      static: ENC(eilntHEIo5VEIK4m88ADKT/huIwY7Ijx)
+    stack:
+      auto: false
+
+kakao:
+  rest-api-key: ENC(kxi6JZ2w6Dr8gKyNUcae9lAuip27AlTMpi+aZyGcphYsPu4ONdZ0lioVYEXLC7YK)
