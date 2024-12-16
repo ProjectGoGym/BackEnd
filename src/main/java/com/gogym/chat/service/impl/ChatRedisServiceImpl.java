@@ -4,9 +4,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.gogym.chat.dto.ChatMessageDto.ChatMessageHistory;
 import com.gogym.chat.dto.ChatMessageDto.ChatMessageRequest;
 import com.gogym.chat.dto.ChatMessageDto.ChatMessageResponse;
+import com.gogym.chat.dto.ChatMessageDto.RedisChatMessage;
 import com.gogym.chat.service.ChatRedisService;
 import com.gogym.util.JsonUtil;
 import com.gogym.util.RedisUtil;
@@ -26,14 +26,15 @@ public class ChatRedisServiceImpl implements ChatRedisService {
     // Redis Key 생성
     String redisKey = this.getRedisChatroomMessageKeyPrefix() + messageRequest.chatRoomId();
 
-    // LocalDateTime을 String으로 변환
+    // 현재 시간 설정
     LocalDateTime createdAt = LocalDateTime.now();
-
+    
     // Redis에 저장할 메시지 객체 생성
-    ChatMessageHistory messageHistory = new ChatMessageHistory(
+    RedisChatMessage  messageHistory = new RedisChatMessage(
         messageRequest.content(),
         memberId,
-        createdAt);
+        createdAt
+    );
 
     // 메시지 객체를 JSON 문자열로 직렬화
     String messageJson = JsonUtil.serialize(messageHistory);
