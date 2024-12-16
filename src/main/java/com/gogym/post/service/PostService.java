@@ -19,6 +19,7 @@ import com.gogym.post.entity.Gym;
 import com.gogym.post.entity.Post;
 import com.gogym.post.repository.PostRepository;
 import com.gogym.post.repository.PostRepositoryCustom;
+import com.gogym.post.type.PostStatus;
 import com.gogym.region.dto.RegionResponseDto;
 import com.gogym.region.service.RegionService;
 import java.util.List;
@@ -185,5 +186,12 @@ public class PostService {
   private Page<PostPageResponseDto> returnPosts(Page<Post> posts) {
 
     return posts != null ? posts.map(PostPageResponseDto::fromEntity) : Page.empty();
+  }
+
+  // 게시글 아이디로 게시글 상태를 반환하는 메서드 입니다.
+  public PostStatus getPostStatus(Long postId) {
+
+    return postRepository.findStatusByPostId(postId)
+        .orElseThrow(() -> new CustomException(POST_NOT_FOUND));
   }
 }
