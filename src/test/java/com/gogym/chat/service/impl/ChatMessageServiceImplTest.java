@@ -1,14 +1,11 @@
 package com.gogym.chat.service.impl;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,6 +25,7 @@ import com.gogym.chat.entity.ChatMessage;
 import com.gogym.chat.repository.ChatMessageRepository;
 import com.gogym.chat.repository.ChatRoomRepository;
 import com.gogym.chat.service.ChatRedisService;
+import com.gogym.chat.service.ChatRoomService;
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
 import com.gogym.post.service.PostService;
@@ -46,6 +44,9 @@ class ChatMessageServiceImplTest {
   private ChatRedisService chatRedisService;
   
   @Mock
+  private ChatRoomService chatRoomService;
+  
+  @Mock
   private PostService postService;
   
   @InjectMocks
@@ -61,8 +62,11 @@ class ChatMessageServiceImplTest {
   @Test
   void 채팅방_메시지와_게시물_상태_조회_성공() {
     // Given
+    Long memberId = 1L;
     Long chatRoomId = 1L;
     Long postId = 1L;
+    
+    when(this.chatRoomService.isMemberInChatRoom(chatRoomId, memberId)).thenReturn(true);
     
     String redisMessageJson = "{\"content\":\"Redis메시지입니다.\",\"senderId\":123,\"createdAt\":\"2024-12-25T12:00:00\"}";
     when(this.chatRedisService.getMessages(chatRoomId)).thenReturn(List.of(redisMessageJson));
@@ -78,7 +82,7 @@ class ChatMessageServiceImplTest {
     when(this.postService.getPostStatusByPostId(postId)).thenReturn(PostStatus.POSTING);
     
     // When
-    ChatRoomMessagesResponse response = this.chatMessageService.getMessagesWithPostStatus(chatRoomId, this.pageable);
+    ChatRoomMessagesResponse response = this.chatMessageService.getMessagesWithPostStatus(memberId, chatRoomId, this.pageable);
     
     // Then
     assertNotNull(response);
@@ -94,14 +98,17 @@ class ChatMessageServiceImplTest {
   @Test
   void 채팅방_없음_예외() {
     // Given
+    Long memberId = 1L;
     Long chatRoomId = 1L;
+    
+    when(this.chatRoomService.isMemberInChatRoom(chatRoomId, memberId)).thenReturn(true);
     
     when(this.chatRoomRepository.findPostIdByChatRoomId(chatRoomId)).thenReturn(Optional.empty());
     when(this.chatMessageRepository.findByChatRoomId(chatRoomId, this.pageable)).thenReturn(Page.empty());
     
     // When
     Throwable thrown = catchThrowable(
-        () -> this.chatMessageService.getMessagesWithPostStatus(chatRoomId, this.pageable)
+        () -> this.chatMessageService.getMessagesWithPostStatus(memberId, chatRoomId, this.pageable)
     );
     
     // Then
@@ -115,8 +122,11 @@ class ChatMessageServiceImplTest {
   @Test
   void 게시물_상태_조회_실패_예외() {
     // Given
+    Long memberId = 1L;
     Long chatRoomId = 1L;
     Long postId = 1L;
+    
+    when(this.chatRoomService.isMemberInChatRoom(chatRoomId, memberId)).thenReturn(true);
     
     when(this.chatRoomRepository.findPostIdByChatRoomId(chatRoomId)).thenReturn(Optional.of(postId));
     when(this.chatMessageRepository.findByChatRoomId(chatRoomId, this.pageable)).thenReturn(Page.empty());
@@ -124,7 +134,7 @@ class ChatMessageServiceImplTest {
     
     // When
     Throwable thrown = catchThrowable(
-        () -> this.chatMessageService.getMessagesWithPostStatus(chatRoomId, this.pageable)
+        () -> this.chatMessageService.getMessagesWithPostStatus(memberId, chatRoomId, this.pageable)
     );
     
     // Then

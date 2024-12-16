@@ -193,8 +193,11 @@ class ChatRoomServiceImplTest {
   @Test
   void 채팅방_나가기_성공() {
     // Given
+    Long memberId = 1L;
     Long chatRoomId = 1L;
     LeaveRequest request = new LeaveRequest(1L);
+    
+    when(this.chatRoomService.isMemberInChatRoom(chatRoomId, memberId)).thenReturn(true);
 
     String redisMessageJson = "{\"content\":\"test message\",\"senderId\":1,\"createdAt\":\"2024-12-10T12:00:00\"}";
     when(this.chatRoomRepository.findById(chatRoomId)).thenReturn(Optional.of(this.chatRoom));
@@ -236,7 +239,10 @@ class ChatRoomServiceImplTest {
         .requestorActive(false)
         .isDeleted(false)
         .build();
-
+    
+    when(this.chatRoomService.isMemberInChatRoom(chatRoomId, this.postAuthor.getId())).thenReturn(true);
+    when(this.chatRoomService.isMemberInChatRoom(chatRoomId, this.requestor.getId())).thenReturn(true);
+    
     String redisMessageJson = "{\"content\":\"test message\",\"senderId\":1,\"createdAt\":\"2024-12-10T12:00:00\"}";
     when(this.chatRoomRepository.findById(chatRoomId)).thenReturn(Optional.of(testChatRoom));
     when(this.chatRedisService.getMessages(chatRoomId))
@@ -255,6 +261,7 @@ class ChatRoomServiceImplTest {
   @Test
   void 채팅방_삭제_한쪽_사용자만_나간_경우_isDeleted_유지() {
     // Given
+    Long memberId = 1L;
     Long chatRoomId = 1L;
     ChatRoom testChatRoom = ChatRoom.builder()
         .post(this.post)
@@ -263,7 +270,9 @@ class ChatRoomServiceImplTest {
         .requestorActive(true)
         .isDeleted(false)
         .build();
-
+    
+    when(this.chatRoomService.isMemberInChatRoom(chatRoomId, memberId)).thenReturn(true);
+    
     String redisMessageJson = "{\"content\":\"test message\",\"senderId\":1,\"createdAt\":\"2024-12-10T12:00:00\"}";
     when(this.chatRoomRepository.findById(chatRoomId)).thenReturn(Optional.of(testChatRoom));
     when(this.chatRedisService.getMessages(chatRoomId)).thenReturn(List.of(redisMessageJson));
