@@ -18,6 +18,16 @@ public class ChatMessageController {
   
   private final ChatMessageService chatMessageService;
   
+  /**
+   * 특정 채팅방의 메시지와 해당 채팅방에 연결된 게시물 상태를 조회합니다.
+   * 
+   * GET /api/chatroom/{chatroom-id}/messages?page={page}&size={size}
+   * 
+   * @param memberId 요청 사용자 ID
+   * @param chatRoomId 조회할 채팅방 ID
+   * @param pageable 페이지네이션 정보 (page, size)
+   * @return {@link ChatRoomMessagesResponse} 메시지 목록과 게시물 상태
+   */
   @GetMapping("/{chatroom-id}/messages")
   public ResponseEntity<ChatRoomMessagesResponse> getMessagesInChatroom(
       @LoginMemberId Long memberId,
