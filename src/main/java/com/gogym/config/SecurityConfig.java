@@ -45,12 +45,14 @@ public class SecurityConfig {
                 "/api/auth/check-nickname", "/api/auth/verify-email", "/api/auth/reset-password",
                 "/api/auth/send-verification-email", "/api/regions","/api/kakao/sign-in",
                 "api/posts/views", "api/posts/filters", "api/posts/details/*", "/api/payments/webhook",
-                "api/payments/sse/subscribe/**", "api/images","/ws/**")
+                "api/payments/sse/subscribe/**", "api/images",
+                "/ws/**")
             .permitAll()
             // 그 외의 모든 요청은 인증 필요
             .anyRequest().authenticated())
         // JWT 인증 필터를 AuthenticationFilter 전에 추가
         .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+
     return http.build();
   }
 
@@ -64,9 +66,10 @@ public class SecurityConfig {
   private List<String> exemptUrls() {
     return List.of("/api/auth/sign-up", "/api/auth/sign-in", "/api/auth/check-email",
         "/api/auth/check-nickname", "/api/auth/verify-email", "/api/auth/reset-password",
-        "/api/auth/send-verification-email", "/api/regions","/api/kakao/sign-in",
+        "/api/auth/send-verification-email", "/api/regions",
         "api/posts/views", "api/posts/filters", "api/posts/details/*", "/api/payments/webhook",
-        "api/payments/sse/subscribe/**", "api/images","/ws/**"
+        "api/payments/sse/subscribe/**", "api/images",
+        "/ws/**"
     );
   }
 }
