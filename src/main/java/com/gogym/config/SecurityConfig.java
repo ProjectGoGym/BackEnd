@@ -60,7 +60,7 @@ public class SecurityConfig {
   @Bean
   public JwtAuthenticationFilter jwtAuthenticationFilter() {
     return new JwtAuthenticationFilter(jwtTokenProvider, exemptUrls());
-  }
+  } 
 
   // 인증 제외 경로
   private List<String> exemptUrls() {
