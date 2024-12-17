@@ -2,9 +2,30 @@ package com.gogym.member.entity;
 
 import com.gogym.common.entity.BaseEntity;
 import com.gogym.gympay.entity.GymPay;
-import jakarta.persistence.*;
-import lombok.*;
+import com.gogym.gympay.entity.Payment;
+import com.gogym.gympay.entity.Transaction;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "members")
@@ -36,6 +57,7 @@ public class Member extends BaseEntity {
   private String password;
 
   @Enumerated(EnumType.STRING)
+  @JdbcTypeCode(SqlTypes.VARCHAR)
   @Column(name = "role", nullable = false)
   private Role role;
 
@@ -52,9 +74,18 @@ public class Member extends BaseEntity {
   @Column(name = "verified_at")
   private LocalDateTime verifiedAt; // 이메일 인증 시간을 저장
 
-  @OneToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "gym_pay_id")
+  @Setter
+  @OneToOne(mappedBy = "member", cascade = CascadeType.PERSIST)
   private GymPay gymPay;
+
+  @OneToMany(mappedBy = "member", cascade = CascadeType.PERSIST)
+  private final List<Payment> payments = new ArrayList<>();
+
+  @OneToMany(mappedBy = "seller")
+  private final List<Transaction> salesTransactions = new ArrayList<>();
+
+  @OneToMany(mappedBy = "buyer")
+  private final List<Transaction> purchaseTransactions = new ArrayList<>();
 
   // 이메일 인증 여부 확인 메서드
   public boolean isVerified() {
