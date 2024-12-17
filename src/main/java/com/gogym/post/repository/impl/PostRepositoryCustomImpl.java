@@ -1,5 +1,12 @@
 package com.gogym.post.repository.impl;
 
+import java.util.List;
+import java.util.Optional;
+import org.springframework.context.annotation.Primary;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Repository;
 import com.gogym.post.dto.PostFilterRequestDto;
 import com.gogym.post.entity.Post;
 import com.gogym.post.entity.QPost;
@@ -7,14 +14,7 @@ import com.gogym.post.filter.PostFilterBuilder;
 import com.gogym.post.repository.PostRepositoryCustom;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import java.util.List;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Primary;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Repository;
 
 @RequiredArgsConstructor
 @Repository

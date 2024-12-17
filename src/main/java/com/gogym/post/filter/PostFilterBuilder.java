@@ -1,5 +1,8 @@
 package com.gogym.post.filter;
 
+import java.time.LocalDate;
+import java.util.List;
+import org.springframework.stereotype.Component;
 import com.gogym.post.dto.PostFilterRequestDto;
 import com.gogym.post.entity.QPost;
 import com.gogym.post.type.FilterMonthsType;
@@ -9,9 +12,6 @@ import com.gogym.post.type.PostStatus;
 import com.gogym.post.type.PostType;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Predicate;
-import java.time.LocalDate;
-import java.util.List;
-import org.springframework.stereotype.Component;
 
 @Component
 public class PostFilterBuilder {
