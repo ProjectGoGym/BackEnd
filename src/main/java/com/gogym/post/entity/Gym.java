@@ -4,6 +4,7 @@ import com.gogym.common.entity.BaseIdEntity;
 import com.gogym.post.dto.PostRequestDto;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,6 +16,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
+@Table(name = "gyms")
 public class Gym extends BaseIdEntity {
 
   @Column(name = "gym_name", nullable = false)

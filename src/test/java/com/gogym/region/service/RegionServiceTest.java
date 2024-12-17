@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import com.gogym.exception.CustomException;
 import com.gogym.region.dto.RegionDto;
+import com.gogym.region.dto.RegionResponseDto;
 import com.gogym.region.entity.Region;
 import com.gogym.region.repository.RegionRepository;
 import java.util.ArrayList;
@@ -65,7 +66,7 @@ class RegionServiceTest {
   }
 
   @Test
-  void 하위지역이_없으면_빈_배열을_반환한다() {
+  void 하위지역이_없으면_상위지역을_반환한다() {
     // given
     String name = "세종특별자치시";
     when(regionRepository.findByName(name)).thenReturn(Optional.of(sejongParent));
@@ -73,7 +74,7 @@ class RegionServiceTest {
     List<RegionDto> children = regionService.getRegions(name);
     // then
     assertNotNull(children);
-    assertEquals(children.size(), 0);
+    assertEquals(children.size(), 1);
   }
 
   @Test
@@ -96,7 +97,8 @@ class RegionServiceTest {
     String district = "강북구 ";
 
     when(regionRepository.findByName(city)).thenReturn(Optional.of(seoulParent));
-    when(regionRepository.findByNameAndParentId(district, seoulParent.getId())).thenReturn(Optional.empty());
+    when(regionRepository.findByNameAndParentId(district, seoulParent.getId())).thenReturn(
+        Optional.empty());
     // when
     CustomException e = assertThrows(CustomException.class,
         () -> regionService.getChildRegionId(city, district));
@@ -116,5 +118,18 @@ class RegionServiceTest {
     // then
     assertEquals(e.getErrorCode(), CITY_NOT_FOUND);
     assertEquals(e.getMessage(), "도시를 찾을 수 없습니다.");
+  }
+
+  @Test
+  void 하위지역의_아이디로_상위지역의_이름과_하위지역의_이름을_반환한다() {
+    // given
+    Long regionId = 2L;
+    when(regionRepository.findById(regionId)).thenReturn(Optional.of(seoulChild1));
+    // when
+    RegionResponseDto region = regionService.findById(regionId);
+    // then
+    assertEquals(regionId, seoulChild1.getId());
+    assertEquals(region.district(), seoulChild1.getName());
+    assertEquals(region.city(), seoulChild1.getParent().getName());
   }
 }

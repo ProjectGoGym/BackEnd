@@ -5,6 +5,7 @@ import static com.gogym.exception.ErrorCode.DISTRICT_NOT_FOUND;
 
 import com.gogym.exception.CustomException;
 import com.gogym.region.dto.RegionDto;
+import com.gogym.region.dto.RegionResponseDto;
 import com.gogym.region.entity.Region;
 import com.gogym.region.repository.RegionRepository;
 import java.util.List;
@@ -25,6 +26,11 @@ public class RegionService {
     Region region = regionRepository.findByName(name)
         .orElseThrow(() -> new CustomException(CITY_NOT_FOUND));
 
+    // 하위지역이 없는경우(예 : 세종특별자치시) 부모노드의 아이디와 이름이 내려갑니다.
+    if (region.getChildren() == null || region.getChildren().isEmpty()) {
+      return List.of(RegionDto.fromEntity(region));
+    }
+
     return region.getChildren().stream().map(RegionDto::fromEntity).toList();
   }
 
@@ -38,5 +44,14 @@ public class RegionService {
         .orElseThrow(() -> new CustomException(DISTRICT_NOT_FOUND));
 
     return child.getId();
+  }
+
+  // 지역 ID 값으로 부모 노드의 이름과 자식 노드의 이름을 추출합니다.
+  public RegionResponseDto findById(Long regionId) {
+
+    Region region = regionRepository.findById(regionId)
+        .orElseThrow(() -> new CustomException(CITY_NOT_FOUND));
+
+    return new RegionResponseDto(region.getParent().getName(), region.getName());
   }
 }
