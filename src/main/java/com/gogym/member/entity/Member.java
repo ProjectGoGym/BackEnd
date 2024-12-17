@@ -14,12 +14,15 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class Member extends BaseEntity {
-  private String memberStatus;
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "member_id")
   private Long id;
+
+  @Setter
+  @Column(name = "member_status")
+  private String memberStatus;
 
   @Column(name = "member_name", nullable = false)
   private String name;
@@ -50,17 +53,20 @@ public class Member extends BaseEntity {
   @Column(name = "region_id_2", nullable = true)
   private Long regionId2;
 
+  @Setter
   @OneToOne(mappedBy = "member", cascade = CascadeType.ALL)
   private GymPay gymPay;
 
   @Setter
   @Column(name = "verified_at")
-  private LocalDateTime verifiedAt; // 이메일 인증 시간을 저장
+  private LocalDateTime verifiedAt; // 이메일 인증 시간
 
   @Column(name = "is_active", nullable = false)
   private boolean isActive = true;
 
-  private boolean isKakao;
+  @Column(name = "is_kakao", nullable = false)
+  @Builder.Default
+  private boolean isKakao = false;
 
   // 이메일 인증 여부 확인 메서드
   public boolean isVerified() {
@@ -123,26 +129,5 @@ public class Member extends BaseEntity {
     return String.join("@", parts);
   }
 
-  public String getMemberStatus() {
-    return memberStatus;
-  }
-
-  public void setMemberStatus(String memberStatus) {
-    this.memberStatus = memberStatus;
-  }
-
-  public GymPay getGymPay() {
-    return this.gymPay;
-  }
-
-  public void setGymPay(GymPay gymPay) {
-    this.gymPay = gymPay;
-  }
-
-  public static class MemberBuilder {
-    public MemberBuilder isKakao(boolean isKakao) {
-      this.isKakao = isKakao;
-      return this;
-    }
-  }
 }
+
