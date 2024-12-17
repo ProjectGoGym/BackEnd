@@ -38,6 +38,9 @@ public class AuthService {
     // Dto에서 Entity 변환
     Member member = request.toEntity(passwordEncoder.encode(request.getPassword()));
 
+    if (member.getMemberStatus() == null) {
+      member.setMemberStatus("ACTIVE");
+    }
     // 회원 데이터 저장
     memberRepository.save(member);
   }
