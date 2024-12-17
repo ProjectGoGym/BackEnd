@@ -54,7 +54,8 @@ public class Member extends BaseEntity {
   private Long regionId2;
 
   @Setter
-  @OneToOne(mappedBy = "member", cascade = CascadeType.ALL)
+  @OneToOne(cascade = CascadeType.ALL)
+  @JoinColumn(name = "gym_pay_id", referencedColumnName = "id")
   private GymPay gymPay;
 
   @Setter
