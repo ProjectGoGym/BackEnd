@@ -111,6 +111,6 @@ public class KakaoService {
   private Member findOrCreateMember(KakaoProfileResponse profile) {
     String email = profile.kakaoAccount().email();
     return memberRepository.findByEmail(email).orElseGet(() -> createMember(profile));
-  }
+  } 
 }
 

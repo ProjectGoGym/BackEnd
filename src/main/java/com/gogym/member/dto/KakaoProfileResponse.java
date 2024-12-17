@@ -8,7 +8,7 @@ public record KakaoProfileResponse(
     Long id,
     String connectedAt,
     KakaoAccount kakaoAccount
-) {
+) { 
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public record KakaoAccount(
         String email,
