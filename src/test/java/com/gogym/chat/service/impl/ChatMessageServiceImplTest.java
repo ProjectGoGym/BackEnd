@@ -56,7 +56,7 @@ class ChatMessageServiceImplTest {
   
   @BeforeEach
   void setup() {
-    this.pageable = PageRequest.of(0, 10);
+    this.pageable = PageRequest.of(0, 6);
   }
   
   @Test
@@ -66,8 +66,6 @@ class ChatMessageServiceImplTest {
     Long chatRoomId = 1L;
     Long postId = 1L;
     
-    when(this.chatRoomService.isMemberInChatRoom(chatRoomId, memberId)).thenReturn(true);
-    
     String redisMessageJson = "{\"content\":\"Redis메시지입니다.\",\"senderId\":123,\"createdAt\":\"2024-12-25T12:00:00\"}";
     when(this.chatRedisService.getMessages(chatRoomId)).thenReturn(List.of(redisMessageJson));
     
@@ -76,8 +74,9 @@ class ChatMessageServiceImplTest {
     when(dbMessage.getSenderId()).thenReturn(2L);
     when(dbMessage.getCreatedAt()).thenReturn(LocalDateTime.of(2024, 12, 25, 12, 0));
     Page<ChatMessage> dbMessages = new PageImpl<>(List.of(dbMessage));
-    when(this.chatMessageRepository.findByChatRoomId(chatRoomId, this.pageable)).thenReturn(dbMessages);
+    when(this.chatMessageRepository.findByChatRoomIdOrderByCreatedAtDesc(chatRoomId, Pageable.unpaged())).thenReturn(dbMessages);
     
+    when(this.chatRoomService.isMemberInChatRoom(chatRoomId, memberId)).thenReturn(true);
     when(this.chatRoomRepository.findPostIdByChatRoomId(chatRoomId)).thenReturn(Optional.of(postId));
     when(this.postService.getPostStatusByPostId(postId)).thenReturn(PostStatus.POSTING);
     
@@ -87,10 +86,12 @@ class ChatMessageServiceImplTest {
     // Then
     assertNotNull(response);
     assertEquals(2, response.messages().getContent().size());
+    assertEquals("DB메시지입니다.", response.messages().getContent().get(0).content());
+    assertEquals("Redis메시지입니다.", response.messages().getContent().get(1).content());
     assertEquals(PostStatus.POSTING, response.postStatus());
     
     verify(this.chatRedisService).getMessages(chatRoomId);
-    verify(this.chatMessageRepository).findByChatRoomId(chatRoomId, this.pageable);
+    verify(this.chatMessageRepository).findByChatRoomIdOrderByCreatedAtDesc(chatRoomId, Pageable.unpaged());
     verify(this.chatRoomRepository).findPostIdByChatRoomId(chatRoomId);
     verify(this.postService).getPostStatusByPostId(postId);
   }
@@ -104,7 +105,7 @@ class ChatMessageServiceImplTest {
     when(this.chatRoomService.isMemberInChatRoom(chatRoomId, memberId)).thenReturn(true);
     
     when(this.chatRoomRepository.findPostIdByChatRoomId(chatRoomId)).thenReturn(Optional.empty());
-    when(this.chatMessageRepository.findByChatRoomId(chatRoomId, this.pageable)).thenReturn(Page.empty());
+    when(this.chatMessageRepository.findByChatRoomIdOrderByCreatedAtDesc(chatRoomId, Pageable.unpaged())).thenReturn(Page.empty());
     
     // When
     Throwable thrown = catchThrowable(
@@ -129,7 +130,7 @@ class ChatMessageServiceImplTest {
     when(this.chatRoomService.isMemberInChatRoom(chatRoomId, memberId)).thenReturn(true);
     
     when(this.chatRoomRepository.findPostIdByChatRoomId(chatRoomId)).thenReturn(Optional.of(postId));
-    when(this.chatMessageRepository.findByChatRoomId(chatRoomId, this.pageable)).thenReturn(Page.empty());
+    when(this.chatMessageRepository.findByChatRoomIdOrderByCreatedAtDesc(chatRoomId, Pageable.unpaged())).thenReturn(Page.empty());
     when(this.postService.getPostStatusByPostId(postId)).thenThrow(new CustomException(ErrorCode.POST_NOT_FOUND));
     
     // When
