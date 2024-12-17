@@ -17,12 +17,12 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
   Optional<ChatMessage> findFirstByChatRoomIdOrderByCreatedAtDesc(Long chatRoomId);
   
   /**
-   * 특정 채팅방의 메시지를 페이징하여 조회합니다.
+   * 특정 채팅방의 메시지를 페이징하여 최근 메시지부터 조회합니다.
    * 
    * @param chatRoomId 채팅방 ID
    * @param pageable 페이징 정보
    * @return Page 형태로 반환된 {@link ChatMessage}
    */
-  Page<ChatMessage> findByChatRoomId(Long chatRoomId, Pageable pageable);
+  Page<ChatMessage> findByChatRoomIdOrderByCreatedAtDesc(Long chatRoomId, Pageable pageable);
   
 }
