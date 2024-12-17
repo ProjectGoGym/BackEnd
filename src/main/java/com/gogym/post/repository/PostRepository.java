@@ -22,8 +22,4 @@ public interface PostRepository extends JpaRepository<Post, Long>, PostRepositor
 
   @Query("SELECT p.status FROM Post p WHERE p.id = :postId")
   Optional<PostStatus> findStatusByPostId(@Param("postId") Long postId);
-  
-  Page<Post> findByAuthorId(Long authorId, Pageable pageable);
-  Page<Post> findFavoritesByMemberId(Long memberId, Pageable pageable);
-  Page<Post> findRecentViewsByMemberId(Long memberId, Pageable pageable);
 }
