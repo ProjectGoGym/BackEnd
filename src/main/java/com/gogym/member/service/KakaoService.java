@@ -97,7 +97,7 @@ public class KakaoService {
 
   @Transactional
   private Member createMember(KakaoProfileResponse profile) {
-    String email = profile.kakaoAccount().email();
+    String email = profile.kakaoAccount().email(); 
     String nickname = generateUniqueNickname();
 
     Member newMember = Member.builder().email(email).nickname(nickname).name(email.split("@")[0])
