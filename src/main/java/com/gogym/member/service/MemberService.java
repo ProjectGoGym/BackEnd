@@ -2,8 +2,8 @@ package com.gogym.member.service;
 
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
-// import com.gogym.member.dto.MemberProfileResponse;
-// import com.gogym.member.dto.UpdateMemberRequest;
+import com.gogym.member.dto.MemberProfileResponse;
+import com.gogym.member.dto.UpdateMemberRequest;
 import com.gogym.member.entity.Member;
 import com.gogym.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -33,18 +33,23 @@ public class MemberService {
         .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
   }
 
-  /*
-   * 
-   * // 내 정보 조회 public MemberProfileResponse getMyProfileById(Long memberId) { Member member =
-   * findById(memberId); return new MemberProfileResponse( member.getEmail(), member.getName(),
-   * member.getNickname(), member.getPhone(), member.getProfileImageUrl() ); }
-   * 
-   * // 내 정보 수정
-   * 
-   * @Transactional public void updateMyProfileById(Long memberId, UpdateMemberRequest request) {
-   * Member member = findById(memberId); member.updateProfile(request.getName(),
-   * request.getNickname(), request.getPhone(), request.getProfileImageUrl()); }
-   */
+
+  // 내 정보 조회
+  public MemberProfileResponse getMyProfileById(Long memberId) {
+    Member member = findById(memberId);
+    return new MemberProfileResponse(member.getEmail(), member.getName(), member.getNickname(),
+        member.getPhone(), member.getProfileImageUrl());
+  }
+
+
+  // 내 정보 수정
+  @Transactional
+  public void updateMyProfileById(Long memberId, UpdateMemberRequest request) {
+    Member member = findById(memberId);
+    member.updateProfile(request.name(), request.nickname(), request.phone(),
+        request.profileImageUrl());
+  }
+
   // 회원 탈퇴
   @Transactional
   public void deleteMyAccountById(Long memberId) {
@@ -76,6 +81,6 @@ public class MemberService {
     Pageable pageable = PageRequest.of(page, Math.min(size, 5));
     // TODO 최근 본 게시글 로직 유노님이랑 구현해야하는 부분
     return List.of("View 1", "View 2", "View 3", "View 4", "View 5");
-  }
+  } 
 
 }

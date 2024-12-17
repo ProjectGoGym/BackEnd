@@ -2,6 +2,7 @@ package com.gogym.member.entity;
 
 import com.gogym.common.entity.BaseEntity;
 import com.gogym.gympay.entity.GymPay;
+import com.gogym.member.repository.BanNicknameRepository;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -64,6 +65,9 @@ public class Member extends BaseEntity {
   @JoinColumn(name = "gym_pay_id")
   private GymPay gymPay;
 
+  @Column(name = "is_active", nullable = false)
+  private boolean isActive = true;
+
   // 이메일 인증 여부 확인 메서드
   public boolean isVerified() {
     return this.verifiedAt != null;
@@ -75,5 +79,53 @@ public class Member extends BaseEntity {
     this.nickname = nickname;
     this.phone = phone;
     this.profileImageUrl = profileImageUrl;
+  }
+
+  // 탈퇴 처리 메서드
+  public void deactivate(BanNicknameRepository banNicknameRepository) {
+    this.isActive = false;
+
+    // 이름과 닉네임 마스킹
+    this.name = maskString(this.name);
+    this.nickname = maskString(this.nickname);
+
+    // 이메일 마스킹
+    this.email = maskEmail(this.email);
+
+    // BanNickname 테이블에 저장
+    if (banNicknameRepository != null) {
+      BanNickname banNickname = BanNickname.builder().bannedNickname(this.nickname).build();
+      banNicknameRepository.save(banNickname);
+    }
+
+    this.phone = null;
+    this.profileImageUrl = null;
+  }
+
+  // 문자열 마스킹 (짝수 인덱스 문자만 '*')
+  private String maskString(String input) {
+    if (input == null || input.isEmpty()) {
+      return input;
+    }
+    StringBuilder masked = new StringBuilder(input);
+    for (int i = 0; i < input.length(); i++) {
+      if (i % 2 == 1) {
+        masked.setCharAt(i, '*');
+      }
+    }
+    return masked.toString();
+  }
+
+  // 이메일 마스킹
+  private String maskEmail(String email) {
+    if (email == null || email.isEmpty()) {
+      return email;
+    }
+    String[] parts = email.split("@");
+    if (parts.length != 2) {
+      return email; // 유효하지 않은 이메일
+    }
+    parts[0] = maskString(parts[0]); // 아이디 부분 마스킹
+    return String.join("@", parts);
   }
 }

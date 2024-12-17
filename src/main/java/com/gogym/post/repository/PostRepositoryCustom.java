@@ -8,5 +8,5 @@ import org.springframework.data.domain.Pageable;
 
 public interface PostRepositoryCustom {
 
-  Page<Post> findAllWithFilter(List<Long> regionIds, PostFilterRequestDto postFilterRequestDto, Pageable sortedByDate);
+  Page<Post> findAllWithFilter(List<Long> regionIds, PostFilterRequestDto postFilterRequestDto, Pageable sortedByDate); 
 }
