@@ -5,7 +5,7 @@ spring:
   application:
     name: GoGym
   profiles:
-    active: dev
+    active: prod
 
   data:
     redis:
@@ -39,7 +39,7 @@ logging:
 
 jasypt:
   encryptor:
-    password: Rhwla123!
+    password: ${JASYPT_ENCRYPTOR_PASSWORD}
 
 portone:
   secret: ENC(Yae9m6UdFdavIg+60o/aoAP5jG7K4gwTIIy/I8FLCsp8PYOcIb0sfwr3wd8Z37XGke+83s1e4VTEv9OtMwV3wmnOWTeXJJ1JqxmGc8VKHFzyR6FJ4YoSPfwKjsBrUwB1)
