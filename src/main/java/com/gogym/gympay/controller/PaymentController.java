@@ -44,7 +44,6 @@ public class PaymentController {
     return ResponseEntity.ok(response);
   }
 
-
   @GetMapping(value = "/sse/subscribe/{payment-id}", produces = TEXT_EVENT_STREAM_VALUE)
   public SseEmitter subscribe(@PathVariable("payment-id") String paymentId) throws IOException {
     return sseService.subscribe(paymentId);

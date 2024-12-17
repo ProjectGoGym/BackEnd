@@ -2,9 +2,12 @@ package com.gogym.gympay.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.gogym.gympay.entity.Payment;
-import com.gogym.gympay.entity.constant.Status;
+import com.gogym.gympay.entity.constant.PaymentStatus;
 import com.gogym.member.entity.Member;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -143,17 +146,17 @@ public record PaymentResult(
   public Payment toEntity(Member member) {
     return Payment.builder()
         .id(id)
-        .status(Status.valueOf(this.status)) // 결제 상태 (PAID, FAILED 등)
+        .status(PaymentStatus.valueOf(this.status)) // 결제 상태 (PAID, FAILED 등)
         .transactionId(this.transactionId) // 거래 고유 ID
         .merchantId(this.merchantId) // 상점 ID
         .storeId(this.storeId) // 매장 ID
         .orderName(this.orderName) // 주문 이름
         .currency(this.currency) // 결제 통화
         .isCulturalExpense(this.isCulturalExpense) // 문화비 사용 여부
-        .requestedAt(LocalDateTime.parse(this.requestedAt)) // 결제 요청 시간
-        .updatedAt(LocalDateTime.parse(this.updatedAt)) // 결제 상태 업데이트 시간
-        .statusChangedAt(LocalDateTime.parse(this.statusChangedAt)) // 결제 상태 변경 시간
-        .paidAt(this.paidAt != null ? LocalDateTime.parse(this.paidAt) : null) // 결제 완료 시간
+        .requestedAt(convertToKST(this.requestedAt)) // 결제 요청 시간
+        .updatedAt(convertToKST(this.updatedAt)) // 결제 상태 업데이트 시간
+        .statusChangedAt(convertToKST(this.statusChangedAt)) // 결제 상태 변경 시간
+        .paidAt(this.paidAt != null ? convertToKST(this.paidAt) : null) // 결제 완료 시간
         .pgTxId(this.pgTxId) // PG사 거래 ID
         .receiptUrl(this.receiptUrl) // 영수증 URL
         .paymentMethod(Payment.PaymentMethod.builder()
@@ -201,7 +204,14 @@ public record PaymentResult(
             .cancelled(this.amount.cancelled) // 취소된 금액
             .cancelledTaxFree(this.amount.cancelledTaxFree) // 취소된 면세 금액
             .build())
+        .failedAt(convertToKST(this.failedAt))
+        .failureReason(this.failure.reason)
         .member(member)
         .build();
+  }
+
+  private LocalDateTime convertToKST(String utcDateTime) {
+    OffsetDateTime offsetDateTime = OffsetDateTime.parse(utcDateTime, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+    return offsetDateTime.atZoneSameInstant(ZoneOffset.ofHours(9)).toLocalDateTime();
   }
 }

@@ -17,19 +17,16 @@ public class GymPayService {
   private final GymPayRepository gymPayRepository;
 
   @Transactional
-  public Long save(Long memberId) {
+  public void save(Long memberId) {
     Member member = memberService.findById(memberId);
     GymPay gymPay = new GymPay(0, member);
 
     gymPayRepository.save(gymPay);
-
-    return gymPay.getId();
   }
 
-  @Transactional
-  public void charge(Member member, int amount) {
-    GymPay gymPay = member.getGymPay();
-
-    gymPay.charge(amount);
+  public GymPay getByMember(Member member) {
+    return gymPayRepository.findByMember(member)
+        .orElse(null);
   }
 }
+

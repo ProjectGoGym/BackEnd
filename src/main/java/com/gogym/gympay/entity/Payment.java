@@ -1,8 +1,6 @@
 package com.gogym.gympay.entity;
 
-import static jakarta.persistence.FetchType.LAZY;
-
-import com.gogym.gympay.entity.constant.Status;
+import com.gogym.gympay.entity.constant.PaymentStatus;
 import com.gogym.member.entity.Member;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
@@ -10,9 +8,10 @@ import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
@@ -20,7 +19,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Getter
 @Entity
@@ -34,7 +32,8 @@ public class Payment {
   @Column(unique = true)
   private String id;
 
-  private Status status; // 결제 상태 (예: PAID, FAILED)
+  @Enumerated(EnumType.STRING)
+  private PaymentStatus status; // 결제 상태 (예: PAID, FAILED)
 
   @Column(name = "transaction_id", nullable = false)
   private String transactionId; // 거래 고유 ID
@@ -67,16 +66,25 @@ public class Payment {
   @Column(name = "pg_tx_id")
   private String pgTxId; // PG사 거래 ID
 
-  @Column(name = "receipteUrl")
+  @Column(name = "receipt_url")
   private String receiptUrl; // 영수증 URL
 
+  @Column(name = "failed_at")
+  private LocalDateTime failedAt;
+
+  @Column(name = "failure_reason")
+  private String failureReason;
+
   @Embedded
+  @Column(columnDefinition = "TEXT")
   private PaymentMethod paymentMethod;
 
   @Embedded
+  @Column(columnDefinition = "TEXT")
   private PaymentChannel paymentChannel;
 
   @Embedded
+  @Column(columnDefinition = "TEXT")
   private Amount amount;
 
   @Getter
@@ -92,6 +100,7 @@ public class Payment {
     private String provider; // 결제 제공사 (예: NAVERPAY)
 
     @Embedded
+    @Column(columnDefinition = "TEXT")
     private EasyPayMethod easyPayMethod; // EasyPay 결제 방식
 
     @Getter
@@ -105,12 +114,14 @@ public class Payment {
       private String easyPayMethodType; // EasyPay 결제 유형
 
       @Embedded
+      @Column(columnDefinition = "TEXT")
       private Card card; // 카드 정보
 
       @Column(name = "approval_number")
       private String approvalNumber; // 승인 번호
 
       @Embedded
+      @Column(columnDefinition = "TEXT")
       private Installment installment; // 할부 정보
 
       @Column(name = "point_used")
@@ -209,7 +220,7 @@ public class Payment {
     private int cancelledTaxFree; // 취소된 면세 금액
   }
 
-  @OneToOne(fetch = LAZY)
-  @JoinColumn(name = "member_id", nullable = false)
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "member_id")
   private Member member;
 }

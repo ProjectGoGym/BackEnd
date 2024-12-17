@@ -41,10 +41,10 @@ public class PortOneService {
         .block();
   }
 
-  public PaymentResult getPaymentInfo(String transactionId) {
+  public PaymentResult getPaymentInfo(String paymentId) {
     return portOneClient.get()
-        .uri("/payments/" + transactionId)
-        .headers(headers -> headers.setBearerAuth("PortOne " + secretKey))
+        .uri("/payments/" + paymentId)
+        .headers(headers -> headers.setBearerAuth(getAccessToken()))
         .retrieve()
         .bodyToMono(PaymentResult.class)
         .doOnError(e -> log.error(e.getMessage()))
