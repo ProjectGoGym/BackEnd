@@ -34,8 +34,8 @@ public class MemberService {
   // 마이페이지 조회
   public MemberProfileResponse getMyProfileById(Long memberId) {
     Member member = findById(memberId);
-    return new MemberProfileResponse(member.getEmail(), member.getName(), member.getNickname(),
-        member.getPhone(), member.getProfileImageUrl());
+    return new MemberProfileResponse(member.getId(), member.getEmail(), member.getName(),
+        member.getNickname(), member.getPhone(), member.getProfileImageUrl());
   }
 
   // 마이페이지 수정

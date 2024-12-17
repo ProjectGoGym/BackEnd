@@ -1,6 +1,7 @@
 package com.gogym.member.entity;
 
 import com.gogym.common.entity.BaseEntity;
+import com.gogym.gympay.entity.GymPay;
 import com.gogym.member.repository.BanNicknameRepository;
 import jakarta.persistence.*;
 import lombok.*;
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class Member extends BaseEntity {
+  private String memberStatus;
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -47,6 +49,9 @@ public class Member extends BaseEntity {
 
   @Column(name = "region_id_2", nullable = true)
   private Long regionId2;
+
+  @OneToOne(mappedBy = "member")
+  private GymPay gymPay;
 
   @Setter
   @Column(name = "verified_at")
@@ -117,4 +122,20 @@ public class Member extends BaseEntity {
     return String.join("@", parts);
   }
 
+  public String getMemberStatus() {
+    return memberStatus;
+  }
+
+  public void setMemberStatus(String memberStatus) {
+    this.memberStatus = memberStatus;
+  }
+
+  private boolean isKakao;
+
+  public static class MemberBuilder {
+    public MemberBuilder isKakao(boolean isKakao) {
+      this.isKakao = isKakao;
+      return this;
+    }
+  }
 }
