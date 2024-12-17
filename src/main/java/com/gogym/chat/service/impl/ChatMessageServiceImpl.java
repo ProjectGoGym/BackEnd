@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import com.gogym.chat.dto.ChatMessageDto.ChatMessageHistory;
 import com.gogym.chat.dto.ChatMessageDto.ChatRoomMessagesResponse;
 import com.gogym.chat.dto.ChatMessageDto.RedisChatMessage;
@@ -21,11 +22,10 @@ import com.gogym.exception.ErrorCode;
 import com.gogym.post.service.PostService;
 import com.gogym.post.type.PostStatus;
 import com.gogym.util.JsonUtil;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
-@Transactional
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class ChatMessageServiceImpl implements ChatMessageService {
   
@@ -44,10 +44,7 @@ public class ChatMessageServiceImpl implements ChatMessageService {
     }
     
     // Redis와 DB에서 메시지를 조회 및 변환
-    List<ChatMessageHistory> combinedMessages = this.getCombinedMessages(chatRoomId, pageable);
-
-    // 병합된 메시지 목록을 페이징 처리
-    Page<ChatMessageHistory> messagePage = this.paginateMessages(combinedMessages, pageable);
+    Page<ChatMessageHistory> messagePage = this.getCombinedMessages(chatRoomId, pageable);
 
     // 채팅방에 연결된 게시물 상태값을 조회
     PostStatus postStatus = this.getPostStatus(chatRoomId);
@@ -57,19 +54,34 @@ public class ChatMessageServiceImpl implements ChatMessageService {
   }
   
   /**
-   * Redis와 DB에서 메시지를 조회 후 병합.
+   * Redis와 DB에서 메시지를 조회 후 병합하여 페이징 처리.
    * 
    * @param chatRoomId 채팅방 ID
    * @param pageable 페이징 정보
    * @return 병합된 {@link ChatMessageHistory} 리스트
    */
-  private List<ChatMessageHistory> getCombinedMessages(Long chatRoomId, Pageable pageable) {
-    return Stream
-        .concat(
-            this.getRedisMessages(chatRoomId).stream(),
-            this.getDbMessages(chatRoomId, pageable).stream())
-        .sorted(Comparator.comparing(ChatMessageHistory::createdAt))
+  private Page<ChatMessageHistory> getCombinedMessages(Long chatRoomId, Pageable pageable) {
+    // Redis에서 메시지 조회 및 정렬
+    List<ChatMessageHistory> redisMessages = this.getRedisMessages(chatRoomId).stream()
+        .sorted(Comparator.comparing(ChatMessageHistory::createdAt).reversed())
         .toList();
+    
+    // DB에서 페이징된 메시지 조회
+    List<ChatMessageHistory> dbMessages = this.getDbMessages(chatRoomId, Pageable.unpaged());
+    
+    // DB 메시지와 Redis 메시지를 병합한 후 내림차순으로 정렬
+    List<ChatMessageHistory> combinedMessages = Stream.concat(dbMessages.stream(), redisMessages.stream())
+        .sorted(Comparator.comparing(ChatMessageHistory::createdAt).reversed())
+        .toList();
+    
+    // Pageable 조건에 맞게 페이징 처리
+    int start = (int) pageable.getOffset();
+    int end = Math.min(start + pageable.getPageSize(), combinedMessages.size());
+    
+    // 경계값 확인 및 반환
+    return start >= combinedMessages.size()
+        ? new PageImpl<>(List.of(), pageable, combinedMessages.size())
+        : new PageImpl<>(combinedMessages.subList(start, end), pageable, combinedMessages.size());
   }
   
   /**
@@ -97,26 +109,12 @@ public class ChatMessageServiceImpl implements ChatMessageService {
    * @return {@link ChatMessageHistory} 리스트
    */
   private List<ChatMessageHistory> getDbMessages(Long chatRoomId, Pageable pageable) {
-    return this.chatMessageRepository.findByChatRoomId(chatRoomId, pageable).stream()
+    return this.chatMessageRepository.findByChatRoomIdOrderByCreatedAtDesc(chatRoomId, pageable).stream()
         .map(dbMessage -> new ChatMessageHistory(
             dbMessage.getContent(),
             dbMessage.getSenderId(),
             dbMessage.getCreatedAt()
         )).toList();
-  }
-  
-  /**
-   * 메시지 리스트를 페이징 처리.
-   * 
-   * @param combinedMessages 병합된 메시지 리스트
-   * @param pageable 페이징 정보
-   * @return {@link Page} 형태의 메시지 리스트
-   */
-  private Page<ChatMessageHistory> paginateMessages(List<ChatMessageHistory> combinedMessages, Pageable pageable) {
-    int start = (int) pageable.getOffset();
-    int end = Math.min(start + pageable.getPageSize(), combinedMessages.size());
-    List<ChatMessageHistory> pagedMessages = combinedMessages.subList(start, end);
-    return new PageImpl<>(pagedMessages, pageable, combinedMessages.size());
   }
   
   /**
