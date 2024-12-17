@@ -2,12 +2,10 @@ package com.gogym.member.service;
 
 import static org.mockito.Mockito.*;
 import static org.assertj.core.api.Assertions.*;
-
-import com.gogym.post.dto.PostResponseDto;
-import com.gogym.post.entity.Post;
-import com.gogym.post.repository.PostRepository;
-import com.gogym.region.dto.RegionResponseDto;
-import com.gogym.region.service.RegionService;
+import com.gogym.member.entity.Member;
+import com.gogym.post.dto.PostPageResponseDto;
+import com.gogym.post.service.PostService;
+import com.gogym.post.service.WishService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.mockito.InjectMocks;
@@ -22,65 +20,87 @@ import java.util.List;
 class ActivityServiceTest {
 
   @Mock
-  private PostRepository postRepository;
+  private PostService postService;
 
   @Mock
-  private RegionService regionService;
+  private WishService wishService;
+
+  @Mock
+  private MemberService memberService;
 
   @InjectMocks
   private ActivityService activityService;
 
+  private Pageable pageable;
+
   @BeforeEach
   void setUp() {
     MockitoAnnotations.openMocks(this);
+    this.pageable = Pageable.ofSize(5);
   }
 
   @Test
-  void testGetMyPosts() {
+  void 내가_작성한_게시글_조회_성공() {
+    // Given
     Long memberId = 1L;
-    Pageable pageable = Pageable.ofSize(5);
-    Post post = mock(Post.class); // Post 객체를 Mock으로 생성
-    Page<Post> postPage = new PageImpl<>(List.of(post), pageable, 1);
+    PostPageResponseDto responseDto = mock(PostPageResponseDto.class);
+    Page<PostPageResponseDto> postPage = new PageImpl<>(List.of(responseDto), pageable, 1);
 
-    when(postRepository.findByAuthorId(memberId, pageable)).thenReturn(postPage);
-    when(regionService.findById(any())).thenReturn(new RegionResponseDto("Seoul", "Gangnam"));
+    Member mockMember = mock(Member.class);
+    when(mockMember.isActive()).thenReturn(true);
+    when(memberService.findById(memberId)).thenReturn(mockMember);
 
-    Page<PostResponseDto> result = activityService.getMyPosts(memberId, pageable);
+    when(postService.getAuthorPosts(memberId, pageable)).thenReturn(postPage);
 
+    // When
+    Page<PostPageResponseDto> result = activityService.getMyPosts(memberId, pageable);
+
+    // Then
     assertThat(result.getContent()).isNotEmpty();
-    verify(postRepository).findByAuthorId(memberId, pageable);
+    verify(postService).getAuthorPosts(memberId, pageable);
   }
 
   @Test
-  void testGetMyFavorites() {
+  void 내가_찜한_게시글_조회_성공() {
+    // Given
     Long memberId = 1L;
-    Pageable pageable = Pageable.ofSize(5);
-    Post post = mock(Post.class); // Post 객체를 Mock으로 생성
-    Page<Post> postPage = new PageImpl<>(List.of(post), pageable, 1);
+    PostPageResponseDto responseDto = mock(PostPageResponseDto.class);
+    Page<PostPageResponseDto> wishPage = new PageImpl<>(List.of(responseDto), pageable, 1);
 
-    when(postRepository.findFavoritesByMemberId(memberId, pageable)).thenReturn(postPage);
-    when(regionService.findById(any())).thenReturn(new RegionResponseDto("Seoul", "Gangnam"));
+    Member mockMember = mock(Member.class);
+    when(mockMember.isActive()).thenReturn(true);
+    when(memberService.findById(memberId)).thenReturn(mockMember);
 
-    Page<PostResponseDto> result = activityService.getMyFavorites(memberId, pageable);
+    when(wishService.getWishList(memberId, pageable)).thenReturn(wishPage);
 
+    // When
+    Page<PostPageResponseDto> result = activityService.getMyFavorites(memberId, pageable);
+
+    // Then
     assertThat(result.getContent()).isNotEmpty();
-    verify(postRepository).findFavoritesByMemberId(memberId, pageable);
+    verify(wishService).getWishList(memberId, pageable);
   }
 
   @Test
-  void testGetRecentViews() {
+  void 최근_본_게시글_조회_성공() {
+    // Given
     Long memberId = 1L;
-    Pageable pageable = Pageable.ofSize(5);
-    Post post = mock(Post.class); // Post 객체를 Mock으로 생성
-    Page<Post> postPage = new PageImpl<>(List.of(post), pageable, 1);
+    PostPageResponseDto responseDto = mock(PostPageResponseDto.class);
+    Page<PostPageResponseDto> recentViewPage = new PageImpl<>(List.of(responseDto), pageable, 1);
 
-    when(postRepository.findRecentViewsByMemberId(memberId, pageable)).thenReturn(postPage);
-    when(regionService.findById(any())).thenReturn(new RegionResponseDto("Seoul", "Gangnam"));
+    Member mockMember = mock(Member.class);
+    when(mockMember.isActive()).thenReturn(true);
+    when(memberService.findById(memberId)).thenReturn(mockMember);
 
-    Page<PostResponseDto> result = activityService.getRecentViews(memberId, pageable);
+    when(postService.getAuthorPosts(memberId, pageable)).thenReturn(recentViewPage);
 
+    // When
+    Page<PostPageResponseDto> result = activityService.getRecentViews(memberId, pageable);
+
+    // Then
     assertThat(result.getContent()).isNotEmpty();
-    verify(postRepository).findRecentViewsByMemberId(memberId, pageable);
+    verify(postService).getAuthorPosts(memberId, pageable);
   }
 }
+
 

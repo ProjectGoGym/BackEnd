@@ -30,17 +30,16 @@ class MemberServiceTest {
   private MemberService memberService;
 
   @BeforeEach
-  void setUp() {
+  void 설정() {
     MockitoAnnotations.openMocks(this);
   }
 
   @Test
-  void testGetMyProfileById() {
+  void 마이페이지_조회_성공() {
     Long memberId = 1L;
 
-    // GymPay를 Mock 객체로 생성
     GymPay gymPay = mock(GymPay.class);
-    when(gymPay.getBalance()).thenReturn(10000L); // Long 타입으로 명시적 변경
+    when(gymPay.getBalance()).thenReturn(10000L);
 
     Member member =
         Member.builder().id(memberId).email("test@example.com").name("John Doe").nickname("johndoe")
@@ -50,15 +49,14 @@ class MemberServiceTest {
 
     MemberProfileResponse response = memberService.getMyProfileById(memberId);
 
-    assertThat(response.gymPayBalance()).isEqualTo(10000L); // Long 타입으로 확인
+    assertThat(response.gymPayBalance()).isEqualTo(10000L);
     verify(memberRepository).findById(memberId);
   }
 
   @Test
-  void testUpdateMyProfileById() {
+  void 마이페이지_수정_성공() {
     Long memberId = 1L;
 
-    // UpdateMemberRequest를 Mock 객체로 생성
     UpdateMemberRequest request = mock(UpdateMemberRequest.class);
     when(request.name()).thenReturn("New Name");
     when(request.nickname()).thenReturn("newNick");
@@ -76,8 +74,9 @@ class MemberServiceTest {
   }
 
   @Test
-  void testDeactivateMyAccountById() {
+  void 회원_탈퇴_성공() {
     Long memberId = 1L;
+
     Member member = mock(Member.class);
     when(memberRepository.findById(memberId)).thenReturn(Optional.of(member));
 
@@ -87,4 +86,5 @@ class MemberServiceTest {
     verify(memberRepository).findById(memberId);
   }
 }
+
 
