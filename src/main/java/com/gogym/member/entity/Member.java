@@ -50,7 +50,7 @@ public class Member extends BaseEntity {
   @Column(name = "region_id_2", nullable = true)
   private Long regionId2;
 
-  @OneToOne(mappedBy = "member")
+  @OneToOne(mappedBy = "member", cascade = CascadeType.ALL)
   private GymPay gymPay;
 
   @Setter
@@ -59,6 +59,8 @@ public class Member extends BaseEntity {
 
   @Column(name = "is_active", nullable = false)
   private boolean isActive = true;
+
+  private boolean isKakao;
 
   // 이메일 인증 여부 확인 메서드
   public boolean isVerified() {
@@ -118,7 +120,6 @@ public class Member extends BaseEntity {
       return email; // 유효하지 않은 이메일
     }
     parts[0] = maskString(parts[0]); // 아이디 부분 마스킹
-    parts[1] = parts[1]; // 도메인 부분
     return String.join("@", parts);
   }
 
@@ -130,7 +131,13 @@ public class Member extends BaseEntity {
     this.memberStatus = memberStatus;
   }
 
-  private boolean isKakao;
+  public GymPay getGymPay() {
+    return this.gymPay;
+  }
+
+  public void setGymPay(GymPay gymPay) {
+    this.gymPay = gymPay;
+  }
 
   public static class MemberBuilder {
     public MemberBuilder isKakao(boolean isKakao) {

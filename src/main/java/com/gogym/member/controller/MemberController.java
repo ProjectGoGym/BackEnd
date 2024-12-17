@@ -27,7 +27,7 @@ public class MemberController {
   // 내 정보 조회
   @GetMapping("/me/profile")
   public ResponseEntity<MemberProfileResponse> getMyProfile(@LoginMemberId Long memberId) {
-    return ResponseEntity.ok(memberService.getMyProfileById(memberId));
+      return ResponseEntity.ok(memberService.getMyProfileById(memberId));
   }
 
   // 내 정보 수정
