@@ -15,11 +15,10 @@ public class ImageController {
   private final ImageService imageService;
 
   @GetMapping("/presigned-url")
-  public ResponseEntity<String> getPresignedUrl(
-      @RequestParam("file-name") String fileName,
-      @RequestParam("dir-name") String dirName) {
+  public ResponseEntity<String> getPresignedUrl(@RequestParam("dir-name") String dirName,
+      @RequestParam("file-name") String fileName) {
+    String presignedUrl = imageService.getPresignedUrl(dirName, fileName);
 
-    String presignedUrl = imageService.getPresignedUrl(fileName, dirName);
     return ResponseEntity.ok(presignedUrl);
   }
 }
