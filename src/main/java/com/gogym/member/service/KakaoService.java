@@ -38,7 +38,7 @@ public class KakaoService {
   @Transactional
   public String processKakaoLogin(String code, String currentDomain) {
     KakaoTokenResponse tokenResponse = getAccessToken(code, currentDomain);
-    KakaoProfileResponse profileResponse = getProfile(tokenResponse.getAccessToken());
+    KakaoProfileResponse profileResponse = getProfile(tokenResponse.accessToken());
 
     Member member = findOrCreateMember(profileResponse);
     return jwtTokenProvider.createToken(member.getEmail(), member.getId(),
@@ -97,7 +97,7 @@ public class KakaoService {
 
   @Transactional
   private Member createMember(KakaoProfileResponse profile) {
-    String email = profile.getKakaoAccount().getEmail();
+    String email = profile.kakaoAccount().email();
     String nickname = generateUniqueNickname();
 
     Member newMember = Member.builder().email(email).nickname(nickname).name(email.split("@")[0])
@@ -109,7 +109,7 @@ public class KakaoService {
   }
 
   private Member findOrCreateMember(KakaoProfileResponse profile) {
-    String email = profile.getKakaoAccount().getEmail();
+    String email = profile.kakaoAccount().email();
     return memberRepository.findByEmail(email).orElseGet(() -> createMember(profile));
   }
 }
