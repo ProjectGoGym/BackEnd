@@ -13,11 +13,9 @@ import com.gogym.member.entity.Member;
 import com.gogym.post.type.PostStatus;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Slf4j
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -41,7 +39,8 @@ public class SafePaymentService {
     Member requester = (requesterRole == RequesterRole.SELLER) ? seller : buyer;
     Member responder = (requesterRole == RequesterRole.SELLER) ? buyer : seller;
 
-    SafePayment safePayment = request.toEntity(requester, responder, chatRoom.getTransaction(), requesterRole);
+    SafePayment safePayment = request.toEntity(requester, responder, chatRoom.getTransaction(),
+        requesterRole);
 
     safePaymentRepository.save(safePayment);
 
@@ -80,7 +79,7 @@ public class SafePaymentService {
     safePayment.reject();
   }
 
-  @Transactional
+  @Transactional(rollbackFor = Exception.class)
   public void complete(Long safePaymentId, Long requesterId) {
     SafePayment safePayment = getById(safePaymentId);
 

@@ -60,8 +60,4 @@ public class Transaction extends BaseEntity {
     this.status = TransactionStatus.STARTED;
     this.chatRoom.setTransaction(this);
   }
-
-  public void addSafePayment(SafePayment payment) {
-    safePayments.add(payment);
-  }
 }

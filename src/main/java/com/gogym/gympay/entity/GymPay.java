@@ -43,8 +43,4 @@ public class GymPay extends BaseEntity {
   public void withdraw(int amount) {
     this.balance -= amount;
   }
-
-  public void addHistory(GymPayHistory history) {
-    histories.add(history);
-  }
 }

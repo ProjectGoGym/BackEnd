@@ -5,8 +5,8 @@ import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
 import com.gogym.gympay.dto.PaymentResult;
 import com.gogym.gympay.entity.constant.TransferType;
-import com.gogym.gympay.event.GymPayBalanceChangedEvent;
 import com.gogym.gympay.event.PaidEvent;
+import com.gogym.gympay.service.GymPayHistoryService;
 import com.gogym.member.entity.Member;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 public class PaymentPaidStrategy implements PaymentProcessingStrategy {
 
   private final ApplicationEventPublisher eventPublisher;
+  private final GymPayHistoryService gymPayHistoryService;
 
   @Override
   @RedissonLock(key = "'gym-pay:' + #member.gymPay.id")
@@ -30,6 +31,6 @@ public class PaymentPaidStrategy implements PaymentProcessingStrategy {
     member.getGymPay().deposit(result.amount().total());
 
     eventPublisher.publishEvent(new PaidEvent(result.id(), result.status()));
-    eventPublisher.publishEvent(new GymPayBalanceChangedEvent(TransferType.CHARGE, result.amount().paid(), member.getGymPay().getBalance(), null, member.getGymPay()));
+    gymPayHistoryService.save(TransferType.CHARGE, result.amount().total(), member.getGymPay().getBalance(), null, member.getGymPay());
   }
 }

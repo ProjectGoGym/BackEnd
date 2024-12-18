@@ -52,7 +52,6 @@ public class SafePayment extends BaseEntity {
     this.requester = requester;
     this.responder = responder;
     this.requesterRole = requesterRole;
-    this.transaction.addSafePayment(this);
   }
 
   public void approve() {
