@@ -10,9 +10,10 @@ public interface ChatRedisService {
    * 메시지를 Redis에 저장 후 응답
    * 
    * @param messageRequest 요청 메시지
+   * @param memberId 메시지를 보낸 사용자 ID
    * @return 저장된 메시지 응답
    */
-  ChatMessageResponse saveMessageToRedis(ChatMessageRequest messageRequest);
+  ChatMessageResponse saveMessageToRedis(ChatMessageRequest messageRequest, Long memberId);
   
   /**
    * Redis에서 특정 채팅방의 메시지 목록을 조회

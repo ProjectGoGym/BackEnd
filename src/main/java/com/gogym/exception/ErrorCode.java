@@ -12,7 +12,6 @@ public enum ErrorCode {
 
   // 400 BAD REQUEST
   REQUEST_VALIDATION_FAIL(BAD_REQUEST, "잘못된 요청 값입니다."),
-  INVALID_FILE_EXTENSION(BAD_REQUEST, "유효하지 않은 파일 확장자입니다."),
 
   // 401 UNAUTHORIZED
   UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증에 실패했습니다."),

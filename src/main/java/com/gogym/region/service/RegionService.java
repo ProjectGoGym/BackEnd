@@ -26,6 +26,11 @@ public class RegionService {
     Region region = regionRepository.findByName(name)
         .orElseThrow(() -> new CustomException(CITY_NOT_FOUND));
 
+    // 하위지역이 없는경우(예 : 세종특별자치시) 부모노드의 아이디와 이름이 내려갑니다.
+    if (region.getChildren() == null || region.getChildren().isEmpty()) {
+      return List.of(RegionDto.fromEntity(region));
+    }
+
     return region.getChildren().stream().map(RegionDto::fromEntity).toList();
   }
 

@@ -28,7 +28,7 @@ public class ChatRoom extends BaseEntity {
   @ManyToOne(fetch = FetchType.LAZY)
   private Post post; // 게시글 작성자
   
-  @JoinColumn(name = "request_id", nullable = false)
+  @JoinColumn(name = "requestor_id", nullable = false)
   @ManyToOne(fetch = FetchType.LAZY)
   private Member requestor; // 채팅 요청자
   
@@ -48,7 +48,7 @@ public class ChatRoom extends BaseEntity {
   
   // 게시글 작성자 반환 메서드
   public Member getPostAuthor() {
-    return this.post.getMember();
+    return this.post.getAuthor();
   }
   
 }

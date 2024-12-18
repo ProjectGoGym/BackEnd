@@ -22,6 +22,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import com.gogym.chat.dto.ChatRoomDto.ChatRoomResponse;
 import com.gogym.chat.dto.ChatRoomDto.LeaveRequest;
@@ -81,7 +82,7 @@ class ChatRoomServiceImplTest {
         .build();
     
     this.post = Post.builder()
-        .member(this.postAuthor)
+        .author(this.postAuthor)
         .build();
     
     this.chatRoom = ChatRoom.builder()
@@ -161,22 +162,25 @@ class ChatRoomServiceImplTest {
         eq(memberId),
         any(Pageable.class))).thenReturn(mockPage);
 
-    String redisMessageJson = "{\"content\":\"test message\",\"senderId\":1,\"createdAt\":\"2024-12-10 12:00:00\"}";
+    String redisMessageJson = "{\"content\":\"안녕하세요!\",\"senderId\":123,\"createdAt\":\"2024-12-03T12:00:00\"}";
     when(this.chatRedisService.getMessages(chatRoomId)).thenReturn(List.of(redisMessageJson));
     when(this.chatMessageReadRepository.countUnreadMessages(eq(chatRoomId), eq(memberId))).thenReturn(5);
 
     // When
-    List<ChatRoomResponse> responses = this.chatRoomService.getChatRooms(memberId, 0, 10);
+    Page<ChatRoomResponse> responses = this.chatRoomService.getChatRooms(memberId, PageRequest.of(0, 10));
 
     // Then
     assertNotNull(responses);
-    assertEquals(1, responses.size());
+    assertEquals(1, responses.getContent().size());
 
-    ChatRoomResponse response = responses.get(0);
+    ChatRoomResponse response = responses.getContent().get(0);
     
     assertEquals(chatRoomId, response.chatRoomId());
-    assertEquals("test message", response.lastMessage());
+    assertEquals("안녕하세요!", response.lastMessage());
     assertEquals(5, response.unreadMessageCount());
+    assertEquals(1, responses.getTotalElements());
+    assertEquals(1, responses.getTotalPages());
+    assertFalse(responses.hasNext());
     
     verify(this.chatRoomRepository).findChatRoomsSortedByLastMessage(
         eq(memberId),

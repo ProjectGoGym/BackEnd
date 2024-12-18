@@ -1,7 +1,10 @@
 package com.gogym.post.service;
 
+import static com.gogym.exception.ErrorCode.DELETED_POST;
+import static com.gogym.exception.ErrorCode.FORBIDDEN;
 import static com.gogym.exception.ErrorCode.POST_NOT_FOUND;
 import static com.gogym.post.type.MembershipType.MEMBERSHIP_ONLY;
+import static com.gogym.post.type.PostStatus.HIDDEN;
 import static com.gogym.post.type.PostStatus.POSTING;
 import static com.gogym.post.type.PostType.SELL;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -19,6 +22,7 @@ import com.gogym.member.service.MemberService;
 import com.gogym.post.dto.PostPageResponseDto;
 import com.gogym.post.dto.PostRequestDto;
 import com.gogym.post.dto.PostResponseDto;
+import com.gogym.post.dto.PostUpdateRequestDto;
 import com.gogym.post.entity.Gym;
 import com.gogym.post.entity.Post;
 import com.gogym.post.repository.GymRepository;
@@ -66,6 +70,9 @@ class PostServiceTest {
   @Mock
   private RegionResponseDto regionResponseDto;
 
+  @Mock
+  private RecentViewService recentViewService;
+
   @InjectMocks
   private PostService postService;
 
@@ -78,6 +85,8 @@ class PostServiceTest {
   private Post post;
   private List<Long> regionIds;
   private Page<Post> posts;
+  private PostUpdateRequestDto postUpdateRequestDto;
+  private PostUpdateRequestDto postDeleteRequestDto;
 
   @BeforeEach
   void setUp() {
@@ -111,11 +120,17 @@ class PostServiceTest {
 
     post = Post.builder()
         .title("게시글 제목")
-        .member(member)
+        .author(member)
         .gym(gym)
         .build();
 
     regionIds = List.of(1L, 2L);
+
+    postUpdateRequestDto = new PostUpdateRequestDto("수정 제목", "내용", SELL, POSTING, MEMBERSHIP_ONLY,
+        LocalDate.now().plusMonths(1), null, 1000L, null, null, null);
+
+    postDeleteRequestDto = new PostUpdateRequestDto("제목", "내용", SELL, HIDDEN, MEMBERSHIP_ONLY,
+        LocalDate.now().plusMonths(1), null, 1000L, null, null, null);
   }
 
   @Test
@@ -135,7 +150,7 @@ class PostServiceTest {
     // given
     posts = new PageImpl<>(List.of(post), pageable, 1);
 
-    when(postRepository.findAllByStatus(pageable, POSTING)).thenReturn(posts);
+    when(postRepository.findAllByStatusOrderByCreatedAtDesc(pageable, POSTING)).thenReturn(posts);
     // when
     Page<PostPageResponseDto> result = postService.getAllPosts(null, pageable);
     // then
@@ -185,7 +200,8 @@ class PostServiceTest {
     when(postRepository.findById(post.getId())).thenReturn(Optional.of(post));
     when(regionService.findById(gym.getRegionId())).thenReturn(regionResponseDto);
     // when
-    PostResponseDto result = postService.getDetailPost(post.getId());
+    PostResponseDto result = postService.getDetailPost(member.getId(), post.getId());
+    recentViewService.saveRecentView(member, post);
     // then
     assertNotNull(result);
     assertEquals(result.title(), post.getTitle());
@@ -198,9 +214,51 @@ class PostServiceTest {
     when(postRepository.findById(post.getId())).thenReturn(Optional.empty());
     // when
     CustomException e = assertThrows(CustomException.class,
-        () -> postService.getDetailPost(post.getId()));
+        () -> postService.getDetailPost(member.getId(), post.getId()));
     // then
     assertEquals(e.getErrorCode(), POST_NOT_FOUND);
     assertEquals(e.getMessage(), "게시글을 찾을 수 없습니다.");
+  }
+
+  @Test
+  void 게시글_수정이_성공한다() {
+    // given
+    when(postRepository.findById(post.getId())).thenReturn(Optional.of(post));
+    when(memberService.findById(member.getId())).thenReturn(member);
+    when(regionService.findById(gym.getRegionId())).thenReturn(regionResponseDto);
+    // when
+    postService.updatePost(member.getId(), post.getId(), postUpdateRequestDto);
+    // then
+    assertEquals(post.getTitle(), postUpdateRequestDto.title());
+  }
+
+  @Test
+  void 게시글_작성자가_아니면_예외가_발생한다() {
+    // given
+    Member anotherMember = Member.builder().id(2L).build();
+    when(postRepository.findById(post.getId())).thenReturn(Optional.of(post));
+    when(memberService.findById(member.getId())).thenReturn(anotherMember);
+    // when
+    CustomException e = assertThrows(CustomException.class,
+        () -> postService.updatePost(member.getId(), post.getId(), postUpdateRequestDto));
+    // then
+    assertEquals(e.getErrorCode(), FORBIDDEN);
+    assertEquals(e.getMessage(), "권한이 없습니다.");
+  }
+
+  @Test
+  void 게시글을_삭제한후_게시글을_조회하면_예외가_발생한다() {
+    // given
+    when(postRepository.findById(post.getId())).thenReturn(Optional.of(post));
+    when(memberService.findById(member.getId())).thenReturn(member);
+    when(regionService.findById(gym.getRegionId())).thenReturn(regionResponseDto);
+    // when
+    postService.updatePost(member.getId(), post.getId(), postDeleteRequestDto);
+    CustomException e = assertThrows(CustomException.class,
+        () -> postService.getDetailPost(member.getId(), post.getId()));
+    // then
+    assertEquals(post.getStatus(), HIDDEN);
+    assertEquals(e.getErrorCode(), DELETED_POST);
+    assertEquals(e.getMessage(), "삭제된 게시글입니다.");
   }
 }

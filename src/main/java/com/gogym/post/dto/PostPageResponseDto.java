@@ -35,7 +35,7 @@ public record PostPageResponseDto(
         .gymName(post.getGym().getGymName())
         .createdAt(post.getCreatedAt())
         .wishCount(post.getWishCount())
-        .authorNickname(post.getMember().getNickname())
+        .authorNickname(post.getAuthor().getNickname())
         .build();
   }
 }

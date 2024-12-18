@@ -66,7 +66,7 @@ class RegionServiceTest {
   }
 
   @Test
-  void 하위지역이_없으면_빈_배열을_반환한다() {
+  void 하위지역이_없으면_상위지역을_반환한다() {
     // given
     String name = "세종특별자치시";
     when(regionRepository.findByName(name)).thenReturn(Optional.of(sejongParent));
@@ -74,7 +74,7 @@ class RegionServiceTest {
     List<RegionDto> children = regionService.getRegions(name);
     // then
     assertNotNull(children);
-    assertEquals(children.size(), 0);
+    assertEquals(children.size(), 1);
   }
 
   @Test

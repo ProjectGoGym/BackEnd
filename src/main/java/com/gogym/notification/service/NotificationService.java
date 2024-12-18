@@ -31,6 +31,8 @@ public class NotificationService {
 
   private final MemberService memberService;
 
+  private static final Long sseTimeOut = 60000L;
+
   @Getter
   private final Map<Long, SseEmitter> emitters = new ConcurrentHashMap<>();
 
@@ -38,7 +40,7 @@ public class NotificationService {
 
     memberService.findById(memberId);
 
-    SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
+    SseEmitter emitter = new SseEmitter(sseTimeOut);
     emitters.put(memberId, emitter);
 
     // 클라이언트 연결 종료, 만료, 에러 처리
@@ -62,24 +64,6 @@ public class NotificationService {
       try {
         emitter.send(SseEmitter.event()
             .name("dummy")
-            .data("Well Connected! Waiting for notifications."));
-      } catch (IOException e) {
-        removeEmitter(memberId);
-      }
-    }
-  }
-
-  /*
-  클라이언트와 연결이 원활이 되었는지 확인하는 메서드입니다.
-  클라이언트 측에서 해당 메세지를 30초마다 한번씩 받지 못하면 재연결 하는 로직을 구현해야 할 것 같습니다.
-   */
-  public void sendHeartbeat(Long memberId) {
-
-    SseEmitter emitter = emitters.get(memberId);
-    if (emitter != null) {
-      try {
-        emitter.send(SseEmitter.event()
-            .name("heartbeat")
             .data("connecting..."));
       } catch (IOException e) {
         removeEmitter(memberId);

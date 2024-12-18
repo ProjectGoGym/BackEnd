@@ -54,7 +54,7 @@ class ChatMessageBatchSchedulerTest {
     // Given
     Long chatroomId = 1L;
     String redisKey = "chatroom:messages:1";
-    String mockMessageJson = "{\"content\":\"안녕하세요!\",\"senderId\":123,\"createdAt\":\"2024-12-03 12:00:00\"}";
+    String mockMessageJson = "{\"content\":\"안녕하세요!\",\"senderId\":123,\"createdAt\":\"2024-12-03T12:00:00\"}";
 
     ChatRoom mockChatRoom = mock(ChatRoom.class);
 
