@@ -6,7 +6,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import com.gogym.chat.dto.ChatMessageDto.ChatMessageHistory;
+import com.gogym.chat.dto.ChatMessageDto.RedisChatMessage;
 import com.gogym.chat.entity.ChatMessage;
 import com.gogym.chat.entity.ChatRoom;
 import com.gogym.chat.repository.ChatMessageRepository;
@@ -56,8 +56,8 @@ public class ChatMessageBatchScheduler {
 
       // 메시지를 하나씩 처리
       messagesJson.forEach(messageJson -> {
-        // JSON 문자열을 ChatMessageHistory 객체로 역직렬화
-        ChatMessageHistory messageHistory = JsonUtil.deserialize(messageJson, ChatMessageHistory.class);
+        // JSON 문자열을 RedisChatMessage 객체로 역직렬화
+        RedisChatMessage messageHistory = JsonUtil.deserialize(messageJson, RedisChatMessage.class);
 
         // ChatMessage 엔티티로 변환
         ChatMessage chatMessage = ChatMessage.builder()
