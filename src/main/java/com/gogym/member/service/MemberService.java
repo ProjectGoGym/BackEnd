@@ -10,6 +10,7 @@ import com.gogym.member.entity.Member;
 import com.gogym.member.repository.BanNicknameRepository;
 import com.gogym.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import com.gogym.member.entity.BanNickname;
 
 @Service
 @RequiredArgsConstructor
@@ -52,7 +53,44 @@ public class MemberService {
   @Transactional
   public void deactivateMyAccountById(Long memberId) {
     Member member = findById(memberId);
-    member.deactivate(banNicknameRepository);
+    member.deactivate(); // 상태 변경
+    member.clearSensitiveInfo(); // 민감 정보 초기화
+
+    // 이름과 닉네임 마스킹
+    String maskedName = maskString(member.getName());
+    String maskedNickname = maskString(member.getNickname());
+    String maskedEmail = maskEmail(member.getEmail());
+
+    // BanNickname 저장
+    BanNickname banNickname = new BanNickname(maskedNickname);
+    banNicknameRepository.save(banNickname);
+  }
+
+  // 문자열 마스킹 (짝수 인덱스 문자만 '*')
+  private String maskString(String input) {
+    if (input == null || input.isEmpty()) {
+      return input;
+    }
+    StringBuilder masked = new StringBuilder(input);
+    for (int i = 0; i < input.length(); i++) {
+      if (i % 2 == 1) {
+        masked.setCharAt(i, '*');
+      }
+    }
+    return masked.toString();
+  }
+
+  // 이메일 마스킹
+  private String maskEmail(String email) {
+    if (email == null || email.isEmpty()) {
+      return email;
+    }
+    String[] parts = email.split("@");
+    if (parts.length != 2) {
+      return email;
+    }
+    parts[0] = maskString(parts[0]);
+    return String.join("@", parts);
   }
 }
 

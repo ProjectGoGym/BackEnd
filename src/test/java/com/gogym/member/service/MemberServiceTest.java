@@ -82,7 +82,7 @@ class MemberServiceTest {
 
     memberService.deactivateMyAccountById(memberId);
 
-    verify(member).deactivate(banNicknameRepository);
+    verify(member).deactivate();
     verify(memberRepository).findById(memberId);
   }
 }

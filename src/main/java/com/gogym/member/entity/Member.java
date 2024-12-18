@@ -2,7 +2,6 @@ package com.gogym.member.entity;
 
 import com.gogym.common.entity.BaseEntity;
 import com.gogym.gympay.entity.GymPay;
-import com.gogym.member.repository.BanNicknameRepository;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -14,11 +13,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class Member extends BaseEntity {
-
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "member_id")
-  private Long id;
 
   @Setter
   @Column(name = "member_status")
@@ -82,52 +76,25 @@ public class Member extends BaseEntity {
     this.profileImageUrl = profileImageUrl;
   }
 
-  // 탈퇴 처리 메서드
-  public void deactivate(BanNicknameRepository banNicknameRepository) {
+  // 상태 비활성화
+  public void deactivate() {
     this.isActive = false;
+  }
 
-    // 이름과 닉네임 마스킹
-    this.name = maskString(this.name);
-    this.nickname = maskString(this.nickname);
-
-    // 이메일 마스킹
-    this.email = maskEmail(this.email);
-
-    // BanNickname 테이블에 저장
-    if (banNicknameRepository != null) {
-      BanNickname banNickname = BanNickname.builder().bannedNickname(this.nickname).build();
-      banNicknameRepository.save(banNickname);
-    }
-
+  // 민감 정보 초기화
+  public void clearSensitiveInfo() {
     this.phone = null;
     this.profileImageUrl = null;
   }
 
-  // 문자열 마스킹 (짝수 인덱스 문자만 '*')
-  private String maskString(String input) {
-    if (input == null || input.isEmpty()) {
-      return input;
-    }
-    StringBuilder masked = new StringBuilder(input);
-    for (int i = 0; i < input.length(); i++) {
-      if (i % 2 == 1) {
-        masked.setCharAt(i, '*');
-      }
-    }
-    return masked.toString();
-  }
+  // 테스트 코드 오류 해결 -> 빌더로 BaseEntity의 id를 설정 가능하게 처리
+  public static class MemberBuilder {
+    private Long id;
 
-  // 이메일 마스킹
-  private String maskEmail(String email) {
-    if (email == null || email.isEmpty()) {
-      return email;
+    public MemberBuilder id(Long id) {
+      this.id = id;
+      return this;
     }
-    String[] parts = email.split("@");
-    if (parts.length != 2) {
-      return email; // 유효하지 않은 이메일
-    }
-    parts[0] = maskString(parts[0]); // 아이디 부분 마스킹
-    return String.join("@", parts);
   }
 
 }

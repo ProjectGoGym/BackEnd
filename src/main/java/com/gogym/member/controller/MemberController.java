@@ -35,13 +35,13 @@ public class MemberController {
   public ResponseEntity<Void> updateMyProfile(@LoginMemberId Long memberId,
       @RequestBody @Valid UpdateMemberRequest request) {
     memberService.updateMyProfileById(memberId, request);
-    return ResponseEntity.ok().build();
+    return ResponseEntity.noContent().build();
   }
 
   // 회원 탈퇴
   @DeleteMapping("/me")
   public ResponseEntity<Void> deactivateMyAccount(@LoginMemberId Long memberId) {
     memberService.deactivateMyAccountById(memberId);
-    return ResponseEntity.ok().build();
+    return ResponseEntity.noContent().build();
   }
 }
