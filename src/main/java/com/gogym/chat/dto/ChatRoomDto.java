@@ -17,6 +17,8 @@ public class ChatRoomDto {
       boolean postAuthorActive,
       boolean requestorActive) {}
 
-  public record LeaveRequest(@NotNull Long lastReadMessageId) {}
+  public record LeaveRequest(
+      @NotNull
+      LocalDateTime leaveAt) {}
 
 }
