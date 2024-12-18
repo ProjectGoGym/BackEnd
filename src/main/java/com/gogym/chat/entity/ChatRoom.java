@@ -52,6 +52,7 @@ public class ChatRoom extends BaseEntity {
   @Setter
   private Boolean requestorActive = true; // 채팅 요청자의 채팅방 활성화 여부
   
+  @Column(name = "leave_at", nullable = true)
   @ElementCollection
   @Builder.Default
   private Map<Long, LocalDateTime> leaveAtMap = new HashMap<>(); // 사용자별 나간 시점
