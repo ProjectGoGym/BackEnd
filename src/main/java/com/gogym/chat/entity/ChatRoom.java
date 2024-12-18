@@ -4,16 +4,19 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import com.gogym.common.entity.BaseEntity;
+import com.gogym.gympay.entity.Transaction;
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
 import com.gogym.member.entity.Member;
 import com.gogym.post.entity.Post;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -51,6 +54,10 @@ public class ChatRoom extends BaseEntity {
   @Builder.Default
   @Setter
   private Boolean requestorActive = true; // 채팅 요청자의 채팅방 활성화 여부
+
+  @Setter
+  @OneToOne(mappedBy = "chatRoom", cascade = CascadeType.PERSIST)
+  private Transaction transaction;
   
   @Column(name = "leave_at", nullable = true)
   @ElementCollection

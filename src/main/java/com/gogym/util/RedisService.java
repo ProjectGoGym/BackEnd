@@ -5,11 +5,11 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-@Component
+@Service
 @RequiredArgsConstructor
-public class RedisUtil {
+public class RedisService {
 
   private final StringRedisTemplate redisTemplate;
 
@@ -28,7 +28,7 @@ public class RedisUtil {
   public void lpush(String key, String value) {
     redisTemplate.opsForList().leftPush(key, value);
   }
-  
+
   public void rpush(String key, String value) {
     redisTemplate.opsForList().rightPush(key, value);
   }
@@ -59,5 +59,9 @@ public class RedisUtil {
 
   public Map<Object, Object> getHash(String key) {
     return redisTemplate.opsForHash().entries(key);
+  }
+
+  public void deleteHash(String key) {
+    redisTemplate.delete(key);
   }
 }
