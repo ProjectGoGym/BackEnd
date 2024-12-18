@@ -51,7 +51,7 @@ public class ChatMessageServiceImpl implements ChatMessageService {
     PostStatus postStatus = this.getPostStatus(chatRoomId);
     
     // leaveAt 조회
-    LocalDateTime leaveAt = this.chatRoomRepository.findById(chatRoomId)
+    LocalDateTime leaveAt = this.chatRoomRepository.findWithLeaveAtById(chatRoomId)
         .map(chatRoom -> chatRoom.getLeaveAt(memberId))
         .orElse(null);
     
