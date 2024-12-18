@@ -39,7 +39,7 @@ public class MemberController {
   }
 
   // 회원 탈퇴
-  @DeleteMapping("/me")
+  @PutMapping("/me/withdraw")
   public ResponseEntity<Void> deactivateMyAccount(@LoginMemberId Long memberId) {
     memberService.deactivateMyAccountById(memberId);
     return ResponseEntity.noContent().build();

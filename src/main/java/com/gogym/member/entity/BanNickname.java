@@ -10,8 +10,8 @@ import com.gogym.common.entity.BaseIdEntity;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 public class BanNickname extends BaseIdEntity {
-
+  
   @Column(name = "banned_nickname", nullable = false)
   private String bannedNickname;
-
+  
 }
