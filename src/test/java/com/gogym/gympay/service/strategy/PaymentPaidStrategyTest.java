@@ -5,6 +5,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import com.gogym.gympay.dto.PaymentResult;
 import com.gogym.gympay.entity.GymPay;
 import com.gogym.gympay.repository.GymPayRepository;
+import com.gogym.gympay.service.PaymentResultTestUtil;
 import com.gogym.member.entity.Member;
 import com.gogym.member.entity.Role;
 import com.gogym.member.repository.MemberRepository;
@@ -13,12 +14,12 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
-import lombok.extern.slf4j.Slf4j;
 
 
 @Slf4j
@@ -57,7 +58,7 @@ class PaymentPaidStrategyTest {
 
   @Test
   @Transactional
-  void givenMultipleThreads_whenProcessInvoked_thenLockIsAcquiredProperly() throws InterruptedException {
+  void 동시에_10명이_충전을_요청하면_락을_획득하는_순서대로_성공한다() throws InterruptedException {
     int threadCount = 10;
     ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
     CountDownLatch countDownLatch = new CountDownLatch(threadCount);;
