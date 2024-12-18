@@ -17,19 +17,15 @@ public class ChatMessageDto {
       Long senderId,
       String content,
       LocalDateTime createdAt) {}
-  
+
   public record RedisChatMessage(
       String content,
       Long senderId,
       LocalDateTime createdAt) {}
 
-  public record ChatMessageHistory(
-      String content,
-      Long senderId,
-      LocalDateTime createdAt) {}
-  
   public record ChatRoomMessagesResponse(
-      Page<ChatMessageHistory> messages,
-      PostStatus postStatus) {}
-  
+      Page<ChatMessageResponse> messages,
+      PostStatus postStatus,
+      LocalDateTime leaveAt) {}
+
 }
