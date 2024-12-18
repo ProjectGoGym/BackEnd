@@ -8,6 +8,7 @@ import com.gogym.gympay.dto.request.SafePaymentRequest;
 import com.gogym.gympay.entity.SafePayment;
 import com.gogym.gympay.entity.constant.RequesterRole;
 import com.gogym.gympay.entity.constant.SafePaymentStatus;
+import com.gogym.gympay.entity.constant.TransactionStatus;
 import com.gogym.gympay.repository.SafePaymentRepository;
 import com.gogym.member.entity.Member;
 import com.gogym.post.type.PostStatus;
@@ -113,7 +114,7 @@ public class SafePaymentService {
     if (!chatRoom.getPost().getStatus().equals(PostStatus.POSTING)) {
       throw new CustomException(ErrorCode.NOT_IN_PROGRESS);
     }
-    if (chatRoom.getTransaction() == null) {
+    if (chatRoom.getTransaction() == null || chatRoom.getTransaction().getStatus() != TransactionStatus.STARTED) {
       throw new CustomException(ErrorCode.NOT_IN_PROGRESS);
     }
   }
