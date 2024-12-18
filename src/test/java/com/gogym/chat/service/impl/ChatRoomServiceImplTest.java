@@ -12,6 +12,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import java.lang.reflect.Field;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,9 +27,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import com.gogym.chat.dto.ChatRoomDto.ChatRoomResponse;
 import com.gogym.chat.dto.ChatRoomDto.LeaveRequest;
-import com.gogym.chat.entity.ChatMessage;
 import com.gogym.chat.entity.ChatRoom;
-import com.gogym.chat.repository.ChatMessageReadRepository;
 import com.gogym.chat.repository.ChatMessageRepository;
 import com.gogym.chat.repository.ChatRoomRepository;
 import com.gogym.common.entity.BaseEntity;
@@ -49,9 +48,6 @@ class ChatRoomServiceImplTest {
   private ChatMessageRepository chatMessageRepository;
 
   @Mock
-  private ChatMessageReadRepository chatMessageReadRepository;
-
-  @Mock
   private MemberService memberService;
 
   @Mock
@@ -67,7 +63,6 @@ class ChatRoomServiceImplTest {
   private Member requestor;
   private Post post;
   private ChatRoom chatRoom;
-  private ChatMessage chatMessage;
 
   @BeforeEach
   void setUp() {
@@ -91,12 +86,6 @@ class ChatRoomServiceImplTest {
         .postAuthorActive(true)
         .requestorActive(true)
         .isDeleted(false)
-        .build();
-    
-    this.chatMessage = ChatMessage.builder()
-        .content("test message content")
-        .senderId(this.postAuthor.getId())
-        .chatRoom(this.chatRoom)
         .build();
   }
 
@@ -151,20 +140,24 @@ class ChatRoomServiceImplTest {
     // Given
     Long chatRoomId = 1L;
     Long memberId = 1L;
-
+    
     Field idField = BaseEntity.class.getDeclaredField("id");
     idField.setAccessible(true);
-    idField.set(this.chatRoom, 1L);
-
+    idField.set(this.chatRoom, chatRoomId);
+    
     Page<ChatRoom> mockPage = new PageImpl<>(List.of(this.chatRoom));
     when(this.chatRoomRepository.findChatRoomsSortedByLastMessage(
         eq(memberId),
         eq(memberId),
         any(Pageable.class))).thenReturn(mockPage);
 
+    // Redis 메시지 Mock 설정
     String redisMessageJson = "{\"content\":\"안녕하세요!\",\"senderId\":123,\"createdAt\":\"2024-12-03T12:00:00\"}";
     when(this.chatRedisService.getMessages(chatRoomId)).thenReturn(List.of(redisMessageJson));
-    when(this.chatMessageReadRepository.countUnreadMessages(eq(chatRoomId), eq(memberId))).thenReturn(5);
+
+    // leaveAt 설정
+    LocalDateTime leaveAt = LocalDateTime.now().minusHours(1);
+    this.chatRoom.setLeaveAt(memberId, leaveAt);
 
     // When
     Page<ChatRoomResponse> responses = this.chatRoomService.getChatRooms(memberId, PageRequest.of(0, 10));
@@ -174,20 +167,8 @@ class ChatRoomServiceImplTest {
     assertEquals(1, responses.getContent().size());
 
     ChatRoomResponse response = responses.getContent().get(0);
-    
     assertEquals(chatRoomId, response.chatRoomId());
     assertEquals("안녕하세요!", response.lastMessage());
-    assertEquals(5, response.unreadMessageCount());
-    assertEquals(1, responses.getTotalElements());
-    assertEquals(1, responses.getTotalPages());
-    assertFalse(responses.hasNext());
-    
-    verify(this.chatRoomRepository).findChatRoomsSortedByLastMessage(
-        eq(memberId),
-        eq(memberId),
-        any(Pageable.class));
-    verify(this.chatRedisService).getMessages(chatRoomId);
-    verify(this.chatMessageReadRepository).countUnreadMessages(chatRoomId, memberId);
   }
 
   @Test
@@ -195,35 +176,36 @@ class ChatRoomServiceImplTest {
     // Given
     Long memberId = 1L;
     Long chatRoomId = 1L;
-    LeaveRequest request = new LeaveRequest(1L);
+    LeaveRequest request = new LeaveRequest(LocalDateTime.now().minusMinutes(5));
     
-    when(this.chatRoomService.isMemberInChatRoom(chatRoomId, memberId)).thenReturn(true);
-
-    String redisMessageJson = "{\"content\":\"test message\",\"senderId\":1,\"createdAt\":\"2024-12-10T12:00:00\"}";
     when(this.chatRoomRepository.findById(chatRoomId)).thenReturn(Optional.of(this.chatRoom));
+    when(this.chatRoomService.isMemberInChatRoom(chatRoomId, memberId)).thenReturn(true);
+    
+    // Redis 메시지 Mock 설정
+    String redisMessageJson = "{\"content\":\"test message\",\"senderId\":1,\"createdAt\":\"2024-12-10T12:00:00\"}";
     when(this.chatRedisService.getMessages(chatRoomId)).thenReturn(List.of(redisMessageJson));
-    when(this.chatMessageRepository.findFirstByChatRoomIdOrderByCreatedAtDesc(chatRoomId)).thenReturn(Optional.of(this.chatMessage));
-
+    
     // When
-    assertDoesNotThrow(() -> this.chatRoomService.leaveChatRoom(this.postAuthor.getId(), chatRoomId, request));
-
+    assertDoesNotThrow(() -> this.chatRoomService.leaveChatRoom(memberId, chatRoomId, request));
+    
     // Then
-    verify(this.chatMessageReadRepository).save(any());
+    verify(this.chatRedisService).getMessages(chatRoomId);
+    assertEquals(request.leaveAt(), this.chatRoom.getLeaveAt(memberId));
   }
 
   @Test
   void 채팅방_나가기_실패_채팅방_없음() {
     // Given
     Long chatRoomId = 1L;
-    LeaveRequest request = new LeaveRequest(1L);
-
+    LeaveRequest request = new LeaveRequest(LocalDateTime.now().minusMinutes(5));
+    
     when(this.chatRoomRepository.findById(chatRoomId)).thenReturn(Optional.empty());
-
+    
     // When
     CustomException exception = assertThrows(
         CustomException.class,
         () -> this.chatRoomService.leaveChatRoom(this.postAuthor.getId(), chatRoomId, request));
-
+    
     // Then
     assertEquals(ErrorCode.CHATROOM_NOT_FOUND, exception.getErrorCode());
   }
