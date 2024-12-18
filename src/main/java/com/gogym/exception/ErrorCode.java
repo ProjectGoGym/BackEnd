@@ -12,6 +12,7 @@ public enum ErrorCode {
 
   // 400 BAD REQUEST
   REQUEST_VALIDATION_FAIL(BAD_REQUEST, "잘못된 요청 값입니다."),
+  INVALID_FILE_EXTENSION(BAD_REQUEST, "유효하지 않은 파일 확장자입니다."),
 
   // 401 UNAUTHORIZED
   UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증에 실패했습니다."),
@@ -42,6 +43,9 @@ public enum ErrorCode {
   // 408 REQUEST TIMEOUT
   SSE_TIMEOUT(REQUEST_TIMEOUT, "SSE 연결 시간이 초과되었습니다."),
 
+  // 408 REQUEST TIMEOUT
+  SSE_TIMEOUT(REQUEST_TIMEOUT, "SSE 연결 시간이 초과되었습니다."),
+
   // 409 CONFLICT
   DUPLICATE_EMAIL(CONFLICT, "이미 사용 중인 이메일입니다."),
   DUPLICATE_NICKNAME(CONFLICT, "이미 사용 중인 닉네임입니다."),
@@ -63,3 +67,4 @@ public enum ErrorCode {
   private final HttpStatus httpStatus;
   private final String message;
 }
+

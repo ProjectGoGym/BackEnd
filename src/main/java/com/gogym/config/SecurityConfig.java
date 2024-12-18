@@ -45,7 +45,7 @@ public class SecurityConfig {
             "/api/auth/check-nickname", "/api/auth/verify-email", "/api/auth/reset-password",
             "/api/auth/send-verification-email", "/api/regions", "/api/kakao/sign-in",
             "api/posts/views", "api/posts/filters", "api/posts/details/*", "/api/payments/webhook",
-            "api/payments/sse/subscribe/**", "api/images", "/ws/**")
+            "/api/payments/sse/subscribe/**", "/api/images/presigned-url", "/ws/**")
         .permitAll()
         // 그 외의 모든 요청은 인증 필요
         .anyRequest().authenticated())
@@ -67,6 +67,6 @@ public class SecurityConfig {
         "/api/auth/check-nickname", "/api/auth/verify-email", "/api/auth/reset-password",
         "/api/auth/send-verification-email", "/api/regions", "/api/kakao/sign-in",
         "api/posts/views", "api/posts/filters", "api/posts/details/*", "/api/payments/webhook",
-        "api/payments/sse/subscribe/**", "api/images", "/ws/**");
+        "/api/payments/sse/subscribe/**", "/api/images/presigned-url", "/ws/**");
   }
 }
