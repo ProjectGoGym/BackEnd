@@ -1,6 +1,7 @@
 package com.gogym.chat.dto;
 
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotNull;
 
 public class ChatRoomDto {
@@ -17,6 +18,9 @@ public class ChatRoomDto {
       boolean postAuthorActive,
       boolean requestorActive) {}
 
-  public record LeaveRequest(@NotNull LocalDateTime leaveAt) {}
+  public record LeaveRequest(
+      @NotNull
+      @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+      LocalDateTime leaveAt) {}
 
 }
