@@ -1,5 +1,7 @@
-package com.gogym.gympay.event;
+package com.gogym.gympay.event.listener;
 
+import com.gogym.gympay.event.FailedEvent;
+import com.gogym.gympay.event.PaidEvent;
 import com.gogym.gympay.service.SSEService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

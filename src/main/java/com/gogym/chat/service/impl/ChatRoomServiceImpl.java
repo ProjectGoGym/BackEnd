@@ -221,7 +221,13 @@ public class ChatRoomServiceImpl implements ChatRoomService {
   public boolean isMemberInChatRoom(Long chatRoomId, Long memberId) {
     return this.chatRoomRepository.existsByChatRoomIdAndMemberId(chatRoomId, memberId);
   }
-  
+
+  @Override
+  public ChatRoom getById(Long chatRoomId) {
+    return chatRoomRepository.findById(chatRoomId)
+        .orElseThrow(() -> new CustomException(ErrorCode.CHATROOM_NOT_FOUND));
+  }
+
   /**
    * Redis에 저장된 메시지들을 강제로 DB에 저장.
    * 

@@ -1,13 +1,16 @@
 package com.gogym.chat.entity;
 
 import com.gogym.common.entity.BaseEntity;
+import com.gogym.gympay.entity.Transaction;
 import com.gogym.member.entity.Member;
 import com.gogym.post.entity.Post;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -45,7 +48,11 @@ public class ChatRoom extends BaseEntity {
   @Builder.Default
   @Setter
   private Boolean requestorActive = true; // 채팅 요청자의 채팅방 활성화 여부
-  
+
+  @Setter
+  @OneToOne(mappedBy = "chatRoom", cascade = CascadeType.PERSIST)
+  private Transaction transaction;
+
   // 게시글 작성자 반환 메서드
   public Member getPostAuthor() {
     return this.post.getAuthor();

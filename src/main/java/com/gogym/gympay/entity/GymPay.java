@@ -25,7 +25,7 @@ public class GymPay extends BaseEntity {
   private int balance;
 
   @OneToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "member_id")
+  @JoinColumn(name = "member_id", nullable = false)
   private Member member;
 
   @OneToMany(mappedBy = "gymPay", cascade = CascadeType.PERSIST)
@@ -34,10 +34,17 @@ public class GymPay extends BaseEntity {
   public GymPay(int balance, Member member) {
     this.balance = balance;
     this.member = member;
-    member.setGymPay(this);
   }
 
-  public void charge(int amount) {
+  public void deposit(int amount) {
     this.balance += amount;
+  }
+
+  public void withdraw(int amount) {
+    this.balance -= amount;
+  }
+
+  public void addHistory(GymPayHistory history) {
+    histories.add(history);
   }
 }
