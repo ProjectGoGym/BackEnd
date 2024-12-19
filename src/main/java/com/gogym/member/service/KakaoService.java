@@ -47,16 +47,14 @@ public class KakaoService {
     Optional<Member> optionalMember = memberRepository.findByEmail(email);
 
     if (optionalMember.isEmpty()) {
-      // 회원 정보가 없는 경우: 클라이언트에 false 반환
-      return null;
+      return null; // 회원 정보가 없는 경우는 클라이언트에 false 반환
     }
 
     Member member = optionalMember.get();
 
     // 3. isKakao 여부 확인
     if (!member.isKakao()) {
-      // 일반 회원가입 진행 필요
-      return null;
+      return null; // 일반 회원가입 진행 필요
     }
 
     // 4. 로그인 진행: JWT 토큰 발행
@@ -101,36 +99,5 @@ public class KakaoService {
     return response.getBody();
   }
 
-  private String generateUniqueNickname() {
-    // 수식어 리스트
-    String[] add = {"화려한", "건강한", "상냥한", "착한", "활기찬", "강력한", "멋쟁이"};
-    // 랜덤 수식어
-    String randomAdjective = add[(int) (Math.random() * add.length)];
-    // 고유한 6자리 닉네임 생성
-    String uniqueId = UUID.randomUUID().toString().replaceAll("[^0-9]", "").substring(0, 6);
-
-    // 닉네임 조합
-    return randomAdjective + " 고짐이_" + uniqueId;
-  }
-
-
-  @Transactional
-  private Member createMember(KakaoProfileResponse profile) {
-    String email = profile.kakaoAccount().email();
-    String nickname = generateUniqueNickname();
-
-    Member newMember =
-        Member.builder().email(email).nickname(nickname).name(email.split("@")[0]).role(Role.USER)
-            .password("").phone("").isKakao(true).memberStatus(MemberStatus.ACTIVE).build();
-
-    memberRepository.save(newMember);
-
-    return newMember;
-  }
-
-  private Member findOrCreateMember(KakaoProfileResponse profile) {
-    String email = profile.kakaoAccount().email();
-    return memberRepository.findByEmail(email).orElseGet(() -> createMember(profile));
-  }
 }
 
