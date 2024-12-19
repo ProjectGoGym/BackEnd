@@ -17,6 +17,7 @@ public class Member extends BaseEntity {
 
   @Enumerated(EnumType.STRING)
   @Column(name = "member_status", nullable = false)
+  @Setter
   private MemberStatus memberStatus;
 
   @Column(name = "member_name", nullable = false)
@@ -29,6 +30,7 @@ public class Member extends BaseEntity {
   private String nickname;
 
   @Column(name = "phone", nullable = false)
+  @Setter
   private String phone;
 
   @Setter
@@ -40,6 +42,7 @@ public class Member extends BaseEntity {
   private Role role;
 
   @Column(name = "profile_image_url")
+  @Setter
   private String profileImageUrl;
 
   @Column(name = "region_id_1", nullable = true)
@@ -72,17 +75,6 @@ public class Member extends BaseEntity {
     this.nickname = nickname;
     this.phone = phone;
     this.profileImageUrl = profileImageUrl;
-  }
-
-  // 상태 변경 메서드
-  public void setMemberStatus(MemberStatus memberStatus) {
-    this.memberStatus = memberStatus;
-  }
-
-  // 민감 정보 초기화
-  public void clearSensitiveInfo() {
-    this.phone = null;
-    this.profileImageUrl = null;
   }
 
 }

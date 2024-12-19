@@ -54,8 +54,8 @@ public class MemberService {
   @Transactional
   public void deactivateMyAccountById(Long memberId) {
     Member member = findById(memberId);
-    member.setMemberStatus(MemberStatus.INACTIVE); // 상태 변경
-    member.clearSensitiveInfo(); // 민감 정보 초기화
+    member.setMemberStatus(MemberStatus.DEACTIVATED); // 상태 변경
+    clearSensitiveInfo(member); // 민감 정보 초기화
 
     // 이름과 닉네임 마스킹
     String maskedName = maskString(member.getName());
@@ -92,6 +92,13 @@ public class MemberService {
     }
     parts[0] = maskString(parts[0]);
     return String.join("@", parts);
+  }
+
+  // 민감 정보 초기화
+  @Transactional
+  public void clearSensitiveInfo(Member member) {
+    member.setPhone("010-****-****");
+    member.setProfileImageUrl(null);
   }
 }
 

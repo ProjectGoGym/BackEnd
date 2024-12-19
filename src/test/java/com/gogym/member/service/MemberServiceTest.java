@@ -90,7 +90,7 @@ class MemberServiceTest {
 
     memberService.deactivateMyAccountById(memberId);
 
-    verify(member).setMemberStatus(MemberStatus.INACTIVE);
+    verify(member).setMemberStatus(MemberStatus.DEACTIVATED);
     verify(memberRepository).findById(memberId);
   }
 }
