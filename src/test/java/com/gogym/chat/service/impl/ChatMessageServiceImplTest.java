@@ -78,7 +78,7 @@ class ChatMessageServiceImplTest {
     
     when(this.chatRoomService.isMemberInChatRoom(chatRoomId, memberId)).thenReturn(true);
     when(this.chatRoomRepository.findPostIdByChatRoomId(chatRoomId)).thenReturn(Optional.of(postId));
-    when(this.postService.getPostStatusByPostId(postId)).thenReturn(PostStatus.POSTING);
+    when(this.postService.getPostStatus(postId)).thenReturn(PostStatus.POSTING);
     
     // When
     ChatRoomMessagesResponse response = this.chatMessageService.getMessagesWithPostStatus(memberId, chatRoomId, this.pageable);
@@ -93,7 +93,7 @@ class ChatMessageServiceImplTest {
     verify(this.chatRedisService).getMessages(chatRoomId);
     verify(this.chatMessageRepository).findByChatRoomIdOrderByCreatedAtDesc(chatRoomId, Pageable.unpaged());
     verify(this.chatRoomRepository).findPostIdByChatRoomId(chatRoomId);
-    verify(this.postService).getPostStatusByPostId(postId);
+    verify(this.postService).getPostStatus(postId);
   }
   
   @Test
@@ -131,7 +131,7 @@ class ChatMessageServiceImplTest {
     
     when(this.chatRoomRepository.findPostIdByChatRoomId(chatRoomId)).thenReturn(Optional.of(postId));
     when(this.chatMessageRepository.findByChatRoomIdOrderByCreatedAtDesc(chatRoomId, Pageable.unpaged())).thenReturn(Page.empty());
-    when(this.postService.getPostStatusByPostId(postId)).thenThrow(new CustomException(ErrorCode.POST_NOT_FOUND));
+    when(this.postService.getPostStatus(postId)).thenThrow(new CustomException(ErrorCode.POST_NOT_FOUND));
     
     // When
     Throwable thrown = catchThrowable(
@@ -144,7 +144,7 @@ class ChatMessageServiceImplTest {
     assertEquals(ErrorCode.POST_NOT_FOUND, ((CustomException) thrown).getErrorCode());
     
     verify(this.chatRoomRepository).findPostIdByChatRoomId(chatRoomId);
-    verify(this.postService).getPostStatusByPostId(postId);
+    verify(this.postService).getPostStatus(postId);
   }
   
 }
