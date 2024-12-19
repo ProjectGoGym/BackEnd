@@ -23,29 +23,22 @@ public class ActivityService {
 
   // 내가 작성한 게시글 조회
   public Page<PostPageResponseDto> getMyPosts(Long memberId, Pageable pageable) {
-    validateMember(memberId);
+    memberService.findById(memberId);
     return postService.getAuthorPosts(memberId, pageable);
   }
 
   // 내가 찜한 게시글 조회
   public Page<PostPageResponseDto> getMyFavorites(Long memberId, Pageable pageable) {
-    validateMember(memberId);
+    memberService.findById(memberId);
     return wishService.getWishList(memberId, pageable);
   }
 
   // 최근 본 게시글 조회
   public Page<PostPageResponseDto> getRecentViews(Long memberId, Pageable pageable) {
-    validateMember(memberId);
+    memberService.findById(memberId);
     return postService.getAuthorPosts(memberId, pageable);
   }
 
-  // 멤버 객체 검증
-  private void validateMember(Long memberId) {
-    Member member = memberService.findById(memberId);
-    if (member == null || !member.isActive()) {
-      throw new CustomException(ErrorCode.MEMBER_NOT_FOUND);
-    }
-  }
 }
 
 

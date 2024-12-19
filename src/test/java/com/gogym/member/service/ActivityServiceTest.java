@@ -3,6 +3,7 @@ package com.gogym.member.service;
 import static org.mockito.Mockito.*;
 import static org.assertj.core.api.Assertions.*;
 import com.gogym.member.entity.Member;
+import com.gogym.member.entity.MemberStatus;
 import com.gogym.post.dto.PostPageResponseDto;
 import com.gogym.post.service.PostService;
 import com.gogym.post.service.WishService;
@@ -47,7 +48,7 @@ class ActivityServiceTest {
     Page<PostPageResponseDto> postPage = new PageImpl<>(List.of(responseDto), pageable, 1);
 
     Member mockMember = mock(Member.class);
-    when(mockMember.isActive()).thenReturn(true);
+    when(mockMember.getMemberStatus()).thenReturn(MemberStatus.ACTIVE);
     when(memberService.findById(memberId)).thenReturn(mockMember);
 
     when(postService.getAuthorPosts(memberId, pageable)).thenReturn(postPage);
@@ -68,7 +69,7 @@ class ActivityServiceTest {
     Page<PostPageResponseDto> wishPage = new PageImpl<>(List.of(responseDto), pageable, 1);
 
     Member mockMember = mock(Member.class);
-    when(mockMember.isActive()).thenReturn(true);
+    when(mockMember.getMemberStatus()).thenReturn(MemberStatus.ACTIVE);
     when(memberService.findById(memberId)).thenReturn(mockMember);
 
     when(wishService.getWishList(memberId, pageable)).thenReturn(wishPage);
@@ -89,7 +90,7 @@ class ActivityServiceTest {
     Page<PostPageResponseDto> recentViewPage = new PageImpl<>(List.of(responseDto), pageable, 1);
 
     Member mockMember = mock(Member.class);
-    when(mockMember.isActive()).thenReturn(true);
+    when(mockMember.getMemberStatus()).thenReturn(MemberStatus.ACTIVE);
     when(memberService.findById(memberId)).thenReturn(mockMember);
 
     when(postService.getAuthorPosts(memberId, pageable)).thenReturn(recentViewPage);

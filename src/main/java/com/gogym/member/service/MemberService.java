@@ -7,6 +7,7 @@ import com.gogym.exception.ErrorCode;
 import com.gogym.member.dto.MemberProfileResponse;
 import com.gogym.member.dto.UpdateMemberRequest;
 import com.gogym.member.entity.Member;
+import com.gogym.member.entity.MemberStatus;
 import com.gogym.member.repository.BanNicknameRepository;
 import com.gogym.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -53,7 +54,7 @@ public class MemberService {
   @Transactional
   public void deactivateMyAccountById(Long memberId) {
     Member member = findById(memberId);
-    member.deactivate(); // 상태 변경
+    member.setMemberStatus(MemberStatus.INACTIVE); // 상태 변경
     member.clearSensitiveInfo(); // 민감 정보 초기화
 
     // 이름과 닉네임 마스킹

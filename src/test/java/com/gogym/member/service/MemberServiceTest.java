@@ -7,6 +7,7 @@ import com.gogym.exception.CustomException;
 import com.gogym.member.dto.MemberProfileResponse;
 import com.gogym.member.dto.UpdateMemberRequest;
 import com.gogym.member.entity.Member;
+import com.gogym.member.entity.MemberStatus;
 import com.gogym.member.repository.BanNicknameRepository;
 import com.gogym.member.repository.MemberRepository;
 import com.gogym.gympay.entity.GymPay;
@@ -28,6 +29,8 @@ class MemberServiceTest {
 
   @InjectMocks
   private MemberService memberService;
+  @Mock
+  private Member member;
 
   @BeforeEach
   void 설정() {
@@ -41,9 +44,14 @@ class MemberServiceTest {
     GymPay gymPay = mock(GymPay.class);
     when(gymPay.getBalance()).thenReturn(10000L);
 
-    Member member =
-        Member.builder().id(memberId).email("test@example.com").name("John Doe").nickname("johndoe")
-            .phone("01012345678").profileImageUrl("profile.jpg").gymPay(gymPay).build();
+    member = mock(Member.class);
+    when(member.getId()).thenReturn(1L);
+    when(member.getEmail()).thenReturn("test@example.com");
+    when(member.getName()).thenReturn("John Doe");
+    when(member.getNickname()).thenReturn("johndoe");
+    when(member.getPhone()).thenReturn("01012345678");
+    when(member.getProfileImageUrl()).thenReturn("profile.jpg");
+    when(member.getGymPay()).thenReturn(gymPay);
 
     when(memberRepository.findById(memberId)).thenReturn(Optional.of(member));
 
@@ -82,7 +90,7 @@ class MemberServiceTest {
 
     memberService.deactivateMyAccountById(memberId);
 
-    verify(member).deactivate();
+    verify(member).setMemberStatus(MemberStatus.INACTIVE);
     verify(memberRepository).findById(memberId);
   }
 }

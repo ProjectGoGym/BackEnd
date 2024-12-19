@@ -18,6 +18,7 @@ import com.gogym.member.entity.Role;
 import com.gogym.member.jwt.JwtTokenProvider;
 import com.gogym.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import com.gogym.member.entity.MemberStatus;
 
 @Service
 @RequiredArgsConstructor
@@ -97,11 +98,12 @@ public class KakaoService {
 
   @Transactional
   private Member createMember(KakaoProfileResponse profile) {
-    String email = profile.kakaoAccount().email(); 
+    String email = profile.kakaoAccount().email();
     String nickname = generateUniqueNickname();
 
-    Member newMember = Member.builder().email(email).nickname(nickname).name(email.split("@")[0])
-        .role(Role.USER).password("").phone("").isKakao(true).memberStatus("APPROVED").build();
+    Member newMember =
+        Member.builder().email(email).nickname(nickname).name(email.split("@")[0]).role(Role.USER)
+            .password("").phone("").isKakao(true).memberStatus(MemberStatus.ACTIVE).build();
 
     memberRepository.save(newMember);
 
@@ -111,6 +113,6 @@ public class KakaoService {
   private Member findOrCreateMember(KakaoProfileResponse profile) {
     String email = profile.kakaoAccount().email();
     return memberRepository.findByEmail(email).orElseGet(() -> createMember(profile));
-  } 
+  }
 }
 

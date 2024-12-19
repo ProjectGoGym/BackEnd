@@ -6,6 +6,7 @@ import com.gogym.member.dto.ResetPasswordRequest;
 import com.gogym.member.dto.SignInRequest;
 import com.gogym.member.dto.SignUpRequest;
 import com.gogym.member.entity.Member;
+import com.gogym.member.entity.MemberStatus;
 import com.gogym.member.jwt.JwtTokenProvider;
 import com.gogym.member.repository.MemberRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -38,9 +39,8 @@ public class AuthService {
     // Dto에서 Entity 변환
     Member member = request.toEntity(passwordEncoder.encode(request.getPassword()));
 
-    if (member.getMemberStatus() == null) {
-      member.setMemberStatus("ACTIVE");
-    }
+    member.setMemberStatus(MemberStatus.ACTIVE);
+    
     // 회원 데이터 저장
     memberRepository.save(member);
   }

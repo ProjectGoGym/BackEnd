@@ -14,9 +14,9 @@ import java.time.LocalDateTime;
 @Builder
 public class Member extends BaseEntity {
 
-  @Setter
-  @Column(name = "member_status")
-  private String memberStatus;
+  @Enumerated(EnumType.STRING)
+  @Column(name = "member_status", nullable = false)
+  private MemberStatus memberStatus;
 
   @Column(name = "member_name", nullable = false)
   private String name;
@@ -56,9 +56,6 @@ public class Member extends BaseEntity {
   @Column(name = "verified_at")
   private LocalDateTime verifiedAt; // 이메일 인증 시간
 
-  @Column(name = "is_active", nullable = false)
-  private boolean isActive = true;
-
   @Column(name = "is_kakao", nullable = false)
   @Builder.Default
   private boolean isKakao = false;
@@ -76,25 +73,15 @@ public class Member extends BaseEntity {
     this.profileImageUrl = profileImageUrl;
   }
 
-  // 상태 비활성화
-  public void deactivate() {
-    this.isActive = false;
+  // 상태 변경 메서드
+  public void setMemberStatus(MemberStatus memberStatus) {
+    this.memberStatus = memberStatus;
   }
 
   // 민감 정보 초기화
   public void clearSensitiveInfo() {
     this.phone = null;
     this.profileImageUrl = null;
-  }
-
-  // 테스트 코드 오류 해결 -> 빌더로 BaseEntity의 id를 설정 가능하게 처리
-  public static class MemberBuilder {
-    private Long id;
-
-    public MemberBuilder id(Long id) {
-      this.id = id;
-      return this;
-    }
   }
 
 }
