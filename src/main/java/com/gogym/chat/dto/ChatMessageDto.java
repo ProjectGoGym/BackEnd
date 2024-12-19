@@ -10,7 +10,12 @@ public class ChatMessageDto {
 
   public record ChatMessageRequest(
       @NotNull Long chatRoomId,
-      @NotBlank String content) {}
+      @NotBlank String content) implements MessageRequest {
+    @Override
+    public Long senderId() {
+      return null;
+    }
+  }
 
   public record ChatMessageResponse(
       Long chatRoomId,

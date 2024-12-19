@@ -5,12 +5,10 @@ import java.util.UUID;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import com.gogym.chat.dto.ChatMessageDto.ChatMessageRequest;
-import com.gogym.chat.dto.ChatMessageDto.ChatMessageResponse;
-import com.gogym.chat.service.ChatRedisService;
+import com.gogym.chat.service.ChatMessageService;
 import com.gogym.chat.service.ChatRoomService;
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
@@ -26,11 +24,8 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class WebSocketChatController {
   
-  private final SimpMessagingTemplate messagingTemplate;
-  private final ChatRedisService chatRedisService;
+  private final ChatMessageService chatMessageService;
   private final ChatRoomService chatRoomService;
-  
-  private static final String TOPIC_CHATROOM_PREFIX = "/topic/chatroom/";
   
   /**
    * 실시간 채팅 메시지를 처리하고 Redis에 저장한 뒤,
@@ -62,23 +57,16 @@ public class WebSocketChatController {
       throw new CustomException(ErrorCode.FORBIDDEN);
     }
     
-    // 메시지를 Redis에 저장
-    ChatMessageResponse savedMessage = this.chatRedisService.saveMessageToRedis(messageRequest, memberId);
-    
-    // 고유 트랜잭션 ID 추출
-    String transactionId = UUID.randomUUID().toString().substring(0, 8);
+    // 메시지 브로드캐스팅
+    this.chatMessageService.sendMessage(messageRequest, memberId);
     
     // WebSocket 로깅
+    String transactionId = UUID.randomUUID().toString().substring(0, 8);
     log.info("[WebSocket] TransactionId: {}, SenderId: {}, ChatRoomId: {}, Content: {}",
         transactionId,
         memberId,
-        savedMessage.chatRoomId(),
-        savedMessage.content());
-    
-    // 메시지 브로드캐스트
-    this.messagingTemplate.convertAndSend(
-        TOPIC_CHATROOM_PREFIX + messageRequest.chatRoomId(),
-        savedMessage);
+        messageRequest.chatRoomId(),
+        messageRequest.content());
   }
   
 }

@@ -14,6 +14,7 @@ import com.gogym.chat.entity.ChatRoom;
 import com.gogym.chat.repository.ChatMessageRepository;
 import com.gogym.chat.repository.ChatRoomRepository;
 import com.gogym.chat.service.ChatRedisService;
+import com.gogym.chat.service.ChatRoomQueryService;
 import com.gogym.chat.service.ChatRoomService;
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
@@ -27,7 +28,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class ChatRoomServiceImpl implements ChatRoomService {
+public class ChatRoomServiceImpl implements ChatRoomQueryService, ChatRoomService {
   
   private final ChatRoomRepository chatRoomRepository;
   private final ChatMessageRepository chatMessageRepository;
@@ -231,6 +232,18 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
     // DB에 저장
     this.chatMessageRepository.saveAll(chatMessages);
+  }
+  
+  @Override
+  public ChatRoom getChatRoomById(Long chatRoomId) {
+    return this.chatRoomRepository.findById(chatRoomId)
+        .orElseThrow(() -> new CustomException(ErrorCode.CHATROOM_NOT_FOUND));
+  }
+  
+  @Override
+  public ChatRoom getChatRoomByParticipantsAndId(Long chatRoomId, Long memberId1, Long memberId2) {
+    return this.chatRoomRepository.findByChatRoomIdAndParticipants(chatRoomId, memberId1, memberId2)
+        .orElseThrow(() -> new CustomException(ErrorCode.CHATROOM_NOT_FOUND));
   }
 
 }
