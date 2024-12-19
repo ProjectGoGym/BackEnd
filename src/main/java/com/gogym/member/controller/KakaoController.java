@@ -13,7 +13,7 @@ import org.springframework.http.HttpHeaders;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/kakao")
-public class KakaoController {
+public class KakaoController { 
 
   private final KakaoService kakaoService;
 
