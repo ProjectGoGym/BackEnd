@@ -15,6 +15,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import com.gogym.member.type.MemberStatus;
+import jakarta.persistence.*;
+import lombok.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,10 +38,10 @@ import org.hibernate.type.SqlTypes;
 @Builder
 public class Member extends BaseEntity {
 
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "member_id")
-  private Long id;
+  @Enumerated(EnumType.STRING)
+  @Column(name = "member_status", nullable = false)
+  @Setter
+  private MemberStatus memberStatus;
 
   @Column(name = "member_name", nullable = false)
   private String name;
@@ -50,6 +53,7 @@ public class Member extends BaseEntity {
   private String nickname;
 
   @Column(name = "phone", nullable = false)
+  @Setter
   private String phone;
 
   @Setter
@@ -62,6 +66,7 @@ public class Member extends BaseEntity {
   private Role role;
 
   @Column(name = "profile_image_url")
+  @Setter
   private String profileImageUrl;
 
   @Column(name = "region_id_1", nullable = true)
@@ -72,7 +77,7 @@ public class Member extends BaseEntity {
 
   @Setter
   @Column(name = "verified_at")
-  private LocalDateTime verifiedAt;
+  private LocalDateTime verifiedAt; // 이메일 인증 시간
 
   @Column(name = "is_kakao", nullable = false)
   @Builder.Default
@@ -107,4 +112,6 @@ public class Member extends BaseEntity {
     this.phone = phone;
     this.profileImageUrl = profileImageUrl;
   }
+
 }
+
