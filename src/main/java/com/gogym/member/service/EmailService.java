@@ -26,8 +26,9 @@ public class EmailService {
   private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
 
   // 변경해야할 부분
-  // private static final String SERVER_URL = "http://3.36.198.162:8080/";
-  private static final String SERVER_URL = "http://localhost:8080/";
+  private static final String SERVER_URL = "http://3.36.198.162:8080/";
+  //private static final String SERVER_URL = "http://localhost:8080/";
+  //private static final String SERVER_URL = "https://253e-119-196-107-204.ngrok-free.app";
   private final MemberService memberService;
   private final MemberRepository memberRepository;
   private final JavaMailSender mailSender;

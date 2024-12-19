@@ -4,9 +4,9 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import com.gogym.common.entity.BaseEntity;
+import com.gogym.gympay.entity.Transaction;
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
-import com.gogym.gympay.entity.Transaction;
 import com.gogym.member.entity.Member;
 import com.gogym.post.entity.Post;
 import jakarta.persistence.CascadeType;
@@ -58,13 +58,12 @@ public class ChatRoom extends BaseEntity {
   @Setter
   @OneToOne(mappedBy = "chatRoom", cascade = CascadeType.PERSIST)
   private Transaction transaction;
-
-
+  
   @Column(name = "leave_at", nullable = true)
   @ElementCollection
   @Builder.Default
   private Map<Long, LocalDateTime> leaveAtMap = new HashMap<>(); // 사용자별 나간 시점
-
+  
   public void setLeaveAt(Long memberId, LocalDateTime leaveAt) {
     if (leaveAt == null || leaveAt.isAfter(LocalDateTime.now())) {
       throw new CustomException(ErrorCode.REQUEST_VALIDATION_FAIL);
@@ -75,7 +74,7 @@ public class ChatRoom extends BaseEntity {
   public LocalDateTime getLeaveAt(Long memberId) {
     return this.leaveAtMap.getOrDefault(memberId, null);
   }
-
+  
   // 게시글 작성자 반환 메서드
   public Member getPostAuthor() {
     return this.post.getAuthor();
