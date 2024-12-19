@@ -22,7 +22,6 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class AuthService {
 
-  // TODO : 서버 주소 또는 도메인 파면 변경해야할 부분
   private final MemberService memberService;
 
   private final MemberRepository memberRepository;
@@ -187,8 +186,7 @@ public class AuthService {
         .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
 
     // isKakao 값을 true로 업데이트
-    member.setIsKakao(true);
-    memberRepository.save(member);
+    member.setKakao(true);
   }
 
 }
