@@ -2,6 +2,7 @@ package com.gogym.member.entity;
 
 import com.gogym.common.entity.BaseEntity;
 import com.gogym.gympay.entity.GymPay;
+import com.gogym.member.type.MemberStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;

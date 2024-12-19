@@ -1,4 +1,4 @@
-package com.gogym.member.entity;
+package com.gogym.member.type;
 
 public enum MemberStatus {
   ACTIVE, INACTIVE

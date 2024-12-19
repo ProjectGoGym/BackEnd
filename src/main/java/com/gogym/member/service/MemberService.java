@@ -7,9 +7,9 @@ import com.gogym.exception.ErrorCode;
 import com.gogym.member.dto.MemberProfileResponse;
 import com.gogym.member.dto.UpdateMemberRequest;
 import com.gogym.member.entity.Member;
-import com.gogym.member.entity.MemberStatus;
 import com.gogym.member.repository.BanNicknameRepository;
 import com.gogym.member.repository.MemberRepository;
+import com.gogym.member.type.MemberStatus;
 import lombok.RequiredArgsConstructor;
 import com.gogym.member.entity.BanNickname;
 

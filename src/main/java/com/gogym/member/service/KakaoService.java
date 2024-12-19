@@ -17,8 +17,8 @@ import com.gogym.member.entity.Member;
 import com.gogym.member.entity.Role;
 import com.gogym.member.jwt.JwtTokenProvider;
 import com.gogym.member.repository.MemberRepository;
+import com.gogym.member.type.MemberStatus;
 import lombok.RequiredArgsConstructor;
-import com.gogym.member.entity.MemberStatus;
 
 @Service
 @RequiredArgsConstructor

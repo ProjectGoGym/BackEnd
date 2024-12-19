@@ -3,7 +3,7 @@ package com.gogym.member.service;
 import static org.mockito.Mockito.*;
 import static org.assertj.core.api.Assertions.*;
 import com.gogym.member.entity.Member;
-import com.gogym.member.entity.MemberStatus;
+import com.gogym.member.type.MemberStatus;
 import com.gogym.post.dto.PostPageResponseDto;
 import com.gogym.post.service.PostService;
 import com.gogym.post.service.WishService;
