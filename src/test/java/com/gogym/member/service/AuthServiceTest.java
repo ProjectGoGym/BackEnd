@@ -91,7 +91,7 @@ class AuthServiceTest {
     when(passwordEncoder.encode(signUpRequest.getPassword())).thenReturn("encodedPassword");
     doNothing().when(emailService).validateEmail(signUpRequest.getEmail());
 
-    authService.signUp(signUpRequest);
+    authService.signUp(signUpRequest, false);
 
     verify(emailService).validateEmail(signUpRequest.getEmail());
     verify(memberRepository).save(any(Member.class));
@@ -221,7 +221,7 @@ class AuthServiceTest {
     Member mockMember = mock(Member.class);
     when(mockMember.getEmail()).thenReturn("test@example.com");
     when(memberService.findByEmail(mockMember.getEmail())).thenReturn(mockMember);
-    
+
     Member foundMember = authService.getMemberByEmail(mockMember.getEmail());
 
     assertNotNull(foundMember);
@@ -242,5 +242,17 @@ class AuthServiceTest {
     authService.resetPassword(mockRequest, resetPasswordRequest);
 
     verify(memberRepository).save(any(Member.class));
+  }
+
+  void 카카오회원가입이_성공한다() {
+    when(passwordEncoder.encode(signUpRequest.getPassword())).thenReturn("encodedPassword");
+    doNothing().when(emailService).validateEmail(signUpRequest.getEmail());
+
+    // isKakao 값을 true로 설정하여 호출
+    authService.signUp(signUpRequest, true);
+
+    verify(emailService).validateEmail(signUpRequest.getEmail());
+    verify(memberRepository).save(any(Member.class));
+    verify(memberRepository).findByEmail(signUpRequest.getEmail());
   }
 }

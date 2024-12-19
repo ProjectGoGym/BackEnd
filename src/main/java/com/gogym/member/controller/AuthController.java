@@ -28,8 +28,9 @@ public class AuthController {
 
   // 회원가입
   @PostMapping("/sign-up")
-  public ResponseEntity<Void> signUp(@RequestBody @Valid SignUpRequest request) {
-    authService.signUp(request);
+  public ResponseEntity<Void> signUp(@RequestBody @Valid SignUpRequest request,
+      @RequestParam(defaultValue = "false") boolean isKakao) {
+    authService.signUp(request, isKakao);
     return ResponseEntity.status(HttpStatus.OK).build();
   }
 

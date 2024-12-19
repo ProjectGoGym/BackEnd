@@ -38,10 +38,28 @@ public class KakaoService {
 
   @Transactional
   public String processKakaoLogin(String code, String currentDomain) {
+    // 1. Access Token 및 프로필 정보 획득
     KakaoTokenResponse tokenResponse = getAccessToken(code, currentDomain);
     KakaoProfileResponse profileResponse = getProfile(tokenResponse.accessToken());
 
-    Member member = findOrCreateMember(profileResponse);
+    // 2. 이메일로 회원 정보 조회
+    String email = profileResponse.kakaoAccount().email();
+    Optional<Member> optionalMember = memberRepository.findByEmail(email);
+
+    if (optionalMember.isEmpty()) {
+      // 회원 정보가 없는 경우: 클라이언트에 false 반환
+      return null;
+    }
+
+    Member member = optionalMember.get();
+
+    // 3. isKakao 여부 확인
+    if (!member.isKakao()) {
+      // 일반 회원가입 진행 필요
+      return null;
+    }
+
+    // 4. 로그인 진행: JWT 토큰 발행
     return jwtTokenProvider.createToken(member.getEmail(), member.getId(),
         List.of(member.getRole().name()));
   }
@@ -89,7 +107,7 @@ public class KakaoService {
     // 랜덤 수식어
     String randomAdjective = add[(int) (Math.random() * add.length)];
     // 고유한 6자리 닉네임 생성
-    String uniqueId = UUID.randomUUID().toString().replace("-", "").substring(0, 6);
+    String uniqueId = UUID.randomUUID().toString().replaceAll("[^0-9]", "").substring(0, 6);
 
     // 닉네임 조합
     return randomAdjective + " 고짐이_" + uniqueId;

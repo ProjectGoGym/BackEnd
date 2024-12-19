@@ -64,6 +64,10 @@ public class Member extends BaseEntity {
   @Builder.Default
   private boolean isKakao = false;
 
+  public void setIsKakao(boolean isKakao) {
+    this.isKakao = isKakao;
+  }
+
   // 이메일 인증 여부 확인 메서드
   public boolean isVerified() {
     return this.verifiedAt != null;
