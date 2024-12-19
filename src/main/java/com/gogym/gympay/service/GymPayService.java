@@ -1,6 +1,10 @@
 package com.gogym.gympay.service;
 
+import com.gogym.common.annotation.RedissonLock;
+import com.gogym.exception.CustomException;
+import com.gogym.exception.ErrorCode;
 import com.gogym.gympay.entity.GymPay;
+import com.gogym.gympay.entity.constant.TransferType;
 import com.gogym.gympay.repository.GymPayRepository;
 import com.gogym.member.entity.Member;
 import com.gogym.member.service.MemberService;
@@ -14,22 +18,41 @@ import org.springframework.transaction.annotation.Transactional;
 public class GymPayService {
 
   private final MemberService memberService;
+  private final GymPayHistoryService gymPayHistoryService;
   private final GymPayRepository gymPayRepository;
 
   @Transactional
-  public Long save(Long memberId) {
+  public void save(Long memberId) {
     Member member = memberService.findById(memberId);
     GymPay gymPay = new GymPay(0, member);
 
     gymPayRepository.save(gymPay);
-
-    return gymPay.getId();
   }
 
-  @Transactional
-  public void charge(Member member, Long amount) {
-    GymPay gymPay = member.getGymPay();
+  @RedissonLock(key = "'gym-pay:' + #gymPay.id")
+  public void deposit(GymPay gymPay, int amount, Long counterpartyId) {
+    if (gymPay == null) {
+      throw new CustomException(ErrorCode.GYM_PAY_NOT_FOUND);
+    }
 
-    gymPay.charge(amount);
+    gymPay.deposit(amount);
+    gymPayHistoryService.save(TransferType.DEPOSIT, amount, gymPay.getBalance(), counterpartyId,
+        gymPay);
+  }
+
+  @RedissonLock(key = "'gym-pay:' + #gymPay.id")
+  public void withdraw(GymPay gymPay, int amount, Long counterpartyId) {
+    if (gymPay == null) {
+      throw new CustomException(ErrorCode.GYM_PAY_NOT_FOUND);
+    }
+
+    if (gymPay.getBalance() < amount) {
+      throw new CustomException(ErrorCode.INSUFFICIENT_BALANCE);
+    }
+
+    gymPay.withdraw(amount);
+    gymPayHistoryService.save(TransferType.WITHDRAWAL, amount, gymPay.getBalance(), counterpartyId,
+        gymPay);
   }
 }
+
