@@ -60,9 +60,9 @@ public class Member extends BaseEntity {
   @Column(name = "verified_at")
   private LocalDateTime verifiedAt; // 이메일 인증 시간
 
-  @Column(name = "is_kakao", nullable = false)
-  @Builder.Default
-  private boolean isKakao = false;
+  @Setter
+  @Column(name = "is_kakao")
+  private boolean isKakao;
 
   // 이메일 인증 여부 확인 메서드
   public boolean isVerified() {

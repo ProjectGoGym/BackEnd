@@ -16,6 +16,9 @@ public class ResetPasswordRequest {
   @Email
   @NotBlank
   private String email;
+  
+  @NotBlank
+  private String currentPassword;
 
   @NotBlank
   private String newPassword;
