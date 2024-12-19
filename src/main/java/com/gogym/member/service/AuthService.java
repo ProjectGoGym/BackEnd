@@ -8,6 +8,7 @@ import com.gogym.member.dto.SignUpRequest;
 import com.gogym.member.entity.Member;
 import com.gogym.member.entity.MemberStatus;
 import com.gogym.member.jwt.JwtTokenProvider;
+import com.gogym.member.repository.BanNicknameRepository;
 import com.gogym.member.repository.MemberRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -29,6 +30,7 @@ public class AuthService {
   private final PasswordEncoder passwordEncoder;
   private final JwtTokenProvider jwtTokenProvider;
   private final EmailService emailService;
+  private final BanNicknameRepository banNicknameRepository;
 
   // 회원가입 처리
   @Transactional
@@ -40,7 +42,7 @@ public class AuthService {
     Member member = request.toEntity(passwordEncoder.encode(request.getPassword()));
 
     member.setMemberStatus(MemberStatus.ACTIVE);
-    
+
     // 회원 데이터 저장
     memberRepository.save(member);
   }
@@ -127,7 +129,8 @@ public class AuthService {
 
   // 닉네임 중복 확인
   public void validateNickname(String nickname) {
-    if (memberRepository.existsByNickname(nickname)) {
+    if (memberRepository.existsByNickname(nickname)
+        || banNicknameRepository.existsByBannedNickname(nickname)) {
       throw new CustomException(ErrorCode.DUPLICATE_NICKNAME);
     }
 
