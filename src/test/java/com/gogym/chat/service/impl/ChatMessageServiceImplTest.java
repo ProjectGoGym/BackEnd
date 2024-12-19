@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -20,14 +22,19 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import com.gogym.chat.dto.ChatMessageDto.ChatMessageRequest;
+import com.gogym.chat.dto.ChatMessageDto.ChatMessageResponse;
 import com.gogym.chat.dto.ChatMessageDto.ChatRoomMessagesResponse;
 import com.gogym.chat.entity.ChatMessage;
 import com.gogym.chat.repository.ChatMessageRepository;
 import com.gogym.chat.repository.ChatRoomRepository;
 import com.gogym.chat.service.ChatRedisService;
 import com.gogym.chat.service.ChatRoomService;
+import com.gogym.chat.type.MessageType;
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
+import com.gogym.gympay.event.SendMessageEvent;
 import com.gogym.post.service.PostService;
 import com.gogym.post.type.PostStatus;
 
@@ -48,6 +55,9 @@ class ChatMessageServiceImplTest {
   
   @Mock
   private PostService postService;
+  
+  @Mock
+  private SimpMessagingTemplate messagingTemplate;
   
   @InjectMocks
   private ChatMessageServiceImpl chatMessageService;
@@ -145,6 +155,59 @@ class ChatMessageServiceImplTest {
     
     verify(this.chatRoomRepository).findPostIdByChatRoomId(chatRoomId);
     verify(this.postService).getPostStatus(postId);
+  }
+  
+  @Test
+  void 브로드캐스팅_테스트_일반_메시지_케이스() {
+    // Given
+    Long chatRoomId = 1L;
+    Long senderId = 1L;
+    String content = "안녕하세요!";
+    
+    ChatMessageRequest messageRequest = new ChatMessageRequest(chatRoomId, content);
+    ChatMessageResponse savedMessage = new ChatMessageResponse(chatRoomId, senderId, content, LocalDateTime.now());
+    
+    when(this.chatRedisService.saveMessageToRedis(messageRequest, senderId)).thenReturn(savedMessage);
+    
+    // When
+    this.chatMessageService.sendMessage(messageRequest, senderId);
+    
+    // Then
+    verify(this.chatRedisService).saveMessageToRedis(messageRequest, senderId);
+    verify(this.messagingTemplate).convertAndSend("/topic/chatroom/" + chatRoomId, savedMessage);
+  }
+
+  @Test
+  void 브로드캐스팅_테스트_메시지_타입_포함_케이스() {
+    // Given
+    Long chatRoomId = 1L;
+    Long senderId = 100L;
+    String content = "결제 요청 메시지";
+    MessageType messageType = MessageType.PAYMENT_REQUEST;
+    
+    SendMessageEvent sendMessageEvent = new SendMessageEvent(chatRoomId, senderId, content, messageType);
+    ChatMessageResponse savedMessage = new ChatMessageResponse(chatRoomId, senderId, content, LocalDateTime.now());
+    
+    when(this.chatRedisService.saveMessageToRedis(
+        argThat(request -> request.chatRoomId().equals(chatRoomId) && request.content().equals(content)),
+        eq(senderId)))
+    .thenReturn(savedMessage);
+    
+    // When
+    this.chatMessageService.sendMessage(sendMessageEvent, senderId);
+    
+    // Then
+    verify(this.chatRedisService).saveMessageToRedis(argThat(
+        request -> request.chatRoomId().equals(chatRoomId) && request.content().equals(content)),
+        eq(senderId));
+    verify(this.messagingTemplate).convertAndSend(eq("/topic/chatroom/" + chatRoomId),
+        (Object) argThat(argument -> {
+          if (argument instanceof SendMessageEvent event) {
+            return event.chatRoomId().equals(chatRoomId) && event.senderId().equals(senderId)
+                && event.content().equals(content) && event.messageType().equals(messageType);
+          }
+          return false;
+        }));
   }
   
 }
