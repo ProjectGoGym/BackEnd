@@ -32,7 +32,7 @@ public class AuthService {
 
   // 회원가입 처리
   @Transactional
-  public void signUp(SignUpRequest request, boolean isKakao) {
+  public void signUp(SignUpRequest request) {
     // 이메일 중복 확인
     emailService.validateEmail(request.getEmail());
 
@@ -42,10 +42,11 @@ public class AuthService {
     // 회원 데이터 저장
     memberRepository.save(member);
 
+    /*
     // isKakao가 true인 경우 추가 처리
     if (isKakao) {
       completeKakaoSignUp(request.getEmail());
-    }
+    }*/
   }
 
   // 로그인 처리

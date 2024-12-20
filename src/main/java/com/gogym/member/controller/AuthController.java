@@ -29,14 +29,20 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
   private final AuthService authService;
-  private final EmailService emailService;
-
+  private final EmailService emailService;  
+  /*
   // 회원가입
   @PostMapping("/sign-up")
   public ResponseEntity<Void> signUp(@RequestBody @Valid SignUpRequest request,
       @RequestParam(defaultValue = "false") boolean isKakao) {
     authService.signUp(request, isKakao);
     return ResponseEntity.status(HttpStatus.OK).build();
+  }
+  */
+  @PostMapping("/sign-up")
+  public ResponseEntity<Void> signUp(@RequestBody @Valid SignUpRequest request) {
+      authService.signUp(request);
+      return ResponseEntity.status(HttpStatus.OK).build();
   }
 
   // 로그인
