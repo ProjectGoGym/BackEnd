@@ -4,20 +4,15 @@ import com.gogym.common.entity.BaseEntity;
 import com.gogym.gympay.entity.GymPay;
 import com.gogym.gympay.entity.Payment;
 import com.gogym.gympay.entity.Transaction;
+import com.gogym.member.type.MemberStatus;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import com.gogym.member.type.MemberStatus;
-import jakarta.persistence.*;
-import lombok.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -79,13 +74,9 @@ public class Member extends BaseEntity {
   @Column(name = "verified_at")
   private LocalDateTime verifiedAt; // 이메일 인증 시간
 
-  @Column(name = "is_kakao", nullable = false)
-  @Builder.Default
-  private Boolean isKakao = false; // 카카오 로그인 여부
-
   @Setter
-  @Column(name = "member_status", nullable = false)
-  private String memberStatus; // 회원 상태
+  @Column(name = "is_kakao")
+  private boolean isKakao = false; // 카카오 로그인 여부
 
   @Setter
   @OneToOne(mappedBy = "member", cascade = CascadeType.PERSIST)
@@ -112,6 +103,4 @@ public class Member extends BaseEntity {
     this.phone = phone;
     this.profileImageUrl = profileImageUrl;
   }
-
 }
-

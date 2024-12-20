@@ -15,11 +15,11 @@ public class PaymentEventListener {
 
   @TransactionalEventListener
   public void handlePaymentPaid(PaidEvent event) {
-//    sseService.sendUpdate(event.paymentId(), event.sseEventName());
+    sseService.sendUpdate(event.paymentId(), event.sseEventName());
   }
 
   @TransactionalEventListener
   public void handlePaymentFailed(FailedEvent event) {
-//    sseService.sendUpdate(event.paymentId(), event.sseEventName(), event.failureReason());
+    sseService.sendUpdate(event.paymentId(), event.sseEventName(), event.failureReason());
   }
 }

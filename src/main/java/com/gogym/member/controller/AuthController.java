@@ -1,22 +1,27 @@
 package com.gogym.member.controller;
 
+import com.gogym.member.dto.LoginResponse;
+import com.gogym.member.dto.ResetPasswordRequest;
+import com.gogym.member.dto.SignInRequest;
 import com.gogym.member.dto.SignUpRequest;
 import com.gogym.member.entity.Member;
-import com.gogym.member.dto.SignInRequest;
-import com.gogym.member.dto.ResetPasswordRequest;
-import com.gogym.common.annotation.LoginMemberId;
-import com.gogym.member.dto.LoginResponse;
 import com.gogym.member.service.AuthService;
 import com.gogym.member.service.EmailService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import java.net.URI;
 import java.net.URISyntaxException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -28,8 +33,9 @@ public class AuthController {
 
   // 회원가입
   @PostMapping("/sign-up")
-  public ResponseEntity<Void> signUp(@RequestBody @Valid SignUpRequest request) {
-    authService.signUp(request);
+  public ResponseEntity<Void> signUp(@RequestBody @Valid SignUpRequest request,
+      @RequestParam(defaultValue = "false") boolean isKakao) {
+    authService.signUp(request, isKakao);
     return ResponseEntity.status(HttpStatus.OK).build();
   }
 
@@ -41,9 +47,12 @@ public class AuthController {
 
     // 사용자 정보를 가져오기
     Member member = authService.getMemberByEmail(request.getEmail());
-    LoginResponse loginResponse = new LoginResponse(member.getEmail(), member.getName(),
-        member.getNickname(), member.getPhone()
-
+    LoginResponse loginResponse = new LoginResponse(
+        member.getId(),
+        member.getEmail(),
+        member.getName(),
+        member.getNickname(),
+        member.getPhone()
     );
 
     // HttpHeaders를 사용하여 헤더에 Authorization 추가
