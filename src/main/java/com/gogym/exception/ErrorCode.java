@@ -48,6 +48,7 @@ public enum ErrorCode {
   ALREADY_READ(CONFLICT, "이미 확인한 알림입니다."),
   CHATROOM_ALREADY_EXISTS(CONFLICT, "이미 존재하는 채팅방입니다."),
   PAYMENT_MISMATCH(CONFLICT, "결제 정보가 일치하지 않습니다."),
+  ALREADY_TRANSACTION(CONFLICT, "이미 거래중인 게시글 입니다."),
 
   // 500 INTERNAL SERVER ERROR
   JSON_MAPPING_FAILURE(HttpStatus.INTERNAL_SERVER_ERROR, "JSON 변환 중 오류가 발생했습니다."),

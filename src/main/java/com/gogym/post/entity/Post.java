@@ -1,8 +1,9 @@
 package com.gogym.post.entity;
 
 import static com.gogym.exception.ErrorCode.REQUEST_VALIDATION_FAIL;
-import static com.gogym.post.type.PostStatus.POSTING;
+import static com.gogym.post.type.PostStatus.PENDING;
 
+import com.gogym.chat.entity.ChatRoom;
 import com.gogym.common.entity.BaseEntity;
 import com.gogym.exception.CustomException;
 import com.gogym.member.entity.Member;
@@ -11,6 +12,7 @@ import com.gogym.post.dto.PostUpdateRequestDto;
 import com.gogym.post.type.MembershipType;
 import com.gogym.post.type.PostStatus;
 import com.gogym.post.type.PostType;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -18,8 +20,11 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -81,6 +86,12 @@ public class Post extends BaseEntity {
   @Column(name = "remaining_sessions")
   private Long remainingSessions;
 
+  @OneToMany(mappedBy = "post", cascade = CascadeType.PERSIST)
+  private List<Wish> wishes = new ArrayList<>();
+
+  @OneToMany(mappedBy = "post", cascade = CascadeType.PERSIST)
+  private List<ChatRoom> chatRoom = new ArrayList<>();
+
   public static Post of (Member member, Gym gym, PostRequestDto postRequestDto) {
 
     return Post.builder()
@@ -89,7 +100,7 @@ public class Post extends BaseEntity {
         .title(postRequestDto.title())
         .content(postRequestDto.content())
         .postType(postRequestDto.postType())
-        .status(POSTING)
+        .status(PENDING)
         .amount(postRequestDto.amount())
         .imageUrl1(postRequestDto.imageUrl1())
         .imageUrl2(postRequestDto.imageUrl2())
@@ -114,6 +125,10 @@ public class Post extends BaseEntity {
     imageUrl1 = postUpdateRequestDto.imageUrl1();
     imageUrl2 = postUpdateRequestDto.imageUrl2();
     imageUrl3 = postUpdateRequestDto.imageUrl3();
+  }
+
+  public void updateStatus(PostStatus status) {
+    this.status = status;
   }
 
   // 엔티티에서 Not Null 로 설정해두어 별도의 null 값 체크는 없습니다.
