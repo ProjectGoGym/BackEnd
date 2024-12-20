@@ -57,13 +57,14 @@ public class ChatMessageBatchScheduler {
       // 메시지를 하나씩 처리
       messagesJson.forEach(messageJson -> {
         // JSON 문자열을 RedisChatMessage 객체로 역직렬화
-        RedisChatMessage messageHistory = JsonUtil.deserialize(messageJson, RedisChatMessage.class);
+        RedisChatMessage redisMessageData = JsonUtil.deserialize(messageJson, RedisChatMessage.class);
 
         // ChatMessage 엔티티로 변환
         ChatMessage chatMessage = ChatMessage.builder()
             .chatRoom(chatRoom)
-            .content(messageHistory.content())
-            .senderId(messageHistory.senderId())
+            .content(redisMessageData.content())
+            .senderId(redisMessageData.senderId())
+            .messageType(redisMessageData.messageType())
             .build();
 
         // DB에 저장

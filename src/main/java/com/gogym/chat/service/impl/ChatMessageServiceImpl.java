@@ -115,6 +115,7 @@ public class ChatMessageServiceImpl implements ChatMessageQueryService, ChatMess
             chatRoomId,
             redisMessage.senderId(),
             redisMessage.content(),
+            redisMessage.messageType(),
             redisMessage.createdAt()
         )).toList();
   }
@@ -132,6 +133,7 @@ public class ChatMessageServiceImpl implements ChatMessageQueryService, ChatMess
             chatRoomId,
             dbMessage.getSenderId(),
             dbMessage.getContent(),
+            dbMessage.getMessageType(),
             dbMessage.getCreatedAt()
         )).toList();
   }
@@ -165,14 +167,16 @@ public class ChatMessageServiceImpl implements ChatMessageQueryService, ChatMess
       // SendMessageEvent일 경우의 처리
       savedMessage = this.chatRedisService.saveMessageToRedis(
           new ChatMessageRequest(event.chatRoomId(), event.content()),
-          event.senderId()
+          event.senderId(),
+          event.messageType()
       );
       this.broadcastMessage(event.chatRoomId(), savedMessage, event.messageType());
     } else {
       // ChatMessageRequest일 경우의 처리
       savedMessage = this.chatRedisService.saveMessageToRedis(
           new ChatMessageRequest(messageRequest.chatRoomId(), messageRequest.content()),
-          memberId
+          memberId,
+          MessageType.TEXT_ONLY
       );
       this.broadcastMessage(messageRequest.chatRoomId(), savedMessage);
     }

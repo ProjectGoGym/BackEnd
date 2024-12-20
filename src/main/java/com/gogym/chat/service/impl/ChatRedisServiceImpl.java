@@ -8,6 +8,7 @@ import com.gogym.chat.dto.ChatMessageDto.ChatMessageRequest;
 import com.gogym.chat.dto.ChatMessageDto.ChatMessageResponse;
 import com.gogym.chat.dto.ChatMessageDto.RedisChatMessage;
 import com.gogym.chat.service.ChatRedisService;
+import com.gogym.chat.type.MessageType;
 import com.gogym.util.JsonUtil;
 import com.gogym.util.RedisUtil;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +23,7 @@ public class ChatRedisServiceImpl implements ChatRedisService {
   private final String REDIS_CHATROOM_MESSAGE_KEY = "chatroom:messages:";
   
   @Override
-  public ChatMessageResponse saveMessageToRedis(ChatMessageRequest messageRequest, Long memberId) {
+  public ChatMessageResponse saveMessageToRedis(ChatMessageRequest messageRequest, Long memberId, MessageType messageType) {
     // Redis Key 생성
     String redisKey = this.getRedisChatroomMessageKeyPrefix() + messageRequest.chatRoomId();
 
@@ -33,6 +34,7 @@ public class ChatRedisServiceImpl implements ChatRedisService {
     RedisChatMessage  messageHistory = new RedisChatMessage(
         messageRequest.content(),
         memberId,
+        messageType,
         createdAt
     );
 
@@ -47,6 +49,7 @@ public class ChatRedisServiceImpl implements ChatRedisService {
         messageRequest.chatRoomId(),
         memberId,
         messageRequest.content(),
+        messageType,
         createdAt);
   }
   
