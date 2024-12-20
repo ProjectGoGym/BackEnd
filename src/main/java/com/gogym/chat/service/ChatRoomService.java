@@ -1,5 +1,6 @@
 package com.gogym.chat.service;
 
+import com.gogym.chat.entity.ChatRoom;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import com.gogym.chat.dto.ChatRoomDto.ChatRoomResponse;
@@ -50,5 +51,6 @@ public interface ChatRoomService {
    * @return true: 사용자가 해당 채팅방에 참여 중인 경우, false: 참여하지 않은 경우
    */
   boolean isMemberInChatRoom(Long chatRoomId, Long memberId);
-  
+
+  ChatRoom getById(Long chatRoomId);
 }
