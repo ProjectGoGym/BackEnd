@@ -2,6 +2,7 @@ package com.gogym.gympay.service;
 
 import com.gogym.chat.entity.ChatRoom;
 import com.gogym.chat.service.ChatRoomQueryService;
+import com.gogym.chat.type.MessageType;
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
 import com.gogym.gympay.dto.request.SafePaymentRequest;
@@ -10,7 +11,6 @@ import com.gogym.gympay.entity.Transaction;
 import com.gogym.gympay.entity.constant.RequesterRole;
 import com.gogym.gympay.entity.constant.SafePaymentStatus;
 import com.gogym.gympay.entity.constant.TransactionStatus;
-import com.gogym.gympay.event.MessageType;
 import com.gogym.gympay.event.SendMessageEvent;
 import com.gogym.gympay.repository.SafePaymentRepository;
 import com.gogym.member.entity.Member;
@@ -58,7 +58,7 @@ public class SafePaymentService {
 
     String message = String.format("안전결제를 요청했습니다. \n 금액 : %d원", request.amount());
     eventPublisher.publishEvent(new SendMessageEvent(chatRoomId, requesterId, message,
-        MessageType.SAFE_PAYMENT_REQUEST));
+        MessageType.SYSTEM_SAFE_PAYMENT_REQUEST));
 
     return safePayment.getId();
   }
@@ -84,8 +84,10 @@ public class SafePaymentService {
         safePayment.getAmount(), safePayment.getSeller().getId());
 
     String message = "안전결제를 수락했습니다.";
-    eventPublisher.publishEvent(new SendMessageEvent(safePayment.getTransaction().getChatRoom().getId(), requesterId, message,
-        MessageType.SAFE_PAYMENT_APPROVE));
+    eventPublisher.publishEvent(
+        new SendMessageEvent(safePayment.getTransaction().getChatRoom().getId(), requesterId,
+            message,
+            MessageType.SYSTEM_SAFE_PAYMENT_APPROVAL));
   }
 
   @Transactional
@@ -99,8 +101,10 @@ public class SafePaymentService {
     safePayment.reject();
 
     String message = "안전결제를 거절했습니다.";
-    eventPublisher.publishEvent(new SendMessageEvent(safePayment.getTransaction().getChatRoom().getId(), requesterId, message,
-        MessageType.SAFE_PAYMENT_REQUEST));
+    eventPublisher.publishEvent(
+        new SendMessageEvent(safePayment.getTransaction().getChatRoom().getId(), requesterId,
+            message,
+            MessageType.SYSTEM_SAFE_PAYMENT_REJECTION));
   }
 
   @Transactional
@@ -116,8 +120,10 @@ public class SafePaymentService {
         safePayment.getAmount(), safePayment.getBuyer().getId());
 
     String message = String.format("안전결제가 완료되었습니다. \n 금액 : %d원", safePayment.getAmount());
-    eventPublisher.publishEvent(new SendMessageEvent(safePayment.getTransaction().getChatRoom().getId(), requesterId, message,
-        MessageType.SAFE_PAYMENT_COMPLETE));
+    eventPublisher.publishEvent(
+        new SendMessageEvent(safePayment.getTransaction().getChatRoom().getId(), requesterId,
+            message,
+            MessageType.SYSTEM_SAFE_PAYMENT_COMPLETE));
   }
 
   @Transactional
@@ -137,8 +143,10 @@ public class SafePaymentService {
     safePayment.cancel();
 
     String message = "안전결제가 취소되었습니다.";
-    eventPublisher.publishEvent(new SendMessageEvent(safePayment.getTransaction().getChatRoom().getId(), requesterId, message,
-        MessageType.SAFE_PAYMENT_CANCEL));
+    eventPublisher.publishEvent(
+        new SendMessageEvent(safePayment.getTransaction().getChatRoom().getId(), requesterId,
+            message,
+            MessageType.SYSTEM_SAFE_PAYMENT_CANCEL));
   }
 
   private void validateTransactionStatus(Transaction transaction) {
@@ -148,10 +156,12 @@ public class SafePaymentService {
     }
 
     boolean canStart = transaction.getSafePayments().stream()
-        .noneMatch(safePayment -> SafePaymentStatus.COMPLETED.equals(safePayment.getStatus()) || SafePaymentStatus.IN_PROGRESS.equals(safePayment.getStatus()));
+        .noneMatch(safePayment -> SafePaymentStatus.COMPLETED.equals(safePayment.getStatus())
+            || SafePaymentStatus.IN_PROGRESS.equals(safePayment.getStatus()));
 
     if (canStart) {
-      throw new CustomException(ErrorCode.INVALID_STATUS_TRANSITION, "안전결제가 진행 중이거나 완료되면 안전거래를 요청할 수 없습니다.");
+      throw new CustomException(ErrorCode.INVALID_STATUS_TRANSITION,
+          "안전결제가 진행 중이거나 완료되면 안전거래를 요청할 수 없습니다.");
     }
   }
 
