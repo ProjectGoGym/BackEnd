@@ -93,7 +93,7 @@ class ChatMessageServiceImplTest {
     
     when(this.chatRoomQueryService.isMemberInChatRoom(chatRoomId, memberId)).thenReturn(true);
     when(this.chatRoomRepository.findPostIdByChatRoomId(chatRoomId)).thenReturn(Optional.of(postId));
-    when(this.postService.getPostStatus(postId)).thenReturn(PostStatus.POSTING);
+    when(this.postService.getPostStatus(postId)).thenReturn(PostStatus.PENDING);
     
     // When
     ChatRoomMessagesResponse response = this.chatMessageService.getMessagesWithPostStatus(memberId, chatRoomId, this.pageable);
@@ -105,7 +105,7 @@ class ChatMessageServiceImplTest {
     assertEquals(MessageType.TEXT_ONLY, response.messages().getContent().get(0).messageType());
     assertEquals("Redis메시지입니다.", response.messages().getContent().get(1).content());
     assertEquals(MessageType.TEXT_ONLY, response.messages().getContent().get(1).messageType());
-    assertEquals(PostStatus.POSTING, response.postStatus());
+    assertEquals(PostStatus.PENDING, response.postStatus());
     
     verify(this.chatRedisService).getMessages(chatRoomId);
     verify(this.chatMessageRepository).findByChatRoomIdOrderByCreatedAtDesc(chatRoomId, Pageable.unpaged());
