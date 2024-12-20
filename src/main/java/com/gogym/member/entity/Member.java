@@ -40,7 +40,7 @@ public class Member extends BaseEntity {
 
   @Enumerated(EnumType.STRING)
   @Column(name = "member_status", nullable = false)
-  @Setter
+  @Setter 
   private MemberStatus memberStatus;
 
   @Column(name = "member_name", nullable = false)
