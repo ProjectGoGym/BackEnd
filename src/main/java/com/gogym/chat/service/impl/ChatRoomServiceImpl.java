@@ -201,11 +201,6 @@ public class ChatRoomServiceImpl implements ChatRoomQueryService, ChatRoomServic
     }
   }
   
-  @Override
-  public boolean isMemberInChatRoom(Long chatRoomId, Long memberId) {
-    return this.chatRoomRepository.existsByChatRoomIdAndMemberId(chatRoomId, memberId);
-  }
-  
   /**
    * Redis에 저장된 메시지들을 강제로 DB에 저장.
    * 
@@ -244,6 +239,11 @@ public class ChatRoomServiceImpl implements ChatRoomQueryService, ChatRoomServic
   public ChatRoom getChatRoomByParticipantsAndId(Long chatRoomId, Long memberId1, Long memberId2) {
     return this.chatRoomRepository.findByChatRoomIdAndParticipants(chatRoomId, memberId1, memberId2)
         .orElseThrow(() -> new CustomException(ErrorCode.CHATROOM_NOT_FOUND));
+  }
+  
+  @Override
+  public boolean isMemberInChatRoom(Long chatRoomId, Long memberId) {
+    return this.chatRoomRepository.existsByChatRoomIdAndMemberId(chatRoomId, memberId);
   }
 
 }

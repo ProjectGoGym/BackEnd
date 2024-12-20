@@ -22,7 +22,7 @@ import com.gogym.chat.repository.ChatRoomRepository;
 import com.gogym.chat.service.ChatMessageQueryService;
 import com.gogym.chat.service.ChatMessageService;
 import com.gogym.chat.service.ChatRedisService;
-import com.gogym.chat.service.ChatRoomService;
+import com.gogym.chat.service.ChatRoomQueryService;
 import com.gogym.chat.type.MessageType;
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
@@ -45,13 +45,13 @@ public class ChatMessageServiceImpl implements ChatMessageQueryService, ChatMess
   private final ChatRoomRepository chatRoomRepository;
   
   private final ChatRedisService chatRedisService;
-  private final ChatRoomService chatRoomService;
+  private final ChatRoomQueryService chatRoomQueryService;
   private final PostService postService;
   
   @Override
   public ChatRoomMessagesResponse getMessagesWithPostStatus(Long memberId, Long chatRoomId, Pageable pageable) {
     // 회원이 해당 채팅방에 속해 있는지 확인
-    if (!this.chatRoomService.isMemberInChatRoom(chatRoomId, memberId)) {
+    if (!this.chatRoomQueryService.isMemberInChatRoom(chatRoomId, memberId)) {
         throw new CustomException(ErrorCode.FORBIDDEN);
     }
     

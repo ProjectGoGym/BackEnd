@@ -9,7 +9,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import com.gogym.chat.dto.ChatMessageDto.ChatMessageRequest;
 import com.gogym.chat.service.ChatMessageService;
-import com.gogym.chat.service.ChatRoomService;
+import com.gogym.chat.service.ChatRoomQueryService;
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
 import jakarta.validation.Valid;
@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 public class WebSocketChatController {
   
   private final ChatMessageService chatMessageService;
-  private final ChatRoomService chatRoomService;
+  private final ChatRoomQueryService chatRoomQueryService;
   
   /**
    * 실시간 채팅 메시지를 처리하고 Redis에 저장한 뒤,
@@ -53,7 +53,7 @@ public class WebSocketChatController {
     Long memberId = Long.valueOf(principal.getName());
     
     // 사용자가 채팅방에 속해있는지 확인하기 위한 방어 로직
-    if (!this.chatRoomService.isMemberInChatRoom(messageRequest.chatRoomId(), memberId)) {
+    if (!this.chatRoomQueryService.isMemberInChatRoom(messageRequest.chatRoomId(), memberId)) {
       throw new CustomException(ErrorCode.FORBIDDEN);
     }
     
