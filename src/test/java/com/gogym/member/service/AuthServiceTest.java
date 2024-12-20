@@ -1,15 +1,31 @@
 package com.gogym.member.service;
 
 import static com.gogym.exception.ErrorCode.UNAUTHORIZED;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import com.gogym.exception.CustomException;
+import com.gogym.exception.ErrorCode;
+import com.gogym.member.dto.ResetPasswordRequest;
+import com.gogym.member.dto.SignInRequest;
+import com.gogym.member.dto.SignUpRequest;
+import com.gogym.member.entity.Member;
+import com.gogym.member.jwt.JwtTokenProvider;
+import com.gogym.member.repository.BanNicknameRepository;
+import com.gogym.member.repository.MemberRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.time.LocalDateTime;
-
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,19 +37,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
-import com.gogym.exception.CustomException;
-import com.gogym.exception.ErrorCode;
-import com.gogym.member.dto.ResetPasswordRequest;
-import com.gogym.member.dto.SignInRequest;
-import com.gogym.member.dto.SignUpRequest;
-import com.gogym.member.entity.Member;
-import com.gogym.member.entity.Role;
-import com.gogym.member.jwt.JwtTokenProvider;
-import com.gogym.member.repository.BanNicknameRepository;
-import com.gogym.member.repository.MemberRepository;
-
-import jakarta.servlet.http.HttpServletRequest;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
@@ -91,7 +94,7 @@ class AuthServiceTest {
     when(passwordEncoder.encode(signUpRequest.getPassword())).thenReturn("encodedPassword");
     doNothing().when(emailService).validateEmail(signUpRequest.getEmail());
 
-    authService.signUp(signUpRequest);
+    authService.signUp(signUpRequest, false);
 
     verify(emailService).validateEmail(signUpRequest.getEmail());
     verify(memberRepository).save(any(Member.class));
@@ -149,22 +152,33 @@ class AuthServiceTest {
     assertEquals(UNAUTHORIZED, e.getErrorCode());
   }
 
-  @Test
   void 비밀번호_재설정이_성공한다() {
     HttpServletRequest mockRequest = mock(HttpServletRequest.class);
     String mockToken = "mockToken";
+    Member mockMember = mock(Member.class);
 
+    // Mocking 요청 데이터 설정
+    ResetPasswordRequest resetPasswordRequest =
+        ResetPasswordRequest.builder().email("test@example.com").currentPassword("testPassword")
+            .newPassword("newPassword").build();
+
+    // Mocking 및 스터빙
     when(jwtTokenProvider.extractToken(mockRequest)).thenReturn(mockToken);
     when(jwtTokenProvider.getAuthentication(mockToken)).thenReturn(mock(Authentication.class));
     when(jwtTokenProvider.getAuthentication(mockToken).getName())
         .thenReturn(resetPasswordRequest.getEmail());
-    when(memberService.findByEmail(resetPasswordRequest.getEmail())).thenReturn(mock(Member.class));
+    when(memberService.findByEmail(resetPasswordRequest.getEmail())).thenReturn(mockMember);
+    when(mockMember.getPassword()).thenReturn("encodedPassword");
+    when(passwordEncoder.matches(anyString(), eq("encodedPassword"))).thenReturn(true);
 
+    // 테스트 실행
     authService.resetPassword(mockRequest, resetPasswordRequest);
 
     verify(memberService).findByEmail(resetPasswordRequest.getEmail());
+    verify(passwordEncoder).matches(eq("testPassword"), eq("encodedPassword"));
     verify(memberRepository).save(any(Member.class));
   }
+
 
   @Test
   void 로그아웃이_성공한다() {
@@ -221,7 +235,7 @@ class AuthServiceTest {
     Member mockMember = mock(Member.class);
     when(mockMember.getEmail()).thenReturn("test@example.com");
     when(memberService.findByEmail(mockMember.getEmail())).thenReturn(mockMember);
-    
+
     Member foundMember = authService.getMemberByEmail(mockMember.getEmail());
 
     assertNotNull(foundMember);
@@ -233,14 +247,35 @@ class AuthServiceTest {
     HttpServletRequest mockRequest = mock(HttpServletRequest.class);
     String mockToken = "mockToken";
 
+    Member mockMember =
+        Member.builder().email("test@example.com").password("encodedPassword").build();
+
+    ResetPasswordRequest resetPasswordRequest =
+        ResetPasswordRequest.builder().email("test@example.com").currentPassword("testPassword")
+            .newPassword("newPassword").build();
+
+    // Mock 설정
     when(jwtTokenProvider.extractToken(mockRequest)).thenReturn(mockToken);
     when(jwtTokenProvider.getAuthentication(mockToken)).thenReturn(mock(Authentication.class));
-    when(jwtTokenProvider.getAuthentication(mockToken).getName())
-        .thenReturn(resetPasswordRequest.getEmail());
-    when(memberService.findByEmail(resetPasswordRequest.getEmail())).thenReturn(mock(Member.class));
+    when(jwtTokenProvider.getAuthentication(mockToken).getName()).thenReturn("test@example.com");
+    when(memberService.findByEmail("test@example.com")).thenReturn(mockMember);
+    when(passwordEncoder.matches(eq("testPassword"), eq("encodedPassword"))).thenReturn(true);
 
+    // 테스트 실행
     authService.resetPassword(mockRequest, resetPasswordRequest);
 
     verify(memberRepository).save(any(Member.class));
+  }
+
+  void 카카오회원가입이_성공한다() {
+    when(passwordEncoder.encode(signUpRequest.getPassword())).thenReturn("encodedPassword");
+    doNothing().when(emailService).validateEmail(signUpRequest.getEmail());
+
+    // isKakao 값을 true로 설정하여 호출
+    authService.signUp(signUpRequest, true);
+
+    verify(emailService).validateEmail(signUpRequest.getEmail());
+    verify(memberRepository).save(any(Member.class));
+    verify(memberRepository).findByEmail(signUpRequest.getEmail());
   }
 }

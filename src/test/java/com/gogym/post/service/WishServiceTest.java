@@ -60,7 +60,7 @@ class WishServiceTest {
   @BeforeEach
   void setUp() {
 
-    member = Member.builder().id(1L).build();
+    member = Member.builder().build();
     gym = Gym.builder().gymName("헬스장").build();
     post = Post.builder().author(member).gym(gym).wishCount(1L).build();
     post2 = Post.builder().author(member).gym(gym).wishCount(1L).build();

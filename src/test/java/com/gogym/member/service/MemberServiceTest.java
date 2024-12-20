@@ -1,23 +1,23 @@
 package com.gogym.member.service;
 
-import static org.mockito.Mockito.*;
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import com.gogym.exception.CustomException;
+import com.gogym.gympay.entity.GymPay;
 import com.gogym.member.dto.MemberProfileResponse;
 import com.gogym.member.dto.UpdateMemberRequest;
 import com.gogym.member.entity.Member;
 import com.gogym.member.repository.BanNicknameRepository;
 import com.gogym.member.repository.MemberRepository;
 import com.gogym.member.type.MemberStatus;
-import com.gogym.gympay.entity.GymPay;
-import org.junit.jupiter.api.Test;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
-import java.util.Optional;
 
 class MemberServiceTest {
 
@@ -42,7 +42,7 @@ class MemberServiceTest {
     Long memberId = 1L;
 
     GymPay gymPay = mock(GymPay.class);
-    when(gymPay.getBalance()).thenReturn(10000L);
+    when(gymPay.getBalance()).thenReturn(10000);
 
     member = mock(Member.class);
     when(member.getId()).thenReturn(1L);
@@ -94,5 +94,3 @@ class MemberServiceTest {
     verify(memberRepository).findById(memberId);
   }
 }
-
-

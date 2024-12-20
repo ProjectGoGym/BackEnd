@@ -54,6 +54,7 @@ public enum ErrorCode {
   PAYMENT_MISMATCH(CONFLICT, "결제 정보가 일치하지 않습니다."),
   NOT_IN_PROGRESS(CONFLICT, "거래 중이 아닙니다."),
   INVALID_STATUS_TRANSITION(CONFLICT, "변경할 수 없는 상태입니다."),
+  ALREADY_TRANSACTION(CONFLICT, "이미 거래중인 게시글 입니다."),
 
   // 423 LOCKED
   LOCK_ACQUISITION_FAILED(LOCKED, "해당 리소스에 락을 획득할 수 없습니다."),
