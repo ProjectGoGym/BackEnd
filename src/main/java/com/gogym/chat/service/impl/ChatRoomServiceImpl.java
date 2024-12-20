@@ -14,12 +14,15 @@ import com.gogym.chat.entity.ChatRoom;
 import com.gogym.chat.repository.ChatMessageRepository;
 import com.gogym.chat.repository.ChatRoomRepository;
 import com.gogym.chat.service.ChatRedisService;
+import com.gogym.chat.service.ChatRoomQueryService;
 import com.gogym.chat.service.ChatRoomService;
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
 import com.gogym.member.entity.Member;
 import com.gogym.member.service.MemberService;
+import com.gogym.post.entity.Post;
 import com.gogym.post.service.PostService;
+import com.gogym.post.type.PostStatus;
 import com.gogym.util.JsonUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +30,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class ChatRoomServiceImpl implements ChatRoomService {
+public class ChatRoomServiceImpl implements ChatRoomQueryService, ChatRoomService {
   
   private final ChatRoomRepository chatRoomRepository;
   private final ChatMessageRepository chatMessageRepository;
@@ -44,6 +47,13 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     // 이미 존재하는 채팅방 여부 확인
     if (this.chatRoomRepository.existsByPostIdAndRequestorId(postId, memberId)) {
       throw new CustomException(ErrorCode.CHATROOM_ALREADY_EXISTS);
+    }
+    
+    // 게시물 상태 검증
+    Post post = this.postService.findById(postId);
+    if (PostStatus.COMPLETED.equals(post.getStatus())
+        || PostStatus.HIDDEN.equals(post.getStatus())) {
+      throw new CustomException(ErrorCode.REQUEST_VALIDATION_FAIL);
     }
     
     // 채팅방 생성 및 저장
@@ -200,11 +210,6 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     }
   }
   
-  @Override
-  public boolean isMemberInChatRoom(Long chatRoomId, Long memberId) {
-    return this.chatRoomRepository.existsByChatRoomIdAndMemberId(chatRoomId, memberId);
-  }
-  
   /**
    * Redis에 저장된 메시지들을 강제로 DB에 저장.
    * 
@@ -231,6 +236,23 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
     // DB에 저장
     this.chatMessageRepository.saveAll(chatMessages);
+  }
+  
+  @Override
+  public ChatRoom getChatRoomById(Long chatRoomId) {
+    return this.chatRoomRepository.findById(chatRoomId)
+        .orElseThrow(() -> new CustomException(ErrorCode.CHATROOM_NOT_FOUND));
+  }
+  
+  @Override
+  public ChatRoom getChatRoomByParticipantsAndId(Long chatRoomId, Long memberId1, Long memberId2) {
+    return this.chatRoomRepository.findByChatRoomIdAndParticipants(chatRoomId, memberId1, memberId2)
+        .orElseThrow(() -> new CustomException(ErrorCode.CHATROOM_NOT_FOUND));
+  }
+  
+  @Override
+  public boolean isMemberInChatRoom(Long chatRoomId, Long memberId) {
+    return this.chatRoomRepository.existsByChatRoomIdAndMemberId(chatRoomId, memberId);
   }
 
 }

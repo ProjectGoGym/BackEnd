@@ -25,14 +25,15 @@ import com.gogym.chat.entity.ChatRoom;
 import com.gogym.chat.repository.ChatMessageRepository;
 import com.gogym.chat.repository.ChatRoomRepository;
 import com.gogym.chat.schedule.ChatMessageBatchScheduler;
+import com.gogym.chat.type.MessageType;
 import com.gogym.exception.CustomException;
-import com.gogym.util.RedisUtil;
+import com.gogym.util.RedisService;
 
 @ExtendWith(MockitoExtension.class)
 class ChatMessageBatchSchedulerTest {
 
   @Mock
-  private RedisUtil redisUtil;
+  private RedisService redisService;
 
   @Mock
   private RedisTemplate<String, Object> redisTemplate;
@@ -54,15 +55,15 @@ class ChatMessageBatchSchedulerTest {
     // Given
     Long chatroomId = 1L;
     String redisKey = "chatroom:messages:1";
-    String mockMessageJson = "{\"content\":\"안녕하세요!\",\"senderId\":123,\"createdAt\":\"2024-12-03T12:00:00\"}";
+    String mockMessageJson = "{\"content\":\"안녕하세요\",\"senderId\":123,\"messageType\":\"TEXT_ONLY\",\"createdAt\":\"2024-12-03T12:00:00\"}";
 
     ChatRoom mockChatRoom = mock(ChatRoom.class);
 
     // RedisTemplate Mock 설정
     when(this.redisTemplate.keys("chatroom:messages:*")).thenReturn(Set.of(redisKey));
 
-    // RedisUtil Mock 설정
-    when(this.redisUtil.lrange(redisKey, 0, -1)).thenReturn(List.of(mockMessageJson));
+    // RedisService Mock 설정
+    when(this.redisService.lrange(redisKey, 0, -1)).thenReturn(List.of(mockMessageJson));
 
     // ChatRoomRepository Mock 설정
     when(this.chatRoomRepository.findById(chatroomId)).thenReturn(Optional.of(mockChatRoom));
@@ -75,11 +76,12 @@ class ChatMessageBatchSchedulerTest {
     verify(this.chatMessageRepository, times(1)).save(chatMessageCaptor.capture());
 
     ChatMessage savedMessage = chatMessageCaptor.getValue();
-    assertEquals("안녕하세요!", savedMessage.getContent());
+    assertEquals("안녕하세요", savedMessage.getContent());
     assertEquals(123L, savedMessage.getSenderId());
     assertEquals(mockChatRoom, savedMessage.getChatRoom());
+    assertEquals(MessageType.TEXT_ONLY, savedMessage.getMessageType());
 
-    verify(this.redisUtil, times(1)).delete(redisKey);
+    verify(this.redisService, times(1)).delete(redisKey);
   }
 
   @Test
@@ -87,13 +89,13 @@ class ChatMessageBatchSchedulerTest {
     // Given
     Long chatroomId = 1L;
     String redisKey = "chatroom:messages:1";
-    String validMessageJson = "{\"content\":\"Hello\",\"senderId\":123,\"createdAt\":\"2024-12-03T12:00:00\"}";
-
+    String validMessageJson = "{\"content\":\"안녕하세요\",\"senderId\":123,\"messageType\":\"TEXT_ONLY\",\"createdAt\":\"2024-12-03T12:00:00\"}";
+    
     // RedisTemplate Mock 설정
     when(this.redisTemplate.keys("chatroom:messages:*")).thenReturn(Set.of(redisKey));
 
-    // RedisUtil Mock 설정
-    when(this.redisUtil.lrange(redisKey, 0, -1)).thenReturn(List.of(validMessageJson));
+    // RedisService Mock 설정
+    when(this.redisService.lrange(redisKey, 0, -1)).thenReturn(List.of(validMessageJson));
 
     // ChatRoomRepository Mock 설정
     when(this.chatRoomRepository.findById(chatroomId)).thenReturn(Optional.empty());
@@ -110,8 +112,8 @@ class ChatMessageBatchSchedulerTest {
     // RedisTemplate Mock 설정
     when(this.redisTemplate.keys("chatroom:messages:*")).thenReturn(Set.of(redisKey));
 
-    // RedisUtil Mock 설정 (Redis에 메시지가 없는 상황)
-    when(this.redisUtil.lrange(redisKey, 0, -1)).thenReturn(List.of()); // 빈 리스트 반환
+    // RedisService Mock 설정 (Redis에 메시지가 없는 상황)
+    when(this.redisService.lrange(redisKey, 0, -1)).thenReturn(List.of()); // 빈 리스트 반환
 
     // When
     assertDoesNotThrow(() -> this.chatMessageBatchScheduler.batchMessagesToDatabase());
@@ -119,7 +121,7 @@ class ChatMessageBatchSchedulerTest {
     // Then
     verify(this.chatRoomRepository, times(0)).findById(anyLong());
     verify(this.chatMessageRepository, times(0)).save(any(ChatMessage.class));
-    verify(this.redisUtil, times(0)).delete(redisKey);
+    verify(this.redisService, times(0)).delete(redisKey);
   }
 
 }

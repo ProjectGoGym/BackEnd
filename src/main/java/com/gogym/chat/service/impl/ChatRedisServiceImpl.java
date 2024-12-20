@@ -8,8 +8,9 @@ import com.gogym.chat.dto.ChatMessageDto.ChatMessageRequest;
 import com.gogym.chat.dto.ChatMessageDto.ChatMessageResponse;
 import com.gogym.chat.dto.ChatMessageDto.RedisChatMessage;
 import com.gogym.chat.service.ChatRedisService;
+import com.gogym.chat.type.MessageType;
 import com.gogym.util.JsonUtil;
-import com.gogym.util.RedisUtil;
+import com.gogym.util.RedisService;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -17,12 +18,12 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ChatRedisServiceImpl implements ChatRedisService {
   
-  private final RedisUtil redisUtil;
+  private final RedisService redisService;
   
   private final String REDIS_CHATROOM_MESSAGE_KEY = "chatroom:messages:";
   
   @Override
-  public ChatMessageResponse saveMessageToRedis(ChatMessageRequest messageRequest, Long memberId) {
+  public ChatMessageResponse saveMessageToRedis(ChatMessageRequest messageRequest, Long memberId, MessageType messageType) {
     // Redis Key 생성
     String redisKey = this.getRedisChatroomMessageKeyPrefix() + messageRequest.chatRoomId();
 
@@ -33,6 +34,7 @@ public class ChatRedisServiceImpl implements ChatRedisService {
     RedisChatMessage  messageHistory = new RedisChatMessage(
         messageRequest.content(),
         memberId,
+        messageType,
         createdAt
     );
 
@@ -40,26 +42,27 @@ public class ChatRedisServiceImpl implements ChatRedisService {
     String messageJson = JsonUtil.serialize(messageHistory);
 
     // Redis에 저장
-    this.redisUtil.rpush(redisKey, messageJson);
+    this.redisService.rpush(redisKey, messageJson);
 
     // 메시지 저장 결과 반환
     return new ChatMessageResponse(
         messageRequest.chatRoomId(),
         memberId,
         messageRequest.content(),
+        messageType,
         createdAt);
   }
   
   @Override
   public List<String> getMessages(Long chatRoomId) {
     String redisKey = this.getRedisChatroomMessageKeyPrefix() + chatRoomId;
-    return this.redisUtil.lrange(redisKey, 0, -1);
+    return this.redisService.lrange(redisKey, 0, -1);
   }
   
   @Override
   public void deleteMessages(Long chatRoomId) {
     String redisKey = this.getRedisChatroomMessageKeyPrefix() + chatRoomId;
-    this.redisUtil.delete(redisKey);
+    this.redisService.delete(redisKey);
   }
 
   @Override

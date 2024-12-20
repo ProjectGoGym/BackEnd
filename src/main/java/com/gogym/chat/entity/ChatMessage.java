@@ -1,8 +1,11 @@
 package com.gogym.chat.entity;
 
+import com.gogym.chat.type.MessageType;
 import com.gogym.common.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -32,5 +35,9 @@ public class ChatMessage extends BaseEntity {
   
   @Column(name = "sender_id", nullable = false)
   private Long senderId; // 메시지 보낸 사용자 ID
+  
+  @Column(name = "message_type", nullable = false)
+  @Enumerated(EnumType.STRING)
+  private MessageType messageType; // 메시지 유형
   
 }

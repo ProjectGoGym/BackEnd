@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.gogym.chat.dto.ChatMessageDto.ChatRoomMessagesResponse;
-import com.gogym.chat.service.ChatMessageService;
+import com.gogym.chat.service.ChatMessageQueryService;
 import com.gogym.common.annotation.LoginMemberId;
 import lombok.RequiredArgsConstructor;
 
@@ -16,7 +16,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/chatroom")
 public class ChatMessageController {
   
-  private final ChatMessageService chatMessageService;
+  private final ChatMessageQueryService chatMessageQueryService;
   
   /**
    * 특정 채팅방의 메시지와 해당 채팅방에 연결된 게시물 상태를 조회합니다.
@@ -33,7 +33,7 @@ public class ChatMessageController {
       @LoginMemberId Long memberId,
       @PathVariable("chatroom-id") Long chatRoomId,
       Pageable pageable) {
-    return ResponseEntity.ok(this.chatMessageService.getMessagesWithPostStatus(memberId, chatRoomId, pageable));
+    return ResponseEntity.ok(this.chatMessageQueryService.getMessagesWithPostStatus(memberId, chatRoomId, pageable));
   }
   
 }

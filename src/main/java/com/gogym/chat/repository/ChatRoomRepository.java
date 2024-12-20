@@ -121,4 +121,26 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
   """)
   Optional<ChatRoom> findWithLeaveAtById(@Param("chatRoomId") Long chatRoomId);
   
+  /**
+   * 특정 채팅방에서 두 사용자가 참여 중인지 확인하여 해당 채팅방 정보를 조회.
+   * 
+   * @param chatRoomId 확인할 채팅방 ID
+   * @param memberId1 첫 번째 사용자 ID
+   * @param memberId2 두 번째 사용자 ID
+   * @return 두 사용자가 참여하는 채팅방
+   */
+  @Query("""
+      SELECT cr
+      FROM ChatRoom cr
+      WHERE cr.id = :chatRoomId
+        AND (
+            (cr.post.author.id = :memberId1 AND cr.requestor.id = :memberId2) OR
+            (cr.post.author.id = :memberId2 AND cr.requestor.id = :memberId1)
+        )
+  """)
+  Optional<ChatRoom> findByChatRoomIdAndParticipants(
+      @Param("chatRoomId") Long chatRoomId,
+      @Param("memberId1") Long memberId1,
+      @Param("memberId2") Long memberId2
+  );
 }
