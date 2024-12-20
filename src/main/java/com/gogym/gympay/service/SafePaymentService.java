@@ -37,7 +37,7 @@ public class SafePaymentService {
   @Transactional
   public Long save(Long requesterId, Long chatRoomId, SafePaymentRequest request) {
     ChatRoom chatRoom = chatRoomQueryService.getChatRoomById(chatRoomId);
-    if (chatRoom.getPost().getStatus() != PostStatus.POSTING) {
+    if (chatRoom.getPost().getStatus() != PostStatus.PENDING) {
       throw new CustomException(ErrorCode.NOT_IN_PROGRESS);
     }
 
