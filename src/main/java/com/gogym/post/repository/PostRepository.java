@@ -22,4 +22,14 @@ public interface PostRepository extends JpaRepository<Post, Long>, PostRepositor
 
   @Query("SELECT p.status FROM Post p WHERE p.id = :postId")
   Optional<PostStatus> findStatusByPostId(@Param("postId") Long postId);
+
+  @Query("""
+      SELECT COUNT(c) > 0
+      FROM Post p
+      JOIN p.chatRoom c
+      JOIN Transaction t ON c.transactionId = t.id
+      WHERE p.id = :postId
+      AND t.status IN ('COMPLETED', 'STARTED')
+  """)
+  boolean existsChatRoomWithTransactionInProgressOrCompleted(@Param("postId") Long postId);
 }

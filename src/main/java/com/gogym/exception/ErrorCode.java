@@ -41,6 +41,7 @@ public enum ErrorCode {
   SSE_SUBSCRIPTION_NOT_FOUND(NOT_FOUND, "요청한 구독 정보가 존재하지 않습니다."),
   LOCK_KEY_NOT_FOUND(NOT_FOUND, "RedissonLock Key가 존재하지 않습니다."),
   SAFE_PAYMENT_NOT_FOUND(NOT_FOUND, "안전거래를 찾을 수 없습니다."),
+  TRANSACTION_NOT_FOUND(NOT_FOUND, "거래를 찾을 수 없습니다."),
 
   // 408 REQUEST TIMEOUT
   SSE_TIMEOUT(REQUEST_TIMEOUT, "SSE 연결 시간이 초과되었습니다."),
@@ -52,6 +53,7 @@ public enum ErrorCode {
   CHATROOM_ALREADY_EXISTS(CONFLICT, "이미 존재하는 채팅방입니다."),
   PAYMENT_MISMATCH(CONFLICT, "결제 정보가 일치하지 않습니다."),
   NOT_IN_PROGRESS(CONFLICT, "거래 중이 아닙니다."),
+  ALREADY_TRANSACTION(CONFLICT, "이미 거래중인 게시글 입니다."),
 
   // 423 LOCKED
   LOCK_ACQUISITION_FAILED(LOCKED, "해당 리소스에 락을 획득할 수 없습니다."),
