@@ -21,9 +21,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class TransactionService {
 
-  private final TransactionRepository transactionRepository;
-  
   private final ChatRoomQueryService chatRoomQueryService;
+
+  private final TransactionRepository transactionRepository;
 
   @Transactional
   public void start(ChatRoom chatRoom, Member seller, Member buyer) {
@@ -50,14 +50,12 @@ public class TransactionService {
   }
 
   @Transactional
-  public void patchDate(Long memberId, Long chatRoomId, UpdateDateRequest dateTime) {
-//     TODO: 채팅방에 memberId가 참여 중인지 확인
-
+  public void patchDate(Long memberId, Long chatRoomId, UpdateDateRequest request) {
     ChatRoom chatRoom = chatRoomQueryService.getChatRoomById(chatRoomId);
-//    chatRoom.getTransaction().setMeetingAt(dateTime);
-    
-    Transaction transaction = this.getById(chatRoom.getTransactionId());
-    transaction.setMeetingAt(dateTime.dateTime());
+    chatRoomQueryService.isMemberInChatRoom(chatRoomId, memberId);
+
+    Transaction transaction = getById(chatRoom.getTransactionId());
+    transaction.setMeetingAt(request.dateTime());
   }
 
   private void canCancel(Transaction transaction) {
