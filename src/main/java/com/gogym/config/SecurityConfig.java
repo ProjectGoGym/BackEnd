@@ -13,6 +13,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.config.Customizer;
 
 @Configuration
 public class SecurityConfig {
@@ -40,7 +41,8 @@ public class SecurityConfig {
   // SecurityFilterChain Bean 등록
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    http.csrf().disable().authorizeHttpRequests(auth -> auth
+    http.csrf().disable().cors(Customizer.withDefaults())
+    .authorizeHttpRequests(auth -> auth
             // 인증 없이 접근을 허용할 엔드포인트
             .requestMatchers("/api/auth/sign-up", "/api/auth/sign-in", "/api/auth/check-email",
                 "/api/auth/check-nickname", "/api/auth/verify-email", "/api/auth/reset-password",
