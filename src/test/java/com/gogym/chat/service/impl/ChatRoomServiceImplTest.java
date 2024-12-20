@@ -37,6 +37,7 @@ import com.gogym.member.entity.Member;
 import com.gogym.member.service.MemberService;
 import com.gogym.post.entity.Post;
 import com.gogym.post.service.PostService;
+import com.gogym.post.type.PostStatus;
 
 @ExtendWith(MockitoExtension.class)
 class ChatRoomServiceImplTest {
@@ -91,7 +92,10 @@ class ChatRoomServiceImplTest {
   void 채팅방_생성_성공() {
     // Given
     Long postId = 1L;
-    Post mockPost = null;
+    Post mockPost = Post.builder()
+        .status(PostStatus.PENDING)
+        .author(this.postAuthor)
+        .build();
 
     when(this.postService.getPostAuthor(postId)).thenReturn(this.postAuthor);
     when(this.postService.findById(postId)).thenReturn(mockPost);
