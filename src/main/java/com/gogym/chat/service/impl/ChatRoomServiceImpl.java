@@ -20,7 +20,9 @@ import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
 import com.gogym.member.entity.Member;
 import com.gogym.member.service.MemberService;
+import com.gogym.post.entity.Post;
 import com.gogym.post.service.PostService;
+import com.gogym.post.type.PostStatus;
 import com.gogym.util.JsonUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +47,13 @@ public class ChatRoomServiceImpl implements ChatRoomQueryService, ChatRoomServic
     // 이미 존재하는 채팅방 여부 확인
     if (this.chatRoomRepository.existsByPostIdAndRequestorId(postId, memberId)) {
       throw new CustomException(ErrorCode.CHATROOM_ALREADY_EXISTS);
+    }
+    
+    // 게시물 상태 검증
+    Post post = this.postService.findById(postId);
+    if (PostStatus.COMPLETED.equals(post.getStatus())
+        || PostStatus.HIDDEN.equals(post.getStatus())) {
+      throw new CustomException(ErrorCode.REQUEST_VALIDATION_FAIL);
     }
     
     // 채팅방 생성 및 저장
