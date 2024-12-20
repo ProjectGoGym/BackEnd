@@ -83,10 +83,6 @@ public class Member extends BaseEntity {
   @Column(name = "is_kakao")
   private Boolean isKakao = false; // 카카오 로그인 여부
 
-  //@Setter
-  //@Column(name = "member_status", nullable = false)
-  //private String memberStatus; // 회원 상태
-
   @Setter
   @OneToOne(mappedBy = "member", cascade = CascadeType.PERSIST)
   private GymPay gymPay;
