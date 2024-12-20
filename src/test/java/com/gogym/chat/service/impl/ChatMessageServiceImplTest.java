@@ -30,6 +30,7 @@ import com.gogym.chat.entity.ChatMessage;
 import com.gogym.chat.repository.ChatMessageRepository;
 import com.gogym.chat.repository.ChatRoomRepository;
 import com.gogym.chat.service.ChatRedisService;
+import com.gogym.chat.service.ChatRoomQueryService;
 import com.gogym.chat.service.ChatRoomService;
 import com.gogym.chat.type.MessageType;
 import com.gogym.exception.CustomException;
@@ -54,6 +55,9 @@ class ChatMessageServiceImplTest {
   private ChatRoomService chatRoomService;
   
   @Mock
+  private ChatRoomQueryService chatRoomQueryService;
+  
+  @Mock
   private PostService postService;
   
   @Mock
@@ -76,17 +80,18 @@ class ChatMessageServiceImplTest {
     Long chatRoomId = 1L;
     Long postId = 1L;
     
-    String redisMessageJson = "{\"content\":\"Redis메시지입니다.\",\"senderId\":123,\"createdAt\":\"2024-12-25T12:00:00\"}";
+    String redisMessageJson = "{\"content\":\"Redis메시지입니다.\",\"senderId\":123,\"messageType\":\"TEXT_ONLY\",\"createdAt\":\"2024-12-03T12:00:00\"}";
     when(this.chatRedisService.getMessages(chatRoomId)).thenReturn(List.of(redisMessageJson));
     
     ChatMessage dbMessage = mock(ChatMessage.class);
     when(dbMessage.getContent()).thenReturn("DB메시지입니다.");
     when(dbMessage.getSenderId()).thenReturn(2L);
+    when(dbMessage.getMessageType()).thenReturn(MessageType.TEXT_ONLY);
     when(dbMessage.getCreatedAt()).thenReturn(LocalDateTime.of(2024, 12, 25, 12, 0));
     Page<ChatMessage> dbMessages = new PageImpl<>(List.of(dbMessage));
     when(this.chatMessageRepository.findByChatRoomIdOrderByCreatedAtDesc(chatRoomId, Pageable.unpaged())).thenReturn(dbMessages);
     
-    when(this.chatRoomService.isMemberInChatRoom(chatRoomId, memberId)).thenReturn(true);
+    when(this.chatRoomQueryService.isMemberInChatRoom(chatRoomId, memberId)).thenReturn(true);
     when(this.chatRoomRepository.findPostIdByChatRoomId(chatRoomId)).thenReturn(Optional.of(postId));
     when(this.postService.getPostStatus(postId)).thenReturn(PostStatus.POSTING);
     
@@ -97,7 +102,9 @@ class ChatMessageServiceImplTest {
     assertNotNull(response);
     assertEquals(2, response.messages().getContent().size());
     assertEquals("DB메시지입니다.", response.messages().getContent().get(0).content());
+    assertEquals(MessageType.TEXT_ONLY, response.messages().getContent().get(0).messageType());
     assertEquals("Redis메시지입니다.", response.messages().getContent().get(1).content());
+    assertEquals(MessageType.TEXT_ONLY, response.messages().getContent().get(1).messageType());
     assertEquals(PostStatus.POSTING, response.postStatus());
     
     verify(this.chatRedisService).getMessages(chatRoomId);
@@ -112,7 +119,7 @@ class ChatMessageServiceImplTest {
     Long memberId = 1L;
     Long chatRoomId = 1L;
     
-    when(this.chatRoomService.isMemberInChatRoom(chatRoomId, memberId)).thenReturn(true);
+    when(this.chatRoomQueryService.isMemberInChatRoom(chatRoomId, memberId)).thenReturn(true);
     
     when(this.chatRoomRepository.findPostIdByChatRoomId(chatRoomId)).thenReturn(Optional.empty());
     when(this.chatMessageRepository.findByChatRoomIdOrderByCreatedAtDesc(chatRoomId, Pageable.unpaged())).thenReturn(Page.empty());
@@ -137,7 +144,7 @@ class ChatMessageServiceImplTest {
     Long chatRoomId = 1L;
     Long postId = 1L;
     
-    when(this.chatRoomService.isMemberInChatRoom(chatRoomId, memberId)).thenReturn(true);
+    when(this.chatRoomQueryService.isMemberInChatRoom(chatRoomId, memberId)).thenReturn(true);
     
     when(this.chatRoomRepository.findPostIdByChatRoomId(chatRoomId)).thenReturn(Optional.of(postId));
     when(this.chatMessageRepository.findByChatRoomIdOrderByCreatedAtDesc(chatRoomId, Pageable.unpaged())).thenReturn(Page.empty());
@@ -164,16 +171,25 @@ class ChatMessageServiceImplTest {
     Long senderId = 1L;
     String content = "안녕하세요!";
     
-    ChatMessageRequest messageRequest = new ChatMessageRequest(chatRoomId, content);
-    ChatMessageResponse savedMessage = new ChatMessageResponse(chatRoomId, senderId, content, LocalDateTime.now());
+    ChatMessageRequest messageRequest = new ChatMessageRequest(
+        chatRoomId,
+        content
+    );
+    ChatMessageResponse savedMessage = new ChatMessageResponse(
+        chatRoomId,
+        senderId,
+        content,
+        MessageType.TEXT_ONLY,
+        LocalDateTime.now()
+    );
     
-    when(this.chatRedisService.saveMessageToRedis(messageRequest, senderId)).thenReturn(savedMessage);
+    when(this.chatRedisService.saveMessageToRedis(messageRequest, senderId, MessageType.TEXT_ONLY)).thenReturn(savedMessage);
     
     // When
     this.chatMessageService.sendMessage(messageRequest, senderId);
     
     // Then
-    verify(this.chatRedisService).saveMessageToRedis(messageRequest, senderId);
+    verify(this.chatRedisService).saveMessageToRedis(messageRequest, senderId, MessageType.TEXT_ONLY);
     verify(this.messagingTemplate).convertAndSend("/topic/chatroom/" + chatRoomId, savedMessage);
   }
 
@@ -183,15 +199,27 @@ class ChatMessageServiceImplTest {
     Long chatRoomId = 1L;
     Long senderId = 100L;
     String content = "결제 요청 메시지";
-    MessageType messageType = MessageType.PAYMENT_REQUEST;
+    MessageType messageType = MessageType.SYSTEM_SAFE_PAYMENT_REQUEST;
     
-    SendMessageEvent sendMessageEvent = new SendMessageEvent(chatRoomId, senderId, content, messageType);
-    ChatMessageResponse savedMessage = new ChatMessageResponse(chatRoomId, senderId, content, LocalDateTime.now());
+    SendMessageEvent sendMessageEvent = new SendMessageEvent(
+        chatRoomId,
+        senderId,
+        content,
+        messageType
+    );
+    ChatMessageResponse savedMessage = new ChatMessageResponse(
+        chatRoomId,
+        senderId,
+        content,
+        messageType,
+        LocalDateTime.now()
+    );
     
     when(this.chatRedisService.saveMessageToRedis(
         argThat(request -> request.chatRoomId().equals(chatRoomId) && request.content().equals(content)),
-        eq(senderId)))
-    .thenReturn(savedMessage);
+        eq(senderId),
+        eq(messageType))
+    ).thenReturn(savedMessage);
     
     // When
     this.chatMessageService.sendMessage(sendMessageEvent, senderId);
@@ -199,7 +227,8 @@ class ChatMessageServiceImplTest {
     // Then
     verify(this.chatRedisService).saveMessageToRedis(argThat(
         request -> request.chatRoomId().equals(chatRoomId) && request.content().equals(content)),
-        eq(senderId));
+        eq(senderId),
+        eq(messageType));
     verify(this.messagingTemplate).convertAndSend(eq("/topic/chatroom/" + chatRoomId),
         (Object) argThat(argument -> {
           if (argument instanceof SendMessageEvent event) {

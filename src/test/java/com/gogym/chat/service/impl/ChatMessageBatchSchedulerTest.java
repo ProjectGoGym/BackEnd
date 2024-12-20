@@ -25,6 +25,7 @@ import com.gogym.chat.entity.ChatRoom;
 import com.gogym.chat.repository.ChatMessageRepository;
 import com.gogym.chat.repository.ChatRoomRepository;
 import com.gogym.chat.schedule.ChatMessageBatchScheduler;
+import com.gogym.chat.type.MessageType;
 import com.gogym.exception.CustomException;
 import com.gogym.util.RedisUtil;
 
@@ -54,7 +55,7 @@ class ChatMessageBatchSchedulerTest {
     // Given
     Long chatroomId = 1L;
     String redisKey = "chatroom:messages:1";
-    String mockMessageJson = "{\"content\":\"안녕하세요!\",\"senderId\":123,\"createdAt\":\"2024-12-03T12:00:00\"}";
+    String mockMessageJson = "{\"content\":\"안녕하세요\",\"senderId\":123,\"messageType\":\"TEXT_ONLY\",\"createdAt\":\"2024-12-03T12:00:00\"}";
 
     ChatRoom mockChatRoom = mock(ChatRoom.class);
 
@@ -75,9 +76,10 @@ class ChatMessageBatchSchedulerTest {
     verify(this.chatMessageRepository, times(1)).save(chatMessageCaptor.capture());
 
     ChatMessage savedMessage = chatMessageCaptor.getValue();
-    assertEquals("안녕하세요!", savedMessage.getContent());
+    assertEquals("안녕하세요", savedMessage.getContent());
     assertEquals(123L, savedMessage.getSenderId());
     assertEquals(mockChatRoom, savedMessage.getChatRoom());
+    assertEquals(MessageType.TEXT_ONLY, savedMessage.getMessageType());
 
     verify(this.redisUtil, times(1)).delete(redisKey);
   }
@@ -87,8 +89,8 @@ class ChatMessageBatchSchedulerTest {
     // Given
     Long chatroomId = 1L;
     String redisKey = "chatroom:messages:1";
-    String validMessageJson = "{\"content\":\"Hello\",\"senderId\":123,\"createdAt\":\"2024-12-03T12:00:00\"}";
-
+    String validMessageJson = "{\"content\":\"안녕하세요\",\"senderId\":123,\"messageType\":\"TEXT_ONLY\",\"createdAt\":\"2024-12-03T12:00:00\"}";
+    
     // RedisTemplate Mock 설정
     when(this.redisTemplate.keys("chatroom:messages:*")).thenReturn(Set.of(redisKey));
 
