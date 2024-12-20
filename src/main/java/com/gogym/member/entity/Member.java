@@ -2,6 +2,7 @@ package com.gogym.member.entity;
 
 import com.gogym.common.entity.BaseEntity;
 import com.gogym.gympay.entity.GymPay;
+import com.gogym.member.type.MemberStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -14,10 +15,10 @@ import java.time.LocalDateTime;
 @Builder
 public class Member extends BaseEntity {
 
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "member_id")
-  private Long id;
+  @Enumerated(EnumType.STRING)
+  @Column(name = "member_status", nullable = false)
+  @Setter
+  private MemberStatus memberStatus;
 
   @Column(name = "member_name", nullable = false)
   private String name;
@@ -29,6 +30,7 @@ public class Member extends BaseEntity {
   private String nickname;
 
   @Column(name = "phone", nullable = false)
+  @Setter
   private String phone;
 
   @Setter
@@ -40,6 +42,7 @@ public class Member extends BaseEntity {
   private Role role;
 
   @Column(name = "profile_image_url")
+  @Setter
   private String profileImageUrl;
 
   @Column(name = "region_id_1", nullable = true)
@@ -49,20 +52,17 @@ public class Member extends BaseEntity {
   private Long regionId2;
 
   @Setter
+  @OneToOne(cascade = CascadeType.ALL)
+  @JoinColumn(name = "gym_pay_id", referencedColumnName = "id")
+  private GymPay gymPay;
+
+  @Setter
   @Column(name = "verified_at")
-  private LocalDateTime verifiedAt;
+  private LocalDateTime verifiedAt; // 이메일 인증 시간
 
   @Column(name = "is_kakao", nullable = false)
   @Builder.Default
-  private Boolean isKakao = false; // 카카오 로그인 여부
-
-  @Setter
-  @Column(name = "member_status", nullable = false)
-  private String memberStatus; // 회원 상태
-
-  @OneToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "gym_pay_id")
-  private GymPay gymPay;
+  private boolean isKakao = false;
 
   // 이메일 인증 여부 확인 메서드
   public boolean isVerified() {
@@ -76,4 +76,6 @@ public class Member extends BaseEntity {
     this.phone = phone;
     this.profileImageUrl = profileImageUrl;
   }
+
 }
+
