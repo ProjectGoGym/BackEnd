@@ -24,7 +24,7 @@ public class WebConfig implements WebMvcConfigurer {
   @Override
   public void addCorsMappings(CorsRegistry registry) {
     registry.addMapping("/**")  // 모든 엔드포인트에 대해 CORS 설정
-        .allowedOrigins("*") // 프론트엔드 주소
+        .allowedOriginPatterns("*") // 프론트엔드 주소
         .allowedMethods("*")  // 허용할 HTTP 메서드
         .allowedHeaders("*")  // 모든 헤더 허용
         .exposedHeaders("*")
