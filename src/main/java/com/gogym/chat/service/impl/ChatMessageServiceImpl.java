@@ -5,21 +5,28 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
+import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.gogym.chat.dto.ChatMessageDto.ChatMessageRequest;
 import com.gogym.chat.dto.ChatMessageDto.ChatMessageResponse;
 import com.gogym.chat.dto.ChatMessageDto.ChatRoomMessagesResponse;
 import com.gogym.chat.dto.ChatMessageDto.RedisChatMessage;
+import com.gogym.chat.dto.MessageRequest;
 import com.gogym.chat.repository.ChatMessageRepository;
 import com.gogym.chat.repository.ChatRoomRepository;
+import com.gogym.chat.service.ChatMessageQueryService;
 import com.gogym.chat.service.ChatMessageService;
 import com.gogym.chat.service.ChatRedisService;
-import com.gogym.chat.service.ChatRoomService;
+import com.gogym.chat.service.ChatRoomQueryService;
+import com.gogym.chat.type.MessageType;
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
+import com.gogym.gympay.event.SendMessageEvent;
 import com.gogym.post.service.PostService;
 import com.gogym.post.type.PostStatus;
 import com.gogym.util.JsonUtil;
@@ -28,19 +35,23 @@ import lombok.RequiredArgsConstructor;
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
-public class ChatMessageServiceImpl implements ChatMessageService {
+public class ChatMessageServiceImpl implements ChatMessageQueryService, ChatMessageService {
+  
+  private static final String TOPIC_CHATROOM_PREFIX = "/topic/chatroom/";
+  
+  private final SimpMessagingTemplate messagingTemplate;
   
   private final ChatMessageRepository chatMessageRepository;
   private final ChatRoomRepository chatRoomRepository;
   
   private final ChatRedisService chatRedisService;
-  private final ChatRoomService chatRoomService;
+  private final ChatRoomQueryService chatRoomQueryService;
   private final PostService postService;
   
   @Override
   public ChatRoomMessagesResponse getMessagesWithPostStatus(Long memberId, Long chatRoomId, Pageable pageable) {
     // 회원이 해당 채팅방에 속해 있는지 확인
-    if (!this.chatRoomService.isMemberInChatRoom(chatRoomId, memberId)) {
+    if (!this.chatRoomQueryService.isMemberInChatRoom(chatRoomId, memberId)) {
         throw new CustomException(ErrorCode.FORBIDDEN);
     }
     
@@ -104,6 +115,7 @@ public class ChatMessageServiceImpl implements ChatMessageService {
             chatRoomId,
             redisMessage.senderId(),
             redisMessage.content(),
+            redisMessage.messageType(),
             redisMessage.createdAt()
         )).toList();
   }
@@ -121,6 +133,7 @@ public class ChatMessageServiceImpl implements ChatMessageService {
             chatRoomId,
             dbMessage.getSenderId(),
             dbMessage.getContent(),
+            dbMessage.getMessageType(),
             dbMessage.getCreatedAt()
         )).toList();
   }
@@ -137,7 +150,54 @@ public class ChatMessageServiceImpl implements ChatMessageService {
         .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
     
     // 게시물 ID를 기반으로 상태값 조회
-    return this.postService.getPostStatusByPostId(postId);
+    return this.postService.getPostStatus(postId);
+  }
+  
+  @EventListener
+  public void handleChatMessageEvent(SendMessageEvent event) {
+    this.sendMessage(event, event.senderId());
+  }
+  
+  @Override
+  public void sendMessage(MessageRequest messageRequest, Long memberId) {
+    // Redis에 저장 및 브로드캐스팅에 필요한 객체 선언
+    ChatMessageResponse savedMessage;
+    
+    if (messageRequest instanceof SendMessageEvent event) {
+      // SendMessageEvent일 경우의 처리
+      savedMessage = this.chatRedisService.saveMessageToRedis(
+          new ChatMessageRequest(event.chatRoomId(), event.content()),
+          event.senderId(),
+          event.messageType()
+      );
+      this.broadcastMessage(event.chatRoomId(), savedMessage, event.messageType());
+    } else {
+      // ChatMessageRequest일 경우의 처리
+      savedMessage = this.chatRedisService.saveMessageToRedis(
+          new ChatMessageRequest(messageRequest.chatRoomId(), messageRequest.content()),
+          memberId,
+          MessageType.TEXT_ONLY
+      );
+      this.broadcastMessage(messageRequest.chatRoomId(), savedMessage);
+    }
+  }
+
+  private void broadcastMessage(Long chatRoomId, ChatMessageResponse message) {
+    this.messagingTemplate.convertAndSend(
+        TOPIC_CHATROOM_PREFIX + chatRoomId,
+        message
+    );
+  }
+  
+  private void broadcastMessage(Long chatRoomId, ChatMessageResponse message, MessageType messageType) {
+    this.messagingTemplate.convertAndSend(
+        TOPIC_CHATROOM_PREFIX + chatRoomId,
+        new SendMessageEvent(
+            message.chatRoomId(),
+            message.senderId(),
+            message.content(),
+            messageType)
+    );
   }
   
 }
