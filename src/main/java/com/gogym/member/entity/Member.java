@@ -36,7 +36,7 @@ import org.hibernate.type.SqlTypes;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class Member extends BaseEntity {
+public class Member extends BaseEntity { 
 
   @Enumerated(EnumType.STRING)
   @Column(name = "member_status", nullable = false)
@@ -83,10 +83,6 @@ public class Member extends BaseEntity {
   @Column(name = "is_kakao")
   private Boolean isKakao = false; // 카카오 로그인 여부
 
-  //@Setter
-  //@Column(name = "member_status", nullable = false)
-  //private String memberStatus; // 회원 상태
-
   @Setter
   @OneToOne(mappedBy = "member", cascade = CascadeType.PERSIST)
   private GymPay gymPay;
@@ -100,7 +96,7 @@ public class Member extends BaseEntity {
   @OneToMany(mappedBy = "buyer")
   private final List<Transaction> purchaseTransactions = new ArrayList<>();
 
-  // 이메일 인증 여부 확인 메서드
+  // 이메일 인증 여부 확인 메서드 
   public boolean isVerified() {
     return this.verifiedAt != null;
   }
