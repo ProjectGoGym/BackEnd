@@ -5,6 +5,7 @@ import com.gogym.member.jwt.JwtTokenProvider;
 import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -49,6 +50,7 @@ public class SecurityConfig {
                 "/api/payments/sse/subscribe/**", "/api/images/presigned-url", "/ws/**",
                 "/api/notifications/subscribe/**")
             .permitAll()
+            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
             // 그 외의 모든 요청은 인증 필요
             .anyRequest().authenticated())
         // JWT 인증 필터를 AuthenticationFilter 전에 추가
