@@ -7,8 +7,6 @@ import static com.gogym.exception.ErrorCode.FORBIDDEN;
 import static com.gogym.exception.ErrorCode.MEMBER_NOT_FOUND;
 import static com.gogym.exception.ErrorCode.POST_NOT_FOUND;
 import static com.gogym.exception.ErrorCode.REQUEST_VALIDATION_FAIL;
-import static com.gogym.gympay.entity.constatnt.TransactionStatus.COMPLETED;
-import static com.gogym.gympay.entity.constatnt.TransactionStatus.STARTED;
 import static com.gogym.post.type.PostStatus.HIDDEN;
 import static com.gogym.post.type.PostStatus.IN_PROGRESS;
 import static com.gogym.post.type.PostStatus.PENDING;
@@ -219,7 +217,9 @@ public class PostService {
               post.getStatus().getStatusName(), status.getStatusName()));
     }
 
-    Transaction transaction = chatRoom.getTransaction();
+    Long transactionId = chatRoom.getTransactionId();
+
+    Transaction transaction = transactionService.getById(transactionId);
 
     post.updateStatus(status);
 
@@ -267,16 +267,12 @@ public class PostService {
 
   private void validateTransactionStatus(Post post) {
 
-    post.getChatRoom().stream()
-        .map(ChatRoom::getTransaction)
-        .filter(Objects::nonNull)
-        .filter(transaction ->
-            transaction.getStatus() == STARTED
-                || transaction.getStatus() == COMPLETED)
-        .findAny()
-        .ifPresent(transaction -> {
-          throw new CustomException(ALREADY_TRANSACTION);
-        });
+    boolean validateTransactionStatus = postRepository.existsChatRoomWithTransactionInProgressOrCompleted(
+        post.getId());
+
+    if (validateTransactionStatus) {
+      throw new CustomException(ALREADY_TRANSACTION);
+    }
   }
 
   // 주어진 게시글 ID 로 게시글을 찾습니다.
