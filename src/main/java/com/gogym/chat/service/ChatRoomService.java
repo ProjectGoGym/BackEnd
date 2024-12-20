@@ -1,5 +1,6 @@
 package com.gogym.chat.service;
 
+import com.gogym.chat.entity.ChatRoom;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import com.gogym.chat.dto.ChatRoomDto.ChatRoomResponse;
@@ -41,5 +42,4 @@ public interface ChatRoomService {
    * @param chatRoomId 채팅방 ID
    */
   void deleteChatRoom(Long memberId, Long chatRoomId);
-  
 }

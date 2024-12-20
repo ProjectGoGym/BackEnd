@@ -1,7 +1,7 @@
 package com.gogym.gympay.entity.constant;
 
-public enum Status {
-  PAID,
-  FAILED,
+public enum TransactionStatus {
+  STARTED,
+  COMPLETED,
   CANCELLED
 }
