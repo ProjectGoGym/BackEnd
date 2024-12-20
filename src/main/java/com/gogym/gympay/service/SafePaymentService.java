@@ -11,7 +11,6 @@ import com.gogym.gympay.entity.constant.RequesterRole;
 import com.gogym.gympay.entity.constant.SafePaymentStatus;
 import com.gogym.gympay.entity.constant.TransactionStatus;
 import com.gogym.gympay.event.MessageType;
-import com.gogym.gympay.event.SendMessageEvent;
 import com.gogym.gympay.repository.SafePaymentRepository;
 import com.gogym.member.entity.Member;
 import com.gogym.post.type.PostStatus;
@@ -37,7 +36,7 @@ public class SafePaymentService {
   @Transactional
   public Long save(Long requesterId, Long chatRoomId, SafePaymentRequest request) {
     ChatRoom chatRoom = chatRoomQueryService.getChatRoomById(chatRoomId);
-    if (chatRoom.getPost().getStatus() != PostStatus.PENDING) {
+    if (chatRoom.getPost().getStatus() != PostStatus.POSTING) {
       throw new CustomException(ErrorCode.NOT_IN_PROGRESS);
     }
 
