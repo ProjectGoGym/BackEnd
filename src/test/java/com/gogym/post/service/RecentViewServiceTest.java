@@ -43,7 +43,7 @@ class RecentViewServiceTest {
   void setUp() {
 
     pageable = PageRequest.of(0, 10);
-    member = Member.builder().id(1L).build();
+    member = Member.builder().build();
     gym = Gym.builder().gymName("헬스장").build();
     post = Post.builder().author(member).gym(gym).build();
   }

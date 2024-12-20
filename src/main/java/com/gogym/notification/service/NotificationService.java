@@ -31,7 +31,7 @@ public class NotificationService {
 
   private final MemberService memberService;
 
-  private static final Long sseTimeOut = 60000L;
+  private static final Long SSE_TIME_OUT = 60000L;
 
   @Getter
   private final Map<Long, SseEmitter> emitters = new ConcurrentHashMap<>();
@@ -40,7 +40,7 @@ public class NotificationService {
 
     memberService.findById(memberId);
 
-    SseEmitter emitter = new SseEmitter(sseTimeOut);
+    SseEmitter emitter = new SseEmitter(SSE_TIME_OUT);
     emitters.put(memberId, emitter);
 
     // 클라이언트 연결 종료, 만료, 에러 처리

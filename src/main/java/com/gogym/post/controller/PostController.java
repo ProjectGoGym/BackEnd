@@ -19,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -100,11 +101,24 @@ public class PostController {
   }
 
   // 게시글을 찜 추가, 삭제 합니다.
-  @PostMapping("{post-id}/wishes")
+  @PostMapping("/{post-id}/wishes")
   public ResponseEntity<Void> toggleWish(@LoginMemberId Long memberId,
       @PathVariable("post-id") Long postId) {
 
     wishService.toggleWish(memberId, postId);
+
+    return ResponseEntity.ok().build();
+  }
+
+  // 게시글의 상태를 변경합니다.
+  @PatchMapping("/{post-id}/change")
+  public ResponseEntity<Void> changePostStatus(
+      @LoginMemberId Long memberId,
+      @PathVariable("post-id") Long postId,
+      @RequestParam("chat-room-id") Long chatRoomId,
+      @RequestParam("status") PostStatus status) {
+
+    postService.changePostStatus(memberId, postId, chatRoomId, status);
 
     return ResponseEntity.ok().build();
   }
