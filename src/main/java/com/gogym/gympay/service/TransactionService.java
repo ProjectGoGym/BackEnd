@@ -1,6 +1,7 @@
 package com.gogym.gympay.service;
 
 import com.gogym.chat.entity.ChatRoom;
+import com.gogym.chat.service.ChatRoomQueryService;
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
 import com.gogym.gympay.dto.request.UpdateDateRequest;
@@ -19,6 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class TransactionService {
+
+  private final ChatRoomQueryService chatRoomQueryService;
 
   private final TransactionRepository transactionRepository;
 
@@ -47,11 +50,12 @@ public class TransactionService {
   }
 
   @Transactional
-  public void patchDate(Long memberId, Long chatRoomId, UpdateDateRequest dateTime) {
-//     TODO: 채팅방에 memberId가 참여 중인지 확인
+  public void patchDate(Long memberId, Long chatRoomId, UpdateDateRequest request) {
+    ChatRoom chatRoom = chatRoomQueryService.getChatRoomById(chatRoomId);
+    chatRoomQueryService.isMemberInChatRoom(chatRoomId, memberId);
 
-//    ChatRoom chatRoom = chatRoomQueryService.getChatRoomById(chatRoomId);
-//    chatRoom.getTransaction().setMeetingAt(dateTime);
+    Transaction transaction = getById(chatRoom.getTransactionId());
+    transaction.setMeetingAt(request.dateTime());
   }
 
   private void canCancel(Transaction transaction) {
