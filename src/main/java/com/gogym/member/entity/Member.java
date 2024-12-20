@@ -74,19 +74,22 @@ public class Member extends BaseEntity {
 
   @Column(name = "region_id_2", nullable = true)
   private Long regionId2;
-  
-  @Setter
-  @OneToOne(cascade = CascadeType.ALL)
-  @JoinColumn(name = "gym_pay_id", referencedColumnName = "id")
-  private GymPay gymPay;
 
   @Setter
   @Column(name = "verified_at")
   private LocalDateTime verifiedAt; // 이메일 인증 시간
 
-  @Column(name = "is_kakao", nullable = false)
-  @Builder.Default
+  @Setter
+  @Column(name = "is_kakao")
   private Boolean isKakao = false; // 카카오 로그인 여부
+
+  //@Setter
+  //@Column(name = "member_status", nullable = false)
+  //private String memberStatus; // 회원 상태
+
+  @Setter
+  @OneToOne(mappedBy = "member", cascade = CascadeType.PERSIST)
+  private GymPay gymPay;
 
   @OneToMany(mappedBy = "member", cascade = CascadeType.PERSIST)
   private final List<Payment> payments = new ArrayList<>();
