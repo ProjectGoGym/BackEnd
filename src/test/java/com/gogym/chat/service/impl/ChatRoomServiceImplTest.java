@@ -67,12 +67,10 @@ class ChatRoomServiceImplTest {
   @BeforeEach
   void setUp() {
     this.postAuthor = Member.builder()
-        .id(1L)
         .nickname("PostAuthor")
         .build();
 
     this.requestor = Member.builder()
-        .id(2L)
         .nickname("Requestor")
         .build();
     
@@ -143,6 +141,8 @@ class ChatRoomServiceImplTest {
     
     Field idField = BaseEntity.class.getDeclaredField("id");
     idField.setAccessible(true);
+    idField.set(this.postAuthor, 1L);
+    idField.set(this.requestor, 2L);
     idField.set(this.chatRoom, chatRoomId);
     
     Page<ChatRoom> mockPage = new PageImpl<>(List.of(this.chatRoom));
@@ -211,7 +211,7 @@ class ChatRoomServiceImplTest {
   }
 
   @Test
-  void 채팅방_삭제_양쪽_사용자가_모두_나간_경우_isDeleted_변경() {
+  void 채팅방_삭제_양쪽_사용자가_모두_나간_경우_isDeleted_변경() throws Exception {
     // Given
     Long chatRoomId = 1L;
     ChatRoom testChatRoom = ChatRoom.builder()
@@ -221,6 +221,12 @@ class ChatRoomServiceImplTest {
         .requestorActive(false)
         .isDeleted(false)
         .build();
+    
+    Field idField = BaseEntity.class.getDeclaredField("id");
+    idField.setAccessible(true);
+    idField.set(this.postAuthor, 1L);
+    idField.set(this.requestor, 2L);
+    idField.set(this.chatRoom, chatRoomId);
     
     when(this.chatRoomService.isMemberInChatRoom(chatRoomId, this.postAuthor.getId())).thenReturn(true);
     when(this.chatRoomService.isMemberInChatRoom(chatRoomId, this.requestor.getId())).thenReturn(true);
@@ -241,7 +247,7 @@ class ChatRoomServiceImplTest {
   }
 
   @Test
-  void 채팅방_삭제_한쪽_사용자만_나간_경우_isDeleted_유지() {
+  void 채팅방_삭제_한쪽_사용자만_나간_경우_isDeleted_유지() throws Exception {
     // Given
     Long memberId = 1L;
     Long chatRoomId = 1L;
@@ -252,6 +258,12 @@ class ChatRoomServiceImplTest {
         .requestorActive(true)
         .isDeleted(false)
         .build();
+    
+    Field idField = BaseEntity.class.getDeclaredField("id");
+    idField.setAccessible(true);
+    idField.set(this.postAuthor, 1L);
+    idField.set(this.requestor, 2L);
+    idField.set(this.chatRoom, chatRoomId);
     
     when(this.chatRoomService.isMemberInChatRoom(chatRoomId, memberId)).thenReturn(true);
     
