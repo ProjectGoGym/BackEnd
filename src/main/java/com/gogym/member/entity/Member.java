@@ -96,7 +96,7 @@ public class Member extends BaseEntity {
   @OneToMany(mappedBy = "buyer")
   private final List<Transaction> purchaseTransactions = new ArrayList<>();
 
-  // 이메일 인증 여부 확인 메서드
+  // 이메일 인증 여부 확인 메서드 
   public boolean isVerified() {
     return this.verifiedAt != null;
   }
