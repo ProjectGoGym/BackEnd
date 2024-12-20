@@ -4,7 +4,6 @@ import com.gogym.chat.entity.ChatRoom;
 import com.gogym.common.entity.BaseEntity;
 import com.gogym.gympay.entity.constant.TransactionStatus;
 import com.gogym.member.entity.Member;
-import com.gogym.post.entity.Post;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -20,7 +19,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -58,6 +56,27 @@ public class Transaction extends BaseEntity {
     this.seller = seller;
     this.buyer = buyer;
     this.status = TransactionStatus.STARTED;
-    this.chatRoom.setTransaction(this);
+    this.chatRoom.setTransactionId(this.getId());
+  }
+
+  public void start() {
+    changeStatus(TransactionStatus.STARTED);
+  }
+
+  public void complete() {
+    changeStatus(TransactionStatus.COMPLETED);
+  }
+
+  public void cancel() {
+    changeStatus(TransactionStatus.CANCELLED);
+  }
+
+  private void changeStatus(TransactionStatus targetStatus) {
+    if (!status.canTransitionTo(targetStatus)) {
+      throw new IllegalStateException(
+          String.format("'%s' 상태에서는 '%s' 상태로 전환할 수 없습니다.", this.status, targetStatus)
+      );
+    }
+    this.status = targetStatus;
   }
 }
