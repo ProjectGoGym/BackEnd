@@ -14,7 +14,7 @@ import com.gogym.chat.repository.ChatRoomRepository;
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
 import com.gogym.util.JsonUtil;
-import com.gogym.util.RedisUtil;
+import com.gogym.util.RedisService;
 import lombok.RequiredArgsConstructor;
 
 @Component
@@ -28,7 +28,7 @@ public class ChatMessageBatchScheduler {
   private final ChatMessageRepository chatMessageRepository;
 
   private final RedisTemplate<String, Object> redisTemplate;
-  private final RedisUtil redisUtil;
+  private final RedisService redisService;
 
   /**
    * 일정 주기로 Redis에 저장된 메시지를 DB로 저장.
@@ -40,7 +40,7 @@ public class ChatMessageBatchScheduler {
 
     redisKeys.forEach(redisKey -> {
       // Redis에서 모든 메시지 가져오기
-      List<String> messagesJson = this.redisUtil.lrange(redisKey, 0, -1);
+      List<String> messagesJson = this.redisService.lrange(redisKey, 0, -1);
 
       if (messagesJson == null || messagesJson.isEmpty()) {
         return;
@@ -72,7 +72,7 @@ public class ChatMessageBatchScheduler {
       });
 
       // Redis에서 해당 채팅방 메시지 삭제
-      this.redisUtil.delete(redisKey);
+      this.redisService.delete(redisKey);
     });
   }
 
