@@ -22,7 +22,6 @@ import com.gogym.member.entity.Member;
 import com.gogym.member.service.MemberService;
 import com.gogym.post.entity.Post;
 import com.gogym.post.service.PostQueryService;
-import com.gogym.post.service.PostService;
 import com.gogym.post.type.PostStatus;
 import com.gogym.util.JsonUtil;
 import jakarta.transaction.Transactional;
@@ -37,9 +36,8 @@ public class ChatRoomServiceImpl implements ChatRoomQueryService, ChatRoomServic
   private final ChatMessageRepository chatMessageRepository;
   
   private final ChatRedisService chatRedisService;
-  private final MemberService memberService;
-  //private final PostService postService;
   private final PostQueryService postQueryService;
+  private final MemberService memberService;
   
   @Override
   public ChatRoomResponse createChatRoom(Long memberId, Long postId) {
@@ -72,6 +70,7 @@ public class ChatRoomServiceImpl implements ChatRoomQueryService, ChatRoomServic
         postId, // postId
         postAuthor.getId(), // counterpartyId
         postAuthor.getNickname(), // counterpartyNickname
+        postAuthor.getProfileImageUrl(), // counterpartyProfileImageUrl
         0, // unreadMessageCount
         null, // lastMessage
         null,// lastMessageAt
@@ -147,6 +146,7 @@ public class ChatRoomServiceImpl implements ChatRoomQueryService, ChatRoomServic
           chatRoom.getPost().getId(), // postId
           counterparty.getId(), // counterpartyId
           counterparty.getNickname(), // counterpartyNickname
+          counterparty.getProfileImageUrl(), // counterpartyProfileImageUrl
           unreadMessageCount, // unreadMessageCount
           lastMessage != null ? lastMessage.getContent() : null, // lastMessage
           lastMessageAt, // lastMessageAt
