@@ -23,17 +23,13 @@ public class WebConfig implements WebMvcConfigurer {
 
   @Override
   public void addCorsMappings(CorsRegistry registry) {
-    /*
-    registry.addMapping("/**")  // 모든 엔드포인트에 대해 CORS 설정
+    registry.addMapping("/**") // 모든 엔드포인트에 대해 CORS 설정
         .allowedOrigins( // 프론트엔드 주소
-            "http://localhost:3001",
-            "http://localhost:3000",
-            "https://gogym-eight.vercel.app/")
-        .allowedMethods("*")  // 허용할 HTTP 메서드
-        .allowedHeaders("*")  // 모든 헤더 허용
-        .exposedHeaders("*")
-        .allowCredentials(true);  // 자격증명(쿠키, 인증 헤더 등)을 포함하는 요청 허용
-        */
-    //테스트용 확인작업 주석처리중 1752 
+            "http://localhost:3001", "http://localhost:3000", "https://gogym-eight.vercel.app/")
+        .allowedMethods("*") // 허용할 HTTP 메서드
+        .allowedHeaders("*") // 모든 헤더 허용
+        //.exposedHeaders("*")  // 모든 헤더 노출
+        .exposedHeaders("Authorization", "Content-Type", "X-Requested-With") // 명시적으로 헤더 노출 시도
+        .allowCredentials(true); // 자격증명(쿠키, 인증 헤더 등)을 포함하는 요청 허용
   }
 }
