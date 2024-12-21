@@ -36,10 +36,12 @@ public class MemberService {
   // 마이페이지 조회
   public MemberProfileResponse getMyProfileById(Long memberId) {
     Member member = findById(memberId);
+    Long gymPayId = (member.getGymPay() != null) ? member.getGymPay().getId() : null;
     long gymPayBalance = (member.getGymPay() != null) ? member.getGymPay().getBalance() : 0L;
 
     return new MemberProfileResponse(member.getId(), member.getEmail(), member.getName(),
-        member.getNickname(), member.getPhone(), member.getProfileImageUrl(), gymPayBalance);
+        member.getNickname(), member.getPhone(), member.getProfileImageUrl(), gymPayBalance,
+        gymPayId);
   }
 
   // 마이페이지 수정
