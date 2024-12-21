@@ -27,8 +27,10 @@ import com.gogym.chat.type.MessageType;
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
 import com.gogym.gympay.event.SendMessageEvent;
-import com.gogym.post.service.PostService;
-import com.gogym.post.type.PostStatus;
+import com.gogym.post.dto.PostResponseDto;
+import com.gogym.post.entity.Post;
+import com.gogym.post.service.PostQueryService;
+import com.gogym.region.service.RegionService;
 import com.gogym.util.JsonUtil;
 import lombok.RequiredArgsConstructor;
 
@@ -46,10 +48,11 @@ public class ChatMessageServiceImpl implements ChatMessageQueryService, ChatMess
   
   private final ChatRedisService chatRedisService;
   private final ChatRoomQueryService chatRoomQueryService;
-  private final PostService postService;
+  private final PostQueryService postQueryService;
+  private final RegionService regionService;
   
   @Override
-  public ChatRoomMessagesResponse getMessagesWithPostStatus(Long memberId, Long chatRoomId, Pageable pageable) {
+  public ChatRoomMessagesResponse getChatRoomMessagesAndPostInfo(Long memberId, Long chatRoomId, Pageable pageable) {
     // 회원이 해당 채팅방에 속해 있는지 확인
     if (!this.chatRoomQueryService.isMemberInChatRoom(chatRoomId, memberId)) {
         throw new CustomException(ErrorCode.FORBIDDEN);
@@ -58,8 +61,8 @@ public class ChatMessageServiceImpl implements ChatMessageQueryService, ChatMess
     // Redis와 DB에서 메시지를 조회 및 변환
     Page<ChatMessageResponse> messagePage = this.getCombinedMessages(chatRoomId, pageable);
 
-    // 채팅방에 연결된 게시물 상태값을 조회
-    PostStatus postStatus = this.getPostStatus(chatRoomId);
+    // 채팅방에 연결된 게시물 조회
+    PostResponseDto postResponseDto = this.getConnectedPost(memberId, chatRoomId);
     
     // leaveAt 조회
     LocalDateTime leaveAt = this.chatRoomRepository.findWithLeaveAtById(chatRoomId)
@@ -67,7 +70,7 @@ public class ChatMessageServiceImpl implements ChatMessageQueryService, ChatMess
         .orElse(null);
     
     // ChatRoomMessagesResponse 반환
-    return new ChatRoomMessagesResponse(messagePage, postStatus, leaveAt);
+    return new ChatRoomMessagesResponse(messagePage, postResponseDto, leaveAt);
   }
   
   /**
@@ -139,18 +142,22 @@ public class ChatMessageServiceImpl implements ChatMessageQueryService, ChatMess
   }
   
   /**
-   * 특정 채팅방에 연결된 게시물의 상태값을 조회.
+   * 특정 채팅방에 연결된 게시물을 조회.
    * 
+   * @param memberId 사용자 ID
    * @param chatRoomId 채팅방 ID
-   * @return {@link PostStatus} 게시물 상태
+   * @return {@link PostResponseDto} 채팅방에 연결된 게시물 DTO
    */
-  private PostStatus getPostStatus(Long chatRoomId) {
-    // 채팅방 ID를 기반으로 게시물 ID 조회
-    Long postId = this.chatRoomRepository.findPostIdByChatRoomId(chatRoomId)
-        .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
+  private PostResponseDto getConnectedPost(Long memberId, Long chatRoomId) {
+    // 채팅방에 연결된 게시물 조회
+    Post post = this.chatRoomRepository.findById(chatRoomId)
+        .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND)).getPost();
     
-    // 게시물 ID를 기반으로 상태값 조회
-    return this.postService.getPostStatus(postId);
+    // PostResponseDto로 변환 후 반환
+    return PostResponseDto.fromEntity(
+        post,
+        this.regionService.findById(post.getGym().getRegionId()),
+        this.postQueryService.isWished(post, memberId));
   }
   
   @EventListener
