@@ -67,10 +67,9 @@ public class PaymentService {
     if (paymentResult.status().equals("PAID") || paymentResult.status().equals("FAILED")) {
       PaymentProcessingStrategy strategy = paymentProcessingStrategyMap.get(paymentResult.status());
       strategy.process(paymentResult, preRegisteredData, member);
+      Payment payment = paymentResult.toEntity(member);
+      paymentRepository.save(payment);
     }
-
-    Payment payment = paymentResult.toEntity(member);
-    paymentRepository.save(payment);
   }
 
   private String generateId() {
