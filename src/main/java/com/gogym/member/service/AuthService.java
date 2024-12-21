@@ -1,5 +1,10 @@
 package com.gogym.member.service;
 
+import java.util.List;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
 import com.gogym.member.dto.ResetPasswordRequest;
@@ -9,21 +14,14 @@ import com.gogym.member.entity.Member;
 import com.gogym.member.jwt.JwtTokenProvider;
 import com.gogym.member.repository.BanNicknameRepository;
 import com.gogym.member.repository.MemberRepository;
-import com.gogym.member.type.MemberStatus;
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class AuthService {
 
-  // TODO : 서버 주소 또는 도메인 파면 변경해야할 부분
   private final MemberService memberService;
 
   private final MemberRepository memberRepository;
@@ -34,7 +32,7 @@ public class AuthService {
 
   // 회원가입 처리
   @Transactional
-  public void signUp(SignUpRequest request) {
+  public void signUp(SignUpRequest request, boolean isKakao) {
     // 이메일 중복 확인
     emailService.validateEmail(request.getEmail());
 
@@ -43,6 +41,11 @@ public class AuthService {
 
     // 회원 데이터 저장
     memberRepository.save(member);
+
+    // isKakao가 true인 경우 추가 처리
+    if (isKakao) {
+      completeKakaoSignUp(request.getEmail());
+    }
   }
 
   // 로그인 처리
@@ -73,27 +76,25 @@ public class AuthService {
   // 비밀번호 재설정 처리
   @Transactional
   public void resetPassword(HttpServletRequest request, ResetPasswordRequest resetRequest) {
-    // JWT 토큰 추출
+    // JWT 토큰 추출 및 인증
     String token = jwtTokenProvider.extractToken(request);
     if (token == null || token.isEmpty()) {
       throw new CustomException(ErrorCode.UNAUTHORIZED);
     }
-
-    // 인증 정보 추출
     Authentication authentication = jwtTokenProvider.getAuthentication(token);
     if (authentication == null || authentication.getName() == null) {
       throw new CustomException(ErrorCode.UNAUTHORIZED);
     }
-
     String authenticatedEmail = authentication.getName();
-
-    // 요청 이메일과 인증된 이메일 비교
     if (!authenticatedEmail.equals(resetRequest.getEmail())) {
       throw new CustomException(ErrorCode.FORBIDDEN);
     }
 
-    // 이메일로 사용자 조회 및 비밀번호 재설정
+    // 이메일로 사용자 조회 및 기존 비밀번호 확인
     Member member = memberService.findByEmail(resetRequest.getEmail());
+    validateCurrentPassword(resetRequest.getCurrentPassword(), member.getPassword());
+
+    // 비밀번호 재설정
     member.setPassword(passwordEncoder.encode(resetRequest.getNewPassword()));
     memberRepository.save(member);
   }
@@ -169,6 +170,23 @@ public class AuthService {
   public Member getMemberByEmail(String email) {
     return memberService.findByEmail(email);
 
+  }
+
+  // 현재 비밀번호를 검증
+  private void validateCurrentPassword(String inputPassword, String storedPassword) {
+    if (!passwordEncoder.matches(inputPassword, storedPassword)) {
+      throw new CustomException(ErrorCode.UNAUTHORIZED); // 기존 비밀번호가 틀린 경우
+    }
+  }
+
+  // 카카오 회원가입 업데이트 로직
+  @Transactional
+  public void completeKakaoSignUp(String email) {
+    Member member = memberRepository.findByEmail(email)
+        .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
+
+    // isKakao 값을 true로 업데이트
+    member.setKakao(true);
   }
 
 }

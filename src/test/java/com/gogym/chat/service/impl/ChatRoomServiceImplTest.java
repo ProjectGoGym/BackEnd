@@ -36,6 +36,7 @@ import com.gogym.exception.ErrorCode;
 import com.gogym.member.entity.Member;
 import com.gogym.member.service.MemberService;
 import com.gogym.post.entity.Post;
+import com.gogym.post.service.PostQueryService;
 import com.gogym.post.service.PostService;
 import com.gogym.post.type.PostStatus;
 
@@ -50,10 +51,12 @@ class ChatRoomServiceImplTest {
 
   @Mock
   private MemberService memberService;
-
+/*
   @Mock
   private PostService postService;
-
+*/
+  @Mock
+  private PostQueryService postQueryService;
   @Mock
   private ChatRedisServiceImpl chatRedisService;
 
@@ -97,8 +100,10 @@ class ChatRoomServiceImplTest {
         .author(this.postAuthor)
         .build();
 
-    when(this.postService.getPostAuthor(postId)).thenReturn(this.postAuthor);
-    when(this.postService.findById(postId)).thenReturn(mockPost);
+    //when(this.postService.getPostAuthor(postId)).thenReturn(this.postAuthor);
+    when(this.postQueryService.getPostAuthor(postId)).thenReturn(this.postAuthor);
+    //when(this.postService.findById(postId)).thenReturn(mockPost);
+    when(this.postQueryService.findById(postId)).thenReturn(mockPost);
 
     // 이미 존재하는 채팅방 여부 확인
     when(this.chatRoomRepository.existsByPostIdAndRequestorId(postId, this.postAuthor.getId())).thenReturn(false);

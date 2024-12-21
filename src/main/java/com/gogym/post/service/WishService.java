@@ -24,7 +24,8 @@ public class WishService {
 
   private final MemberService memberService;
 
-  private final PostService postService;
+  //private final PostService postService;
+  private final PostQueryService postQueryService;
 
   private final WishRepository wishRepository;
 
@@ -36,7 +37,8 @@ public class WishService {
 
     Member member = memberService.findById(memberId);
 
-    Post post = postService.findById(postId);
+    //Post post = postService.findById(postId);
+    Post post = postQueryService.findById(postId);
 
     Wish existingWish = wishRepository.findByMemberAndPost(member, post).orElse(null);
 

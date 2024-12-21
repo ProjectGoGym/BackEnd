@@ -3,19 +3,27 @@ package com.gogym.post.service;
 import static com.gogym.exception.ErrorCode.DELETED_POST;
 import static com.gogym.exception.ErrorCode.FORBIDDEN;
 import static com.gogym.exception.ErrorCode.POST_NOT_FOUND;
+import static com.gogym.exception.ErrorCode.REQUEST_VALIDATION_FAIL;
 import static com.gogym.post.type.MembershipType.MEMBERSHIP_ONLY;
+import static com.gogym.post.type.PostStatus.COMPLETED;
 import static com.gogym.post.type.PostStatus.HIDDEN;
-import static com.gogym.post.type.PostStatus.POSTING;
+import static com.gogym.post.type.PostStatus.IN_PROGRESS;
+import static com.gogym.post.type.PostStatus.PENDING;
 import static com.gogym.post.type.PostType.SELL;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.gogym.chat.entity.ChatRoom;
+import com.gogym.chat.repository.ChatRoomRepository;
+import com.gogym.chat.service.ChatRoomService;
 import com.gogym.exception.CustomException;
+import com.gogym.gympay.service.TransactionService;
 import com.gogym.member.entity.Member;
 import com.gogym.member.repository.MemberRepository;
 import com.gogym.member.service.MemberService;
@@ -27,6 +35,7 @@ import com.gogym.post.entity.Gym;
 import com.gogym.post.entity.Post;
 import com.gogym.post.repository.GymRepository;
 import com.gogym.post.repository.PostRepository;
+import com.gogym.post.type.PostStatus;
 import com.gogym.region.dto.RegionResponseDto;
 import com.gogym.region.entity.Region;
 import com.gogym.region.service.RegionService;
@@ -45,6 +54,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class PostServiceTest {
@@ -73,6 +83,15 @@ class PostServiceTest {
   @Mock
   private RecentViewService recentViewService;
 
+  @Mock
+  private ChatRoomService chatRoomService;
+
+  @Mock
+  private ChatRoomRepository chatRoomRepository;
+
+  @Mock
+  private TransactionService transactionService;
+
   @InjectMocks
   private PostService postService;
 
@@ -87,15 +106,20 @@ class PostServiceTest {
   private Page<Post> posts;
   private PostUpdateRequestDto postUpdateRequestDto;
   private PostUpdateRequestDto postDeleteRequestDto;
+  private ChatRoom chatRoom;
+  private Member seller;
+  private Member buyer;
+  private PostStatus status;
 
   @BeforeEach
   void setUp() {
 
     member = Member.builder()
-        .id(1L)
         .regionId1(1L)
         .regionId2(2L)
         .build();
+    ReflectionTestUtils.setField(member, "id", 1L);
+
     parent = Region.builder()
         .id(1L)
         .name("도시")
@@ -126,7 +150,7 @@ class PostServiceTest {
 
     regionIds = List.of(1L, 2L);
 
-    postUpdateRequestDto = new PostUpdateRequestDto("수정 제목", "내용", SELL, POSTING, MEMBERSHIP_ONLY,
+    postUpdateRequestDto = new PostUpdateRequestDto("수정 제목", "내용", SELL, PENDING, MEMBERSHIP_ONLY,
         LocalDate.now().plusMonths(1), null, 1000L, null, null, null);
 
     postDeleteRequestDto = new PostUpdateRequestDto("제목", "내용", SELL, HIDDEN, MEMBERSHIP_ONLY,
@@ -150,7 +174,7 @@ class PostServiceTest {
     // given
     posts = new PageImpl<>(List.of(post), pageable, 1);
 
-    when(postRepository.findAllByStatusOrderByCreatedAtDesc(pageable, POSTING)).thenReturn(posts);
+    when(postRepository.findAllByStatusOrderByCreatedAtDesc(pageable, PENDING)).thenReturn(posts);
     // when
     Page<PostPageResponseDto> result = postService.getAllPosts(null, pageable);
     // then
@@ -165,7 +189,7 @@ class PostServiceTest {
     posts = new PageImpl<>(List.of(post), pageable, 1);
 
     when(memberService.findById(member.getId())).thenReturn(member);
-    when(postRepository.findAllByStatusAndRegionIds(POSTING, pageable, regionIds)).thenReturn(
+    when(postRepository.findAllByStatusAndRegionIds(PENDING, pageable, regionIds)).thenReturn(
         posts);
     // when
     Page<PostPageResponseDto> result = postService.getAllPosts(member.getId(), pageable);
@@ -180,10 +204,10 @@ class PostServiceTest {
     // given
     posts = new PageImpl<>(List.of(post), pageable, 1);
     member = Member.builder()
-        .id(1L)
         .regionId1(null)
         .regionId2(null)
         .build();
+    ReflectionTestUtils.setField(member, "id", 1L);
 
     when(memberService.findById(member.getId())).thenReturn(member);
     // when
@@ -235,12 +259,13 @@ class PostServiceTest {
   @Test
   void 게시글_작성자가_아니면_예외가_발생한다() {
     // given
-    Member anotherMember = Member.builder().id(2L).build();
+    Member anotherMember = Member.builder().regionId1(10L).regionId2(11L).build();
+    ReflectionTestUtils.setField(anotherMember, "id", 2L);
     when(postRepository.findById(post.getId())).thenReturn(Optional.of(post));
-    when(memberService.findById(member.getId())).thenReturn(anotherMember);
+    doReturn(anotherMember).when(memberService).findById(anotherMember.getId());
     // when
     CustomException e = assertThrows(CustomException.class,
-        () -> postService.updatePost(member.getId(), post.getId(), postUpdateRequestDto));
+        () -> postService.updatePost(anotherMember.getId(), post.getId(), postUpdateRequestDto));
     // then
     assertEquals(e.getErrorCode(), FORBIDDEN);
     assertEquals(e.getMessage(), "권한이 없습니다.");
@@ -260,5 +285,77 @@ class PostServiceTest {
     assertEquals(post.getStatus(), HIDDEN);
     assertEquals(e.getErrorCode(), DELETED_POST);
     assertEquals(e.getMessage(), "삭제된 게시글입니다.");
+  }
+
+  @Test
+  void 게시글의_상태를_성공적으로_변경한다() {
+    // given
+    seller = Member.builder().build();
+    ReflectionTestUtils.setField(seller, "id", 1L);
+
+    buyer = Member.builder().build();
+    ReflectionTestUtils.setField(buyer, "id", 2L);
+
+    chatRoom = ChatRoom.builder().post(post).requestor(buyer).build();
+    ReflectionTestUtils.setField(chatRoom, "id", 1L);
+
+    post = Post.builder().author(seller).status(PENDING).chatRoom(List.of(chatRoom)).build();
+    status = IN_PROGRESS;
+
+    when(postRepository.findById(post.getId())).thenReturn(Optional.of(post));
+    when(memberService.findById(seller.getId())).thenReturn(seller);
+    // when
+    postService.changePostStatus(seller.getId(), post.getId(), chatRoom.getId(), status);
+    // then
+    assertEquals(post.getStatus(), IN_PROGRESS);
+  }
+
+  @Test
+  void 게시글의_상태변경이_유효하지_않으면_예외가_발생한다() {
+    // given
+    seller = Member.builder().build();
+    ReflectionTestUtils.setField(seller, "id", 1L);
+
+    buyer = Member.builder().build();
+    ReflectionTestUtils.setField(buyer, "id", 2L);
+
+    chatRoom = ChatRoom.builder().post(post).requestor(buyer).build();
+    ReflectionTestUtils.setField(chatRoom, "id", 1L);
+
+    post = Post.builder().author(seller).status(COMPLETED).chatRoom(List.of(chatRoom)).build();
+    status = IN_PROGRESS;
+
+    when(postRepository.findById(post.getId())).thenReturn(Optional.of(post));
+    when(memberService.findById(seller.getId())).thenReturn(seller);
+    // when
+    CustomException e = assertThrows(CustomException.class,
+        () -> postService.changePostStatus(seller.getId(), post.getId(), chatRoom.getId(), status));
+    // then
+    assertEquals(e.getErrorCode(), REQUEST_VALIDATION_FAIL);
+    assertEquals(e.getMessage(), "'거래완료' 상태는 '거래중' 상태로 변경할 수 없습니다.");
+  }
+
+  @Test
+  void 게시글의_상태가_HIDDEN_이면_다른상태로_변경할_수_없다() {
+    // given
+    seller = Member.builder().build();
+    ReflectionTestUtils.setField(seller, "id", 1L);
+
+    buyer = Member.builder().build();
+    ReflectionTestUtils.setField(buyer, "id", 2L);
+    chatRoom = ChatRoom.builder().post(post).requestor(buyer).build();
+
+    ReflectionTestUtils.setField(chatRoom, "id", 1L);
+    post = Post.builder().author(seller).status(HIDDEN).chatRoom(List.of(chatRoom)).build();
+    status = IN_PROGRESS;
+
+    when(memberService.findById(seller.getId())).thenReturn(seller);
+    when(postRepository.findById(post.getId())).thenReturn(Optional.of(post));
+    // when
+    CustomException e = assertThrows(CustomException.class,
+        () -> postService.changePostStatus(seller.getId(), post.getId(), chatRoom.getId(), status));
+    // then
+    assertEquals(e.getErrorCode(), REQUEST_VALIDATION_FAIL);
+    assertEquals(e.getMessage(), "'숨김처리' 상태는 '거래중' 상태로 변경할 수 없습니다.");
   }
 }
