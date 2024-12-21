@@ -36,17 +36,11 @@ public class AuthService {
     // 이메일 중복 확인
     emailService.validateEmail(request.getEmail());
 
-    // Dto에서 Entity 변환
+    // DTO -> Entity 변환
     Member member = request.toEntity(passwordEncoder.encode(request.getPassword()));
 
     // 회원 데이터 저장
     memberRepository.save(member);
-
-    /*
-    // isKakao가 true인 경우 추가 처리
-    if (isKakao) {
-      completeKakaoSignUp(request.getEmail());
-    }*/
   }
 
   // 로그인 처리
