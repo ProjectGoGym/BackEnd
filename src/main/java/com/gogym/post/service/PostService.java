@@ -37,12 +37,15 @@ import com.gogym.post.type.PostStatus;
 import com.gogym.region.dto.RegionResponseDto;
 import com.gogym.region.service.RegionService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class PostService {
 
+  private static final Logger log = LoggerFactory.getLogger(PostService.class);
   private final PostRepository postRepository;
 
   private final MemberService memberService;
@@ -56,7 +59,7 @@ public class PostService {
   private final RecentViewService recentViewService;
 
   private final TransactionService transactionService;
-  
+
   private final PostQueryService postQueryService;
 
   @Transactional
@@ -221,7 +224,8 @@ public class PostService {
 
     Long transactionId = chatRoom.getTransactionId();
 
-    Transaction transaction = transactionService.getById(transactionId);
+    Transaction transaction =
+        transactionId == null ? null : transactionService.getById(transactionId);
 
     post.updateStatus(status);
 

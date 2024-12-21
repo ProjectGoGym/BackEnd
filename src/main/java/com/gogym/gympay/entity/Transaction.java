@@ -56,7 +56,6 @@ public class Transaction extends BaseEntity {
     this.seller = seller;
     this.buyer = buyer;
     this.status = TransactionStatus.STARTED;
-    this.chatRoom.setTransactionId(this.getId());
   }
 
   public void start() {
