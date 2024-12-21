@@ -28,8 +28,7 @@ public class WebConfig implements WebMvcConfigurer {
             "http://localhost:3001", "http://localhost:3000", "https://gogym-eight.vercel.app/")
         .allowedMethods("*") // 허용할 HTTP 메서드
         .allowedHeaders("*") // 모든 헤더 허용
-        //.exposedHeaders("*")  // 모든 헤더 노출
-        .exposedHeaders("Authorization", "Content-Type", "X-Requested-With") // 명시적으로 헤더 노출 시도
+        .exposedHeaders("Authorization", "Content-Type", "X-Requested-With") // 명시적으로
         .allowCredentials(true); // 자격증명(쿠키, 인증 헤더 등)을 포함하는 요청 허용
   }
 }
