@@ -1,6 +1,5 @@
 package com.gogym.chat.service;
 
-import com.gogym.chat.entity.ChatRoom;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import com.gogym.chat.dto.ChatRoomDto.ChatRoomResponse;
