@@ -35,6 +35,9 @@ public class GymPayHistory extends BaseEntity {
   @Column(name = "counterparty_id")
   private Long counterpartyId;
 
+  @Column(name = "post_id")
+  private Long postId;
+
   @ManyToOne(fetch = LAZY)
   @JoinColumn(name = "gymPay_id", nullable = false)
   private GymPay gymPay;

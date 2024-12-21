@@ -18,13 +18,14 @@ public class GymPayHistoryService {
   private final GymPayHistoryRepository gymPayHistoryRepository;
 
   @Transactional
-  public void save(TransferType transferType, int amount, int balance, Long counterpartyId, GymPay gymPay) {
+  public void save(TransferType transferType, int amount, int balance, Long counterpartyId, Long postId, GymPay gymPay) {
     GymPayHistory gymPayHistory = GymPayHistory.builder()
         .transferType(transferType)
         .amount(amount)
         .balance(balance)
         .counterpartyId(counterpartyId)
         .gymPay(gymPay)
+        .postId(postId)
         .build();
 
     gymPayHistoryRepository.save(gymPayHistory);
