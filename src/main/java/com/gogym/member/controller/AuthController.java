@@ -29,20 +29,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
   private final AuthService authService;
-  private final EmailService emailService;  
-  /*
+  private final EmailService emailService;
+
   // 회원가입
   @PostMapping("/sign-up")
-  public ResponseEntity<Void> signUp(@RequestBody @Valid SignUpRequest request,
-      @RequestParam(defaultValue = "false") boolean isKakao) {
-    authService.signUp(request, isKakao);
-    return ResponseEntity.status(HttpStatus.OK).build();
-  }
-  */
-  @PostMapping("/sign-up")
   public ResponseEntity<Void> signUp(@RequestBody @Valid SignUpRequest request) {
-      authService.signUp(request);
-      return ResponseEntity.status(HttpStatus.OK).build();
+    authService.signUp(request);
+    return ResponseEntity.status(HttpStatus.OK).build();
   }
 
   // 로그인
@@ -53,13 +46,8 @@ public class AuthController {
 
     // 사용자 정보를 가져오기
     Member member = authService.getMemberByEmail(request.getEmail());
-    LoginResponse loginResponse = new LoginResponse(
-        member.getId(),
-        member.getEmail(),
-        member.getName(),
-        member.getNickname(),
-        member.getPhone()
-    );
+    LoginResponse loginResponse = new LoginResponse(member.getId(), member.getEmail(),
+        member.getName(), member.getNickname(), member.getPhone());
 
     // HttpHeaders를 사용하여 헤더에 Authorization 추가
     HttpHeaders headers = new HttpHeaders();
