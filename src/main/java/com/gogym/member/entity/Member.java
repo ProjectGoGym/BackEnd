@@ -38,12 +38,15 @@ public class Member extends BaseEntity {
   @Setter
   private MemberStatus memberStatus;
 
+  @Setter
   @Column(name = "member_name", nullable = false)
   private String name;
 
+  @Setter
   @Column(name = "email", nullable = false, unique = true)
   private String email;
 
+  @Setter
   @Column(name = "nickname", nullable = false, unique = true)
   private String nickname;
 

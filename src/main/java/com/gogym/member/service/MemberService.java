@@ -63,10 +63,15 @@ public class MemberService {
     String maskedName = maskString(member.getName());
     String maskedNickname = maskString(member.getNickname());
     String maskedEmail = maskEmail(member.getEmail());
+    member.setName(maskedName);
+    member.setNickname(maskedNickname);
+    member.setEmail(maskedEmail);
 
     // BanNickname 저장
     BanNickname banNickname = new BanNickname(maskedNickname);
     banNicknameRepository.save(banNickname);
+    
+    memberRepository.save(member);
   }
 
   // 문자열 마스킹 (짝수 인덱스 문자만 '*')
