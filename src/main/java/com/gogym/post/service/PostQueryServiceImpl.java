@@ -32,4 +32,11 @@ public class PostQueryServiceImpl implements PostQueryService {
     return postRepository.findById(postId).orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
   }
   
+  @Override
+  public  boolean isWished(Post post, Long memberId) {
+    return post.getWishes() != null
+        ? post.getWishes().stream().anyMatch(wish -> wish.getMember().getId().equals(memberId))
+        : false;
+  }
+  
 }
