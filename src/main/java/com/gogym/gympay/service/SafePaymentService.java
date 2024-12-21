@@ -1,5 +1,7 @@
 package com.gogym.gympay.service;
 
+import com.gogym.chat.entity.ChatRoom;
+import com.gogym.chat.service.ChatRoomQueryService;
 import com.gogym.chat.type.MessageType;
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
@@ -11,12 +13,15 @@ import com.gogym.gympay.entity.constant.TransactionStatus;
 import com.gogym.gympay.event.SendMessageEvent;
 import com.gogym.gympay.repository.SafePaymentRepository;
 import com.gogym.member.entity.Member;
+import com.gogym.post.type.PostStatus;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -26,12 +31,20 @@ public class SafePaymentService {
 
   private final GymPayService gymPayService;
   private final TransactionService transactionService;
+  private final ChatRoomQueryService chatRoomQueryService;
 
   private final SafePaymentRepository safePaymentRepository;
 
   @Transactional
-  public Long save(Long requesterId, Long transactionId, int amount) {
-    Transaction transaction = transactionService.getById(transactionId);
+  public Long save(Long requesterId, Long chatRoomId, int amount) {
+    ChatRoom chatRoom = chatRoomQueryService.getChatRoomById(chatRoomId);
+    chatRoomQueryService.isMemberInChatRoom(chatRoomId, requesterId);
+
+    if (chatRoom.getPost().getStatus() != PostStatus.IN_PROGRESS) {
+      throw new CustomException(ErrorCode.NOT_IN_PROGRESS);
+    }
+
+    Transaction transaction = transactionService.getById(chatRoom.getTransactionId());
     validateTransactionStatus(transaction);
 
     Member seller = transaction.getSeller();
@@ -47,10 +60,24 @@ public class SafePaymentService {
     safePaymentRepository.save(safePayment);
 
     String message = String.format("안전결제를 요청했습니다. \n 금액 : %d원", amount);
-    eventPublisher.publishEvent(new SendMessageEvent(transaction.getChatRoom().getId(), requesterId, message,
-        MessageType.SYSTEM_SAFE_PAYMENT_REQUEST));
+    eventPublisher.publishEvent(
+        new SendMessageEvent(transaction.getChatRoom().getId(), requesterId, message,
+            MessageType.SYSTEM_SAFE_PAYMENT_REQUEST));
 
     return safePayment.getId();
+  }
+
+  @Transactional
+  public void changeStatus(Long chatRoomId, Long safePaymentId, String status, Long requesterId) {
+    ChatRoom chatRoom = chatRoomQueryService.getChatRoomById(chatRoomId);
+    chatRoomQueryService.isMemberInChatRoom(chatRoomId, requesterId);
+
+    switch (status) {
+      case "approve" -> approve(chatRoom.getPost().getId(), safePaymentId, requesterId);
+      case "reject" -> reject(safePaymentId, requesterId);
+      case "cancel" -> cancel(chatRoom.getPost().getId(), safePaymentId, requesterId);
+      case "complete" -> complete(chatRoom.getPost().getId(), safePaymentId, requesterId);
+    }
   }
 
   private RequesterRole determineRequesterRole(Long requesterId, Member seller) {
@@ -61,8 +88,7 @@ public class SafePaymentService {
     }
   }
 
-  @Transactional
-  public void approve(Long postId, Long safePaymentId, Long requesterId) {
+  private void approve(Long postId, Long safePaymentId, Long requesterId) {
     SafePayment safePayment = getById(safePaymentId);
 
     if (!Objects.equals(safePayment.getResponder().getId(), requesterId)) {
@@ -80,8 +106,7 @@ public class SafePaymentService {
             MessageType.SYSTEM_SAFE_PAYMENT_APPROVAL));
   }
 
-  @Transactional
-  public void reject(Long safePaymentId, Long requesterId) {
+  private void reject(Long safePaymentId, Long requesterId) {
     SafePayment safePayment = getById(safePaymentId);
 
     if (!Objects.equals(safePayment.getResponder().getId(), requesterId)) {
@@ -97,8 +122,7 @@ public class SafePaymentService {
             MessageType.SYSTEM_SAFE_PAYMENT_REJECTION));
   }
 
-  @Transactional
-  public void complete(Long postId, Long safePaymentId, Long requesterId) {
+  private void complete(Long postId, Long safePaymentId, Long requesterId) {
     SafePayment safePayment = getById(safePaymentId);
 
     if (!Objects.equals(safePayment.getBuyer().getId(), requesterId)) {
@@ -116,8 +140,7 @@ public class SafePaymentService {
             MessageType.SYSTEM_SAFE_PAYMENT_COMPLETE));
   }
 
-  @Transactional
-  public void cancel(Long postId, Long safePaymentId, Long requesterId) {
+  private void cancel(Long postId, Long safePaymentId, Long requesterId) {
     SafePayment safePayment = getById(safePaymentId);
 
     if (!(Objects.equals(safePayment.getBuyer().getId(), requesterId)
@@ -149,7 +172,7 @@ public class SafePaymentService {
         .noneMatch(safePayment -> SafePaymentStatus.COMPLETED.equals(safePayment.getStatus())
             || SafePaymentStatus.IN_PROGRESS.equals(safePayment.getStatus()));
 
-    if (canStart) {
+    if (!canStart) {
       throw new CustomException(ErrorCode.INVALID_STATUS_TRANSITION,
           "안전결제가 진행 중이거나 완료되면 안전거래를 요청할 수 없습니다.");
     }

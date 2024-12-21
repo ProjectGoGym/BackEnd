@@ -34,6 +34,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.util.Pair;
@@ -45,6 +47,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class PostService {
 
+  private static final Logger log = LoggerFactory.getLogger(PostService.class);
   private final PostRepository postRepository;
 
   private final MemberService memberService;
@@ -219,7 +222,8 @@ public class PostService {
 
     Long transactionId = chatRoom.getTransactionId();
 
-    Transaction transaction = transactionService.getById(transactionId);
+    Transaction transaction =
+        transactionId == null ? null : transactionService.getById(transactionId);
 
     post.updateStatus(status);
 
@@ -304,9 +308,10 @@ public class PostService {
 
   // 게시글에서 채팅방의 존재를 확인하는 메서드 입니다.
   private ChatRoom getChatRoom(Post post, Long chatRoomId) {
-
-    return post.getChatRoom().stream().filter(room -> room.getId().equals(chatRoomId))
-        .findFirst().orElseThrow(() -> new CustomException(CHATROOM_NOT_FOUND));
+    return post.getChatRoom().stream()
+        .filter(room -> room.getId().equals(chatRoomId))
+        .findFirst()
+        .orElseThrow(() -> new CustomException(CHATROOM_NOT_FOUND));
   }
 
   // 게시글 수정 시 게시글 작성자 보인인지 확인하는 메서드 입니다.

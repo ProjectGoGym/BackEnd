@@ -111,7 +111,7 @@ public class PostController {
   }
 
   // 게시글의 상태를 변경합니다.
-  @PatchMapping("/{post-id}/change")
+  @PutMapping("/{post-id}/change")
   public ResponseEntity<Void> changePostStatus(
       @LoginMemberId Long memberId,
       @PathVariable("post-id") Long postId,
