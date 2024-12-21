@@ -39,10 +39,7 @@ class WishServiceTest {
 
   @Mock
   private WishRepository wishRepository;
-/*
-  @Mock
-  private PostService postService;
-*/
+  
   @Mock
   private PostQueryService postQueryService;
   @Mock
