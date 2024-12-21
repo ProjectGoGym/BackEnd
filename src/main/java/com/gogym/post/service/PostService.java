@@ -58,6 +58,9 @@ public class PostService {
   private final RecentViewService recentViewService;
 
   private final TransactionService transactionService;
+  
+  //
+  private final PostQueryService postQueryService;
 
   @Transactional
   public PostResponseDto createPost(Long memberId, PostRequestDto postRequestDto) {
@@ -113,7 +116,8 @@ public class PostService {
   // 게시글의 상세 페이지를 조회합니다. 비회원의 경우 읽기 처리만 하고, 회원의 경우 최근본 게시글로 저장이 됩니다.
   public PostResponseDto getDetailPost(Long memberId, Long postId) {
 
-    Post post = findById(postId);
+    //Post post = findById(postId);
+    Post post = postQueryService.findById(postId);
 
     // 숨김처리 된 게시글은 조회가 불가능합니다.
     if (post.getStatus() == HIDDEN) {
@@ -141,7 +145,8 @@ public class PostService {
 
     Member member = memberService.findById(memberId);
 
-    Post post = findById(postId);
+    //Post post = findById(postId);
+    Post post = postQueryService.findById(postId);
 
     boolean isWished = isWished(post, memberId);
 
@@ -199,7 +204,8 @@ public class PostService {
   public void changePostStatus(Long memberId, Long postId, Long chatRoomId, PostStatus status) {
 
     Member member = memberService.findById(memberId);
-    Post post = findById(postId);
+    //Post post = findById(postId);
+    Post post = postQueryService.findById(postId);
     ChatRoom chatRoom = getChatRoom(post, chatRoomId);
 
     validatePostAuthor(member, post);
@@ -274,7 +280,7 @@ public class PostService {
       throw new CustomException(ALREADY_TRANSACTION);
     }
   }
-
+/*
   // 주어진 게시글 ID 로 게시글을 찾습니다.
   public Post findById(Long postId) {
 
@@ -292,7 +298,7 @@ public class PostService {
       return post.getAuthor();
     }
   }
-
+*/
   // 특정 게시글의 회원의 찜 여부를 확인하는 메서드 입니다.
   private boolean isWished(Post post, Long memberId) {
 
