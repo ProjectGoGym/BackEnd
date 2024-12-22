@@ -49,9 +49,18 @@ public class NotificationService {
     emitters.put(memberId, emitter);
 
     // 클라이언트 연결 종료, 만료, 에러 처리
-    emitter.onCompletion(() -> removeEmitter(memberId));
-    emitter.onTimeout(() -> removeEmitter(memberId));
-    emitter.onError((e) -> removeEmitter(memberId));
+    emitter.onCompletion(() -> {
+      log.info("👍SSE 구독 정상 해제 (memberId : {}),", memberId);
+      removeEmitter(memberId);
+    });
+    emitter.onTimeout(() -> {
+      log.warn("🕰️SSE 구독 타임 아웃 (memberId : {}),", memberId);
+      removeEmitter(memberId);
+    });
+    emitter.onError((e) -> {
+      log.error("🚨SSE 구독 알수없는 에러 발생 \n📍memberId: {}, \n📍에러: {}", memberId, e.getMessage());
+      removeEmitter(memberId);
+    });
 
     sendDummyData(memberId, emitter);
 
@@ -72,6 +81,7 @@ public class NotificationService {
           emitter.send(SseEmitter.event()
               .name("dummy")
               .data("connecting..."));
+          log.info("✅ 더미 이벤트 발송 완료!: {}", memberId);
         } catch (IOException e) {
           log.error("🚨 더미 이벤트 발송 중 예외 발생!: {}", e.getMessage());
           removeEmitter(memberId);
@@ -104,6 +114,7 @@ public class NotificationService {
         emitter.send(SseEmitter.event()
             .name("notification")
             .data(notificationDto));
+        log.info("✅ 알림 이벤트 발송 완료!: {}", memberId);
       } catch (IOException e) {
         log.error("🚨 알림 이벤트 발송 중 예외 발생!: {}", e.getMessage());
         removeEmitter(memberId);
