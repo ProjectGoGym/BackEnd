@@ -56,17 +56,20 @@ public class MemberService {
   @Transactional
   public void deactivateMyAccountById(Long memberId) {
     Member member = findById(memberId);
+
+    // BanNickname 저장을 위한 원본 닉네임 저장
+    String originalNickname = member.getNickname();
+    
+    BanNickname banNickname = new BanNickname(originalNickname);
+    banNicknameRepository.save(banNickname);
+    
     member.setMemberStatus(MemberStatus.DEACTIVATED); // 상태 변경
 
     // 이름, 닉네임, 이메일 마스킹 및 민감 정보 초기화(엔티티에서 수정)
     String maskedName = maskString(member.getName());
-    String maskedNickname = maskString(member.getNickname());
+    String maskedNickname = maskString(originalNickname);
     String maskedEmail = maskEmail(member.getEmail());
     member.maskSensitiveInfo(maskedName, maskedNickname, maskedEmail);
-
-    // BanNickname 저장
-    BanNickname banNickname = new BanNickname(maskedNickname);
-    banNicknameRepository.save(banNickname);
 
     memberRepository.save(member);
   }
