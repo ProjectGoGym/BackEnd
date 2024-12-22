@@ -7,8 +7,6 @@ import org.springframework.data.domain.Pageable;
 
 public interface GymPayHistoryRepositoryCustom {
 
-  Page<GetHistory> getAllHistoriesByGymPayId(Long id, Pageable pageable);
-
   Page<GetHistory> getAllHistoriesByGymPayIdAndPeriod(Long memberId, LocalDateTime startDate,
       LocalDateTime endDate, Pageable pageable);
 }

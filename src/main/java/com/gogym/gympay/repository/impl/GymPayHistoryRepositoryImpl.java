@@ -20,34 +20,6 @@ public class GymPayHistoryRepositoryImpl implements GymPayHistoryRepositoryCusto
 
   private final JPAQueryFactory queryFactory;
 
-  public Page<GetHistory> getAllHistoriesByGymPayId(Long memberId, Pageable pageable) {
-    List<GetHistory> histories = queryFactory.select(new QGetHistory(
-            gymPayHistory.id,
-            gymPayHistory.amount,
-            gymPayHistory.balance,
-            gymPayHistory.transferType,
-            gymPayHistory.counterpartyId,
-            member.nickname,
-            post.id,
-            post.title,
-            gymPayHistory.createdAt
-        ))
-        .from(gymPayHistory)
-        .leftJoin(member).on(gymPayHistory.counterpartyId.eq(member.id))
-        .leftJoin(post).on(gymPayHistory.postId.eq(post.id))
-        .where(gymPayHistory.gymPay.member.id.eq(memberId))
-        .offset(pageable.getOffset())
-        .limit(pageable.getPageSize())
-        .fetch();
-
-    Long total = queryFactory.select(gymPayHistory.count())
-        .from(gymPayHistory)
-        .where(gymPayHistory.gymPay.member.id.eq(memberId))
-        .fetchOne();
-
-    return new PageImpl<>(histories, pageable, total);
-  }
-
   @Override
   public Page<GetHistory> getAllHistoriesByGymPayIdAndPeriod(Long memberId, LocalDateTime startDate,
       LocalDateTime endDate, Pageable pageable) {
