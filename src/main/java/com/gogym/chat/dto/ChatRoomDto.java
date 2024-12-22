@@ -16,10 +16,11 @@ public class ChatRoomDto {
       String lastMessage,
       LocalDateTime lastMessageAt,
       boolean postAuthorActive,
-      boolean requestorActive) {}
+      boolean requestorActive
+  ) {}
 
   public record LeaveRequest(
-      @NotNull
-      LocalDateTime leaveAt) {}
+      @NotNull LocalDateTime leaveAt
+  ) {}
 
 }
