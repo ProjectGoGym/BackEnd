@@ -10,6 +10,7 @@ import com.gogym.gympay.entity.Transaction;
 import com.gogym.gympay.entity.constant.RequesterRole;
 import com.gogym.gympay.entity.constant.SafePaymentStatus;
 import com.gogym.gympay.entity.constant.TransactionStatus;
+import com.gogym.gympay.entity.constant.TransferType;
 import com.gogym.gympay.event.SendMessageEvent;
 import com.gogym.gympay.repository.SafePaymentRepository;
 import com.gogym.member.entity.Member;
@@ -62,7 +63,7 @@ public class SafePaymentService {
     String message = String.format("안전결제를 요청했습니다. \n 금액 : %d원", amount);
     eventPublisher.publishEvent(
         new SendMessageEvent(transaction.getChatRoom().getId(), requesterId, message,
-            MessageType.SYSTEM_SAFE_PAYMENT_REQUEST));
+            MessageType.SYSTEM_SAFE_PAYMENT_REQUEST, safePayment.getId(), safePayment.getStatus()));
 
     return safePayment.getId();
   }
@@ -97,13 +98,13 @@ public class SafePaymentService {
 
     safePayment.approve();
     gymPayService.withdraw(safePayment.getBuyer().getGymPay(),
-        safePayment.getAmount(), safePayment.getSeller().getId(), postId);
+        safePayment.getAmount(), safePayment.getSeller().getId(), postId, TransferType.WITHDRAWAL);
 
     String message = "안전결제를 수락했습니다.";
     eventPublisher.publishEvent(
         new SendMessageEvent(safePayment.getTransaction().getChatRoom().getId(), requesterId,
             message,
-            MessageType.SYSTEM_SAFE_PAYMENT_APPROVAL));
+            MessageType.SYSTEM_SAFE_PAYMENT_APPROVAL,safePayment.getId(), safePayment.getStatus()));
   }
 
   private void reject(Long safePaymentId, Long requesterId) {
@@ -119,7 +120,7 @@ public class SafePaymentService {
     eventPublisher.publishEvent(
         new SendMessageEvent(safePayment.getTransaction().getChatRoom().getId(), requesterId,
             message,
-            MessageType.SYSTEM_SAFE_PAYMENT_REJECTION));
+            MessageType.SYSTEM_SAFE_PAYMENT_REJECTION, safePayment.getId(), safePayment.getStatus()));
   }
 
   private void complete(Long postId, Long safePaymentId, Long requesterId) {
@@ -131,13 +132,13 @@ public class SafePaymentService {
 
     safePayment.complete();
     gymPayService.deposit(safePayment.getSeller().getGymPay(),
-        safePayment.getAmount(), safePayment.getBuyer().getId(), postId);
+        safePayment.getAmount(), safePayment.getBuyer().getId(), postId, TransferType.DEPOSIT);
 
     String message = String.format("안전결제가 완료되었습니다. \n 금액 : %d원", safePayment.getAmount());
     eventPublisher.publishEvent(
         new SendMessageEvent(safePayment.getTransaction().getChatRoom().getId(), requesterId,
             message,
-            MessageType.SYSTEM_SAFE_PAYMENT_COMPLETE));
+            MessageType.SYSTEM_SAFE_PAYMENT_COMPLETE, safePayment.getId(), safePayment.getStatus()));
   }
 
   private void cancel(Long postId, Long safePaymentId, Long requesterId) {
@@ -150,7 +151,7 @@ public class SafePaymentService {
 
     if (safePayment.getStatus().equals(SafePaymentStatus.IN_PROGRESS)) {
       gymPayService.deposit(safePayment.getBuyer().getGymPay(),
-          safePayment.getAmount(), safePayment.getSeller().getId(), postId);
+          safePayment.getAmount(), safePayment.getSeller().getId(), postId, TransferType.CANCEL_WITHDRAWAL);
     }
 
     safePayment.cancel();
@@ -159,7 +160,7 @@ public class SafePaymentService {
     eventPublisher.publishEvent(
         new SendMessageEvent(safePayment.getTransaction().getChatRoom().getId(), requesterId,
             message,
-            MessageType.SYSTEM_SAFE_PAYMENT_CANCEL));
+            MessageType.SYSTEM_SAFE_PAYMENT_CANCEL, safePayment.getId(), safePayment.getStatus()));
   }
 
   private void validateTransactionStatus(Transaction transaction) {
