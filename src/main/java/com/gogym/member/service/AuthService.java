@@ -193,26 +193,4 @@ public class AuthService {
     member.setKakao(true);
   }
 
-  // 토큰 갱신
-  @Transactional
-  public String refreshAccessToken(String refreshToken) {
-    // Refresh Token 유효성 검증
-    if (!jwtTokenProvider.validateToken(refreshToken)) {
-      throw new CustomException(ErrorCode.UNAUTHORIZED);
-    }
-
-    // Redis에서 Refresh Token 조회
-    Long memberId = jwtTokenProvider.extractMemberId(refreshToken);
-    String redisKey = "refresh:" + memberId;
-    String storedToken = redisService.get(redisKey);
-
-    if (storedToken == null || !storedToken.equals(refreshToken)) {
-      throw new CustomException(ErrorCode.UNAUTHORIZED);
-    }
-
-    // 새로운 Access Token 생성
-    String email = jwtTokenProvider.getClaims(refreshToken).getSubject();
-    return jwtTokenProvider.createToken(email, memberId, List.of("ROLE_USER"));
-  }
-
 }

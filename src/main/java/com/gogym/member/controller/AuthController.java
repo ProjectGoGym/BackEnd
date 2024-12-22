@@ -35,9 +35,8 @@ public class AuthController {
 
   // 회원가입
   @PostMapping("/sign-up")
-  public ResponseEntity<Void> signUp(@RequestBody @Valid SignUpRequest request,
-      @RequestParam(name = "isKakao", defaultValue = "false") boolean isKakao) {
-    authService.signUp(request, isKakao);
+  public ResponseEntity<Void> signUp(@RequestBody @Valid SignUpRequest request) {
+    authService.signUp(request);
     return ResponseEntity.status(HttpStatus.OK).build();
   }
 
@@ -54,7 +53,7 @@ public class AuthController {
     LoginResponse loginResponse = new LoginResponse(member.getId(), member.getEmail(),
         member.getName(), member.getNickname(), member.getPhone());
 
-    // HttpHeaders에 Access Token과 Refresh Token 추가
+    // HttpHeaders를 사용하여 헤더에 Authorization 추가
     HttpHeaders headers = new HttpHeaders();
     headers.add("Authorization", "Bearer " + accessToken);
     headers.add("Refresh-Token", refreshToken);
@@ -111,16 +110,5 @@ public class AuthController {
     emailService.sendVerificationEmail(email);
     return ResponseEntity.ok().build();
   }
-
-  // 토큰 갱신
-  @PostMapping("/refresh-token")
-  public ResponseEntity<Map<String, String>> refreshAccessToken(
-      @RequestBody Map<String, String> request) {
-    String refreshToken = request.get("refreshToken");
-    String newAccessToken = authService.refreshAccessToken(refreshToken);
-
-    Map<String, String> response = new HashMap<>();
-    response.put("accessToken", newAccessToken);
-    return ResponseEntity.ok(response);
-  }
+  
 }

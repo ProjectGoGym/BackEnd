@@ -282,42 +282,6 @@ class AuthServiceTest {
     verify(emailService).validateEmail(signUpRequest.getEmail());
     verify(memberRepository).save(any(Member.class));
     verify(memberRepository).findByEmail(signUpRequest.getEmail());
-  }
-
-  @Test
-  void 리프레쉬_토큰으로_새로운_AccessToken_발급이_성공한다() {
-    // Mock 데이터 설정
-    String refreshToken = "validRefreshToken";
-    String email = "test@example.com";
-    Long memberId = 123L;
-    String newAccessToken = "newAccessToken";
-
-    // Refresh Token 유효성 검증
-    when(jwtTokenProvider.validateToken(refreshToken)).thenReturn(true);
-
-    // Refresh Token에서 Member ID와 Email 추출
-    when(jwtTokenProvider.extractMemberId(refreshToken)).thenReturn(memberId);
-    Claims claims = mock(Claims.class);
-    when(jwtTokenProvider.getClaims(refreshToken)).thenReturn(claims);
-    when(claims.getSubject()).thenReturn(email);
-
-    // Redis에서 Refresh Token 조회
-    when(redisService.get("refresh:" + memberId)).thenReturn(refreshToken);
-
-    // 새로운 Access Token 생성
-    when(jwtTokenProvider.createToken(eq(email), eq(memberId), eq(List.of("ROLE_USER"))))
-        .thenReturn(newAccessToken);
-
-    // 테스트 실행
-    String refreshedToken = authService.refreshAccessToken(refreshToken);
-
-    // 검증
-    assertNotNull(refreshedToken);
-    assertEquals(newAccessToken, refreshedToken);
-    verify(jwtTokenProvider).validateToken(refreshToken); // 유효성 검증 호출 확인
-    verify(jwtTokenProvider).extractMemberId(refreshToken); // Member ID 추출 호출 확인
-    verify(redisService).get("refresh:" + memberId); // Redis 조회 호출 확인
-    verify(jwtTokenProvider).createToken(eq(email), eq(memberId), eq(List.of("ROLE_USER")));
-  }
+  }*/
 
 }
