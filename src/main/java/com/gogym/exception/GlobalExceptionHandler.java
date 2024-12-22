@@ -2,10 +2,12 @@ package com.gogym.exception;
 
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.async.AsyncRequestTimeoutException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -73,5 +75,20 @@ public class GlobalExceptionHandler {
 
     return ResponseEntity.status(e.getStatusCode()).body(response);
   }
-}
 
+  @ExceptionHandler(AsyncRequestTimeoutException.class)
+  public ResponseEntity<String> handleAsyncRequestTimeoutException(AsyncRequestTimeoutException e) {
+    log.info("SSE Connection Timeout: {}", e.getMessage());
+
+    return ResponseEntity.noContent().build();
+  }
+  @ExceptionHandler(RuntimeException.class)
+  public ResponseEntity<String> handleRuntimeException(RuntimeException e) {
+    log.error("SSE RuntimeException: {}", e.getMessage());
+
+    String sseErrorResponse = "event: error\ndata: Unexpected error occurred\n\n";
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .contentType(MediaType.TEXT_EVENT_STREAM)
+        .body(sseErrorResponse);
+  }
+}
