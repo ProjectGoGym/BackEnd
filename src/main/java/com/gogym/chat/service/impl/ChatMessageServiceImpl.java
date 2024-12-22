@@ -27,10 +27,8 @@ import com.gogym.chat.type.MessageType;
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
 import com.gogym.gympay.event.SendMessageEvent;
-import com.gogym.post.dto.PostResponseDto;
+import com.gogym.post.dto.PostSummaryDto;
 import com.gogym.post.entity.Post;
-import com.gogym.post.service.PostQueryService;
-import com.gogym.region.service.RegionService;
 import com.gogym.util.JsonUtil;
 import lombok.RequiredArgsConstructor;
 
@@ -48,8 +46,6 @@ public class ChatMessageServiceImpl implements ChatMessageQueryService, ChatMess
   
   private final ChatRedisService chatRedisService;
   private final ChatRoomQueryService chatRoomQueryService;
-  private final PostQueryService postQueryService;
-  private final RegionService regionService;
   
   @Override
   public ChatRoomMessagesResponse getChatRoomMessagesAndPostInfo(Long memberId, Long chatRoomId, Pageable pageable) {
@@ -61,8 +57,8 @@ public class ChatMessageServiceImpl implements ChatMessageQueryService, ChatMess
     // Redis와 DB에서 메시지를 조회 및 변환
     Page<ChatMessageResponse> messagePage = this.getCombinedMessages(chatRoomId, pageable);
 
-    // 채팅방에 연결된 게시물 조회
-    PostResponseDto postResponseDto = this.getConnectedPost(memberId, chatRoomId);
+    // 채팅방에 연결된 게시물의 요약 정보 조회
+    PostSummaryDto postSummaryDto = this.getConnectedPost(chatRoomId);
     
     // leaveAt 조회
     LocalDateTime leaveAt = this.chatRoomRepository.findWithLeaveAtById(chatRoomId)
@@ -70,7 +66,7 @@ public class ChatMessageServiceImpl implements ChatMessageQueryService, ChatMess
         .orElse(null);
     
     // ChatRoomMessagesResponse 반환
-    return new ChatRoomMessagesResponse(messagePage, postResponseDto, leaveAt);
+    return new ChatRoomMessagesResponse(messagePage, postSummaryDto, leaveAt);
   }
   
   /**
@@ -142,22 +138,22 @@ public class ChatMessageServiceImpl implements ChatMessageQueryService, ChatMess
   }
   
   /**
-   * 특정 채팅방에 연결된 게시물을 조회.
+   * 특정 채팅방에 연결된 게시물의 요약된 정보들을 조회.
    * 
-   * @param memberId 사용자 ID
    * @param chatRoomId 채팅방 ID
-   * @return {@link PostResponseDto} 채팅방에 연결된 게시물 DTO
+   * @return {@link PostSummaryDto} 채팅방에 연결된 게시물 정보 요약 DTO
    */
-  private PostResponseDto getConnectedPost(Long memberId, Long chatRoomId) {
+  private PostSummaryDto getConnectedPost(Long chatRoomId) {
     // 채팅방에 연결된 게시물 조회
     Post post = this.chatRoomRepository.findById(chatRoomId)
         .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND)).getPost();
     
-    // PostResponseDto로 변환 후 반환
-    return PostResponseDto.fromEntity(
-        post,
-        this.regionService.findById(post.getGym().getRegionId()),
-        this.postQueryService.isWished(post, memberId));
+    // PostSummaryDto 변환 후 반환
+    return new PostSummaryDto(
+        post.getId(),
+        post.getTitle(),
+        post.getAmount(),
+        post.getStatus());
   }
   
   @EventListener
