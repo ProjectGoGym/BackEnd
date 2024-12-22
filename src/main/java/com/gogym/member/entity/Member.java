@@ -38,20 +38,16 @@ public class Member extends BaseEntity {
   @Setter
   private MemberStatus memberStatus;
 
-  @Setter
   @Column(name = "member_name", nullable = false)
   private String name;
 
-  @Setter
   @Column(name = "email", nullable = false, unique = true)
   private String email;
 
-  @Setter
   @Column(name = "nickname", nullable = false, unique = true)
   private String nickname;
 
   @Column(name = "phone", nullable = false)
-  @Setter
   private String phone;
 
   @Setter
@@ -96,5 +92,46 @@ public class Member extends BaseEntity {
     this.nickname = nickname;
     this.phone = phone;
     this.profileImageUrl = profileImageUrl;
+  }
+
+  // 정보 마스킹 메서드
+  public void masking() {
+    this.name = maskString(this.name);
+    this.nickname = maskString(this.nickname);
+    this.email = maskEmail(this.email);
+  }
+
+  private String maskString(String input) {
+    if (input == null || input.isEmpty()) {
+      return input;
+    }
+    StringBuilder masked = new StringBuilder(input);
+    for (int i = 0; i < input.length(); i++) {
+      if (i % 2 == 1) {
+        masked.setCharAt(i, '*');
+      }
+    }
+    return masked.toString();
+  }
+
+  private String maskEmail(String email) {
+    if (email == null || email.isEmpty()) {
+      return email;
+    }
+    String[] parts = email.split("@");
+    if (parts.length != 2) {
+      return email;
+    }
+    parts[0] = maskString(parts[0]);
+    return String.join("@", parts);
+  }
+
+  // 정보 마스킹 및 민감 정보 초기화
+  public void maskSensitiveInfo(String maskedName, String maskedNickname, String maskedEmail) {
+    this.name = maskedName;
+    this.nickname = maskedNickname;
+    this.email = maskedEmail;
+    this.phone = "010-****-****";
+    this.profileImageUrl = null;
   }
 }
