@@ -14,14 +14,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/chat-rooms")
+@RequestMapping("/api/chatrooms")
 public class SafePaymentController {
 
   private final SafePaymentService safePaymentService;
 
-  @PostMapping("/{chat-room-id}/safe-payments")
+  @PostMapping("/{chatroom-id}/safe-payments")
   public ResponseEntity<Long> create(@LoginMemberId Long requesterId,
-      @PathVariable("chat-room-id") Long chatRoomId,
+      @PathVariable("chatroom-id") Long chatRoomId,
       @RequestBody SafePaymentRequest request) {
 
     Long safePaymentId = safePaymentService.save(requesterId, chatRoomId, request.amount());
@@ -29,8 +29,8 @@ public class SafePaymentController {
     return ResponseEntity.ok(safePaymentId);
   }
 
-  @PutMapping("/{chat-room-id}/safe-payments/{safe-payment-id}/{status}")
-  public ResponseEntity<Void> changeStatus(@PathVariable("chat-room-id") Long chatRoomId,
+  @PutMapping("/{chatroom-id}/safe-payments/{safe-payment-id}/{status}")
+  public ResponseEntity<Void> changeStatus(@PathVariable("chatroom-id") Long chatRoomId,
       @PathVariable("safe-payment-id") Long safePaymentId,
       @PathVariable String status,
       @LoginMemberId Long requesterId) {

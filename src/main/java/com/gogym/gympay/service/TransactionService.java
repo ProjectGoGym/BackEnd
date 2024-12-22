@@ -65,7 +65,7 @@ public class TransactionService {
         .noneMatch(safePayment -> SafePaymentStatus.COMPLETED.equals(safePayment.getStatus())
             || SafePaymentStatus.IN_PROGRESS.equals(safePayment.getStatus()));
 
-    if (canCancel) {
+    if (!canCancel) {
       throw new CustomException(ErrorCode.INVALID_STATUS_TRANSITION,
           "안전결제가 진행 중이거나 완료되면 거래를 취소할 수 없습니다.");
     }
