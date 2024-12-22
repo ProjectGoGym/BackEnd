@@ -3,7 +3,7 @@ package com.gogym.chat.dto;
 import java.time.LocalDateTime;
 import org.springframework.data.domain.Page;
 import com.gogym.chat.type.MessageType;
-import com.gogym.post.dto.PostResponseDto;
+import com.gogym.post.dto.PostSummaryDto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -33,7 +33,7 @@ public class ChatMessageDto {
 
   public record ChatRoomMessagesResponse(
       Page<ChatMessageResponse> messages,
-      PostResponseDto post,
+      PostSummaryDto postSummary,
       LocalDateTime leaveAt) {}
 
 }
