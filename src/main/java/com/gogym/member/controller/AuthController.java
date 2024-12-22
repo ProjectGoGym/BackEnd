@@ -110,5 +110,4 @@ public class AuthController {
     emailService.sendVerificationEmail(email);
     return ResponseEntity.ok().build();
   }
-  
 }
