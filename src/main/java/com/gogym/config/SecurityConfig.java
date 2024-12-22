@@ -41,7 +41,7 @@ public class SecurityConfig {
   // SecurityFilterChain Bean 등록
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    http.csrf(csrf -> csrf.disable()).authorizeHttpRequests(auth -> auth
+    http.csrf().disable().cors(Customizer.withDefaults()).authorizeHttpRequests(auth -> auth
         // 인증 없이 접근을 허용할 엔드포인트
         .requestMatchers("/api/auth/sign-up", "/api/auth/sign-in", "/api/auth/check-email",
             "/api/auth/check-nickname", "/api/auth/verify-email", "/api/auth/reset-password",
