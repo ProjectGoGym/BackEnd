@@ -10,8 +10,12 @@ import com.gogym.gympay.entity.Transaction;
 import com.gogym.gympay.entity.constant.SafePaymentStatus;
 import com.gogym.gympay.repository.TransactionRepository;
 import com.gogym.member.entity.Member;
+import com.gogym.post.dto.PostPageResponseDto;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -74,5 +78,9 @@ public class TransactionService {
   public Transaction getById(Long id) {
     return transactionRepository.findById(id)
         .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_NOT_FOUND));
+  }
+
+  public Page<PostPageResponseDto> getMyTransactions(Long memberId, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable, String type) {
+    return transactionRepository.getMyTransactions(memberId, startDate, endDate, pageable, type);
   }
 }

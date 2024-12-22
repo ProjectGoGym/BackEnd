@@ -47,6 +47,9 @@ public class Transaction extends BaseEntity {
   @Enumerated(EnumType.STRING)
   private TransactionStatus status;
 
+  @Column(name = "completed_at")
+  private LocalDateTime completedAt;
+
   @Setter
   @Column(name = "meeting_at")
   private LocalDateTime meetingAt;
@@ -64,6 +67,7 @@ public class Transaction extends BaseEntity {
 
   public void complete() {
     changeStatus(TransactionStatus.COMPLETED);
+    this.completedAt = LocalDateTime.now();
   }
 
   public void cancel() {
