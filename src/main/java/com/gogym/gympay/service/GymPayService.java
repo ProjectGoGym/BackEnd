@@ -30,18 +30,18 @@ public class GymPayService {
   }
 
   @RedissonLock(key = "'gym-pay:' + #gymPay.id")
-  public void deposit(GymPay gymPay, int amount, Long counterpartyId, Long postId) {
+  public void deposit(GymPay gymPay, int amount, Long counterpartyId, Long postId, TransferType transferType) {
     if (gymPay == null) {
       throw new CustomException(ErrorCode.GYM_PAY_NOT_FOUND);
     }
 
     gymPay.deposit(amount);
-    gymPayHistoryService.save(TransferType.DEPOSIT, amount, gymPay.getBalance(), counterpartyId,
+    gymPayHistoryService.save(transferType, amount, gymPay.getBalance(), counterpartyId,
         postId, gymPay);
   }
 
   @RedissonLock(key = "'gym-pay:' + #gymPay.id")
-  public void withdraw(GymPay gymPay, int amount, Long counterpartyId, Long postId) {
+  public void withdraw(GymPay gymPay, int amount, Long counterpartyId, Long postId, TransferType transferType) {
     if (gymPay == null) {
       throw new CustomException(ErrorCode.GYM_PAY_NOT_FOUND);
     }
@@ -51,7 +51,7 @@ public class GymPayService {
     }
 
     gymPay.withdraw(amount);
-    gymPayHistoryService.save(TransferType.WITHDRAWAL, amount, gymPay.getBalance(), counterpartyId,
+    gymPayHistoryService.save(transferType, amount, gymPay.getBalance(), counterpartyId,
         postId, gymPay);
   }
 }

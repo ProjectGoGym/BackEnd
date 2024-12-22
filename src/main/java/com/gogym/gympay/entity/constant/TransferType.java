@@ -3,5 +3,8 @@ package com.gogym.gympay.entity.constant;
 public enum TransferType {
   DEPOSIT,
   WITHDRAWAL,
-  CHARGE
+  CHARGE,
+  CANCEL_DEPOSIT,
+  CANCEL_WITHDRAWAL,
+  CANCEL_CHARGE,
 }
