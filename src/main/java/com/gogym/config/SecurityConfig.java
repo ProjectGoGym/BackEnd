@@ -41,17 +41,20 @@ public class SecurityConfig {
   // SecurityFilterChain Bean 등록
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    http.csrf().disable().cors(Customizer.withDefaults()).authorizeHttpRequests(auth -> auth
-        // 인증 없이 접근을 허용할 엔드포인트
-        .requestMatchers("/api/auth/sign-up", "/api/auth/sign-in", "/api/auth/check-email",
-            "/api/auth/check-nickname", "/api/auth/verify-email", "/api/auth/reset-password",
-            "/api/auth/send-verification-email", "/api/regions", "/api/kakao/sign-in",
-            "/api/posts/views", "/api/posts/filters", "/api/posts/details/**",
-            "/api/payments/webhook", "/api/payments/sse/subscribe/**", "/api/images/presigned-url",
-            "/ws/**", "/api/notifications/subscribe/**")
-        .permitAll().requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-        // 그 외의 모든 요청은 인증 필요
-        .anyRequest().authenticated())
+    http.csrf().disable().cors(Customizer.withDefaults())
+    .authorizeHttpRequests(auth -> auth
+            // 인증 없이 접근을 허용할 엔드포인트
+            .requestMatchers("/api/auth/sign-up", "/api/auth/sign-in", "/api/auth/check-email",
+                "/api/auth/check-nickname", "/api/auth/verify-email", "/api/auth/reset-password",
+                "/api/auth/send-verification-email", "/api/regions", "/api/kakao/sign-in",
+                "/api/posts/views", "/api/posts/filters", "/api/posts/details/**",
+                "/api/payments/webhook",
+                "/api/payments/sse/subscribe/**", "/api/images/presigned-url", "/ws/**",
+                "/api/notifications/subscribe/**")
+            .permitAll()
+            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+            // 그 외의 모든 요청은 인증 필요
+            .anyRequest().authenticated())
         // JWT 인증 필터를 AuthenticationFilter 전에 추가
         .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
