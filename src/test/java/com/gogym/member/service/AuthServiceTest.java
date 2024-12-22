@@ -23,6 +23,7 @@ import com.gogym.member.entity.Member;
 import com.gogym.member.jwt.JwtTokenProvider;
 import com.gogym.member.repository.BanNicknameRepository;
 import com.gogym.member.repository.MemberRepository;
+import com.gogym.util.RedisService;
 import jakarta.servlet.http.HttpServletRequest;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -37,6 +38,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import io.jsonwebtoken.Claims;
+import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
@@ -61,6 +64,9 @@ class AuthServiceTest {
 
   @InjectMocks
   private AuthService authService;
+
+  @Mock
+  private RedisService redisService;
 
   @Mock
   private BanNicknameRepository banNicknameRepository;
@@ -142,15 +148,14 @@ class AuthServiceTest {
   @Test
   void 잘못된_비밀번호로_로그인하면_예외가_발생한다() {
     Member mockMember = mock(Member.class);
-    when(mockMember.isVerified()).thenReturn(true);
     when(mockMember.getPassword()).thenReturn("encodedPassword");
     when(memberService.findByEmail(signInRequest.getEmail())).thenReturn(mockMember);
-    when(passwordEncoder.matches(signInRequest.getPassword(), mockMember.getPassword()))
-        .thenReturn(false);
+    when(passwordEncoder.matches(signInRequest.getPassword(), "encodedPassword")).thenReturn(false);
 
     CustomException e = assertThrows(CustomException.class, () -> authService.login(signInRequest));
-    assertEquals(UNAUTHORIZED, e.getErrorCode());
+    assertEquals(ErrorCode.UNAUTHORIZED, e.getErrorCode());
   }
+
 
   void 비밀번호_재설정이_성공한다() {
     HttpServletRequest mockRequest = mock(HttpServletRequest.class);
@@ -278,4 +283,41 @@ class AuthServiceTest {
     verify(memberRepository).save(any(Member.class));
     verify(memberRepository).findByEmail(signUpRequest.getEmail());
   }
+
+  @Test
+  void 리프레쉬_토큰으로_새로운_AccessToken_발급이_성공한다() {
+    // Mock 데이터 설정
+    String refreshToken = "validRefreshToken";
+    String email = "test@example.com";
+    Long memberId = 123L;
+    String newAccessToken = "newAccessToken";
+
+    // Refresh Token 유효성 검증
+    when(jwtTokenProvider.validateToken(refreshToken)).thenReturn(true);
+
+    // Refresh Token에서 Member ID와 Email 추출
+    when(jwtTokenProvider.extractMemberId(refreshToken)).thenReturn(memberId);
+    Claims claims = mock(Claims.class);
+    when(jwtTokenProvider.getClaims(refreshToken)).thenReturn(claims);
+    when(claims.getSubject()).thenReturn(email);
+
+    // Redis에서 Refresh Token 조회
+    when(redisService.get("refresh:" + memberId)).thenReturn(refreshToken);
+
+    // 새로운 Access Token 생성
+    when(jwtTokenProvider.createToken(eq(email), eq(memberId), eq(List.of("ROLE_USER"))))
+        .thenReturn(newAccessToken);
+
+    // 테스트 실행
+    String refreshedToken = authService.refreshAccessToken(refreshToken);
+
+    // 검증
+    assertNotNull(refreshedToken);
+    assertEquals(newAccessToken, refreshedToken);
+    verify(jwtTokenProvider).validateToken(refreshToken); // 유효성 검증 호출 확인
+    verify(jwtTokenProvider).extractMemberId(refreshToken); // Member ID 추출 호출 확인
+    verify(redisService).get("refresh:" + memberId); // Redis 조회 호출 확인
+    verify(jwtTokenProvider).createToken(eq(email), eq(memberId), eq(List.of("ROLE_USER")));
+  }
+
 }
