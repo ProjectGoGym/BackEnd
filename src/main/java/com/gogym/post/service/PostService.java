@@ -4,14 +4,20 @@ import static com.gogym.exception.ErrorCode.ALREADY_TRANSACTION;
 import static com.gogym.exception.ErrorCode.CHATROOM_NOT_FOUND;
 import static com.gogym.exception.ErrorCode.DELETED_POST;
 import static com.gogym.exception.ErrorCode.FORBIDDEN;
-import static com.gogym.exception.ErrorCode.MEMBER_NOT_FOUND;
 import static com.gogym.exception.ErrorCode.POST_NOT_FOUND;
 import static com.gogym.exception.ErrorCode.REQUEST_VALIDATION_FAIL;
 import static com.gogym.post.type.PostStatus.HIDDEN;
 import static com.gogym.post.type.PostStatus.IN_PROGRESS;
 import static com.gogym.post.type.PostStatus.PENDING;
 import static com.gogym.post.type.PostType.SELL;
-
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.util.Pair;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import com.gogym.chat.entity.ChatRoom;
 import com.gogym.exception.CustomException;
 import com.gogym.gympay.entity.Transaction;
@@ -30,17 +36,9 @@ import com.gogym.post.repository.PostRepositoryCustom;
 import com.gogym.post.type.PostStatus;
 import com.gogym.region.dto.RegionResponseDto;
 import com.gogym.region.service.RegionService;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.util.Pair;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -61,6 +59,8 @@ public class PostService {
   private final RecentViewService recentViewService;
 
   private final TransactionService transactionService;
+  
+  private final PostQueryService postQueryService;
 
   @Transactional
   public PostResponseDto createPost(Long memberId, PostRequestDto postRequestDto) {
@@ -116,7 +116,8 @@ public class PostService {
   // 게시글의 상세 페이지를 조회합니다. 비회원의 경우 읽기 처리만 하고, 회원의 경우 최근본 게시글로 저장이 됩니다.
   public PostResponseDto getDetailPost(Long memberId, Long postId) {
 
-    Post post = findById(postId);
+    //Post post = findById(postId);
+    Post post = postQueryService.findById(postId);
 
     // 숨김처리 된 게시글은 조회가 불가능합니다.
     if (post.getStatus() == HIDDEN) {
@@ -130,7 +131,7 @@ public class PostService {
       recentViewService.saveRecentView(member, post);
     }
 
-    boolean isWished = isWished(post, memberId);
+    boolean isWished = postQueryService.isWished(post, memberId);
 
     RegionResponseDto regionResponseDto = regionService.findById(post.getGym().getRegionId());
 
@@ -144,9 +145,9 @@ public class PostService {
 
     Member member = memberService.findById(memberId);
 
-    Post post = findById(postId);
+    Post post = postQueryService.findById(postId);
 
-    boolean isWished = isWished(post, memberId);
+    boolean isWished = postQueryService.isWished(post, memberId);
 
     validatePostAuthor(member, post);
 
@@ -202,7 +203,8 @@ public class PostService {
   public void changePostStatus(Long memberId, Long postId, Long chatRoomId, PostStatus status) {
 
     Member member = memberService.findById(memberId);
-    Post post = findById(postId);
+    //Post post = findById(postId);
+    Post post = postQueryService.findById(postId);
     ChatRoom chatRoom = getChatRoom(post, chatRoomId);
 
     validatePostAuthor(member, post);
@@ -277,33 +279,6 @@ public class PostService {
     if (validateTransactionStatus) {
       throw new CustomException(ALREADY_TRANSACTION);
     }
-  }
-
-  // 주어진 게시글 ID 로 게시글을 찾습니다.
-  public Post findById(Long postId) {
-
-    return postRepository.findById(postId).orElseThrow(() -> new CustomException(POST_NOT_FOUND));
-  }
-
-  // 채팅방 에서 호출할 메서드입니다. 게시글 작성자를 찾습니다.
-  public Member getPostAuthor(Long postId) {
-
-    Post post = findById(postId);
-
-    if (post.getAuthor() == null) {
-      throw new CustomException(MEMBER_NOT_FOUND);
-    } else {
-      return post.getAuthor();
-    }
-  }
-
-  // 특정 게시글의 회원의 찜 여부를 확인하는 메서드 입니다.
-  private boolean isWished(Post post, Long memberId) {
-
-    if (post.getWishes() == null) {
-      return false;
-    }
-    return post.getWishes().stream().anyMatch(wish -> wish.getMember().getId().equals(memberId));
   }
 
   // 게시글에서 채팅방의 존재를 확인하는 메서드 입니다.

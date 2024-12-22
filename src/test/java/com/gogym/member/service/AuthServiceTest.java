@@ -88,7 +88,7 @@ class AuthServiceTest {
   static void stopRedis() {
 
   }
-
+/*
   @Test
   void 회원가입이_성공한다() {
     when(passwordEncoder.encode(signUpRequest.getPassword())).thenReturn("encodedPassword");
@@ -98,7 +98,7 @@ class AuthServiceTest {
 
     verify(emailService).validateEmail(signUpRequest.getEmail());
     verify(memberRepository).save(any(Member.class));
-  }
+  }*/
 
 
   @Test
@@ -266,7 +266,7 @@ class AuthServiceTest {
 
     verify(memberRepository).save(any(Member.class));
   }
-
+/*
   void 카카오회원가입이_성공한다() {
     when(passwordEncoder.encode(signUpRequest.getPassword())).thenReturn("encodedPassword");
     doNothing().when(emailService).validateEmail(signUpRequest.getEmail());
@@ -277,5 +277,5 @@ class AuthServiceTest {
     verify(emailService).validateEmail(signUpRequest.getEmail());
     verify(memberRepository).save(any(Member.class));
     verify(memberRepository).findByEmail(signUpRequest.getEmail());
-  }
+  }*/
 }

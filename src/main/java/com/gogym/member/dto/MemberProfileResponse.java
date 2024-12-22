@@ -7,7 +7,8 @@ public record MemberProfileResponse(
     String nickname,
     String phone,
     String profileImageUrl,
-    long gymPayBalance
+    long gymPayBalance,
+    Long gymPayId
     ) {
 }
 

@@ -91,6 +91,9 @@ class PostServiceTest {
 
   @Mock
   private TransactionService transactionService;
+  
+  @Mock
+  private PostQueryService postQueryService;
 
   @InjectMocks
   private PostService postService;
@@ -217,12 +220,13 @@ class PostServiceTest {
     assertEquals(result.getTotalElements(), 0);
     assertTrue(result.getContent().isEmpty());
   }
-
+  
   @Test
   void 게시글을_조회한다() {
     // given
-    when(postRepository.findById(post.getId())).thenReturn(Optional.of(post));
+    when(postQueryService.findById(post.getId())).thenReturn(post);
     when(regionService.findById(gym.getRegionId())).thenReturn(regionResponseDto);
+    when(postQueryService.isWished(post, member.getId())).thenReturn(true);
     // when
     PostResponseDto result = postService.getDetailPost(member.getId(), post.getId());
     recentViewService.saveRecentView(member, post);
@@ -235,7 +239,7 @@ class PostServiceTest {
   @Test
   void 게시글이_없는_경우_조회에_실패한다() {
     // given
-    when(postRepository.findById(post.getId())).thenReturn(Optional.empty());
+    when(postQueryService.findById(post.getId())).thenThrow(new CustomException(POST_NOT_FOUND));
     // when
     CustomException e = assertThrows(CustomException.class,
         () -> postService.getDetailPost(member.getId(), post.getId()));
@@ -247,9 +251,10 @@ class PostServiceTest {
   @Test
   void 게시글_수정이_성공한다() {
     // given
-    when(postRepository.findById(post.getId())).thenReturn(Optional.of(post));
+    when(postQueryService.findById(post.getId())).thenReturn(post);
     when(memberService.findById(member.getId())).thenReturn(member);
     when(regionService.findById(gym.getRegionId())).thenReturn(regionResponseDto);
+    when(postQueryService.isWished(post, member.getId())).thenReturn(false);
     // when
     postService.updatePost(member.getId(), post.getId(), postUpdateRequestDto);
     // then
@@ -261,20 +266,23 @@ class PostServiceTest {
     // given
     Member anotherMember = Member.builder().regionId1(10L).regionId2(11L).build();
     ReflectionTestUtils.setField(anotherMember, "id", 2L);
-    when(postRepository.findById(post.getId())).thenReturn(Optional.of(post));
-    doReturn(anotherMember).when(memberService).findById(anotherMember.getId());
+    post = Post.builder().title("게시글 제목").author(member).build();
+    ReflectionTestUtils.setField(post, "id", 1L);
+    when(postQueryService.findById(post.getId())).thenReturn(post);
+    when(memberService.findById(anotherMember.getId())).thenReturn(anotherMember);
     // when
     CustomException e = assertThrows(CustomException.class,
         () -> postService.updatePost(anotherMember.getId(), post.getId(), postUpdateRequestDto));
     // then
     assertEquals(e.getErrorCode(), FORBIDDEN);
     assertEquals(e.getMessage(), "권한이 없습니다.");
+    
   }
 
   @Test
   void 게시글을_삭제한후_게시글을_조회하면_예외가_발생한다() {
     // given
-    when(postRepository.findById(post.getId())).thenReturn(Optional.of(post));
+    when(postQueryService.findById(post.getId())).thenReturn(post);
     when(memberService.findById(member.getId())).thenReturn(member);
     when(regionService.findById(gym.getRegionId())).thenReturn(regionResponseDto);
     // when
@@ -300,12 +308,16 @@ class PostServiceTest {
     ReflectionTestUtils.setField(chatRoom, "id", 1L);
 
     post = Post.builder().author(seller).status(PENDING).chatRoom(List.of(chatRoom)).build();
+    ReflectionTestUtils.setField(post, "id", 1L);
+
     status = IN_PROGRESS;
 
-    when(postRepository.findById(post.getId())).thenReturn(Optional.of(post));
+    when(postQueryService.findById(post.getId())).thenReturn(post);
     when(memberService.findById(seller.getId())).thenReturn(seller);
+
     // when
     postService.changePostStatus(seller.getId(), post.getId(), chatRoom.getId(), status);
+
     // then
     assertEquals(post.getStatus(), IN_PROGRESS);
   }
@@ -325,7 +337,7 @@ class PostServiceTest {
     post = Post.builder().author(seller).status(COMPLETED).chatRoom(List.of(chatRoom)).build();
     status = IN_PROGRESS;
 
-    when(postRepository.findById(post.getId())).thenReturn(Optional.of(post));
+    when(postQueryService.findById(post.getId())).thenReturn(post);
     when(memberService.findById(seller.getId())).thenReturn(seller);
     // when
     CustomException e = assertThrows(CustomException.class,
@@ -350,7 +362,7 @@ class PostServiceTest {
     status = IN_PROGRESS;
 
     when(memberService.findById(seller.getId())).thenReturn(seller);
-    when(postRepository.findById(post.getId())).thenReturn(Optional.of(post));
+    when(postQueryService.findById(post.getId())).thenReturn(post);
     // when
     CustomException e = assertThrows(CustomException.class,
         () -> postService.changePostStatus(seller.getId(), post.getId(), chatRoom.getId(), status));

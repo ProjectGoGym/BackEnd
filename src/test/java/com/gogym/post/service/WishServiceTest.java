@@ -39,10 +39,9 @@ class WishServiceTest {
 
   @Mock
   private WishRepository wishRepository;
-
+  
   @Mock
-  private PostService postService;
-
+  private PostQueryService postQueryService;
   @Mock
   private NotificationService notificationService;
 
@@ -74,7 +73,7 @@ class WishServiceTest {
   void 찜이_존재하면_삭제하고_게시글의_찜_카운트가_0이된다() {
     // given
     when(memberService.findById(member.getId())).thenReturn(member);
-    when(postService.findById(post.getId())).thenReturn(post);
+    when(postQueryService.findById(post.getId())).thenReturn(post);
     when(wishRepository.findByMemberAndPost(member, post)).thenReturn(Optional.of(wish));
     // when
     wishService.toggleWish(member.getId(), post.getId());
@@ -87,7 +86,7 @@ class WishServiceTest {
   void 찜이_존재하지_않으면_추가하고_찜_카운트가_증가한다() {
     // given
     when(memberService.findById(member.getId())).thenReturn(member);
-    when(postService.findById(post.getId())).thenReturn(post);
+    when(postQueryService.findById(post.getId())).thenReturn(post);
     when(wishRepository.findByMemberAndPost(member, post)).thenReturn(Optional.empty());
     // when
     wishService.toggleWish(member.getId(), post.getId());
@@ -101,7 +100,7 @@ class WishServiceTest {
     // given
     Post post = Post.builder().wishCount(0L).build();
     when(memberService.findById(member.getId())).thenReturn(member);
-    when(postService.findById(post.getId())).thenReturn(post);
+    when(postQueryService.findById(post.getId())).thenReturn(post);
     when(wishRepository.findByMemberAndPost(member, post)).thenReturn(Optional.of(wish));
     // when
     CustomException e = assertThrows(CustomException.class,

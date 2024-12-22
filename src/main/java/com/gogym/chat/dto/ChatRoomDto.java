@@ -11,6 +11,7 @@ public class ChatRoomDto {
       Long postId,
       Long counterpartyId,
       String counterpartyNickname,
+      String counterpartyProfileImageUrl,
       int unreadMessageCount,
       String lastMessage,
       LocalDateTime lastMessageAt,

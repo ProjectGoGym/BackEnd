@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -27,216 +27,179 @@ import com.gogym.chat.dto.ChatMessageDto.ChatMessageRequest;
 import com.gogym.chat.dto.ChatMessageDto.ChatMessageResponse;
 import com.gogym.chat.dto.ChatMessageDto.ChatRoomMessagesResponse;
 import com.gogym.chat.entity.ChatMessage;
+import com.gogym.chat.entity.ChatRoom;
 import com.gogym.chat.repository.ChatMessageRepository;
 import com.gogym.chat.repository.ChatRoomRepository;
 import com.gogym.chat.service.ChatRedisService;
 import com.gogym.chat.service.ChatRoomQueryService;
-import com.gogym.chat.service.ChatRoomService;
 import com.gogym.chat.type.MessageType;
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
 import com.gogym.gympay.event.SendMessageEvent;
-import com.gogym.post.service.PostService;
-import com.gogym.post.type.PostStatus;
+import com.gogym.member.entity.Member;
+import com.gogym.post.entity.Gym;
+import com.gogym.post.entity.Post;
+import com.gogym.post.service.PostQueryService;
+import com.gogym.region.dto.RegionResponseDto;
+import com.gogym.region.service.RegionService;
 
 @ExtendWith(MockitoExtension.class)
 class ChatMessageServiceImplTest {
-  
+
   @Mock
   private ChatMessageRepository chatMessageRepository;
-  
+
   @Mock
   private ChatRoomRepository chatRoomRepository;
-  
+
   @Mock
   private ChatRedisService chatRedisService;
-  
-  @Mock
-  private ChatRoomService chatRoomService;
-  
+
   @Mock
   private ChatRoomQueryService chatRoomQueryService;
-  
+
   @Mock
-  private PostService postService;
-  
+  private PostQueryService postQueryService;
+
+  @Mock
+  private RegionService regionService;
+
   @Mock
   private SimpMessagingTemplate messagingTemplate;
-  
+
   @InjectMocks
   private ChatMessageServiceImpl chatMessageService;
-  
+
   private Pageable pageable;
-  
+
   @BeforeEach
   void setup() {
     this.pageable = PageRequest.of(0, 6);
   }
-  
+
   @Test
-  void 채팅방_메시지와_게시물_상태_조회_성공() {
+  void 메시지와_게시물_조회_성공() {
     // Given
     Long memberId = 1L;
     Long chatRoomId = 1L;
-    Long postId = 1L;
     
-    String redisMessageJson = "{\"content\":\"Redis메시지입니다.\",\"senderId\":123,\"messageType\":\"TEXT_ONLY\",\"createdAt\":\"2024-12-03T12:00:00\"}";
+    // Mock Post 객체 생성 및 동작 설정
+    Post post = mock(Post.class);
+    when(post.getGym()).thenReturn(mock(Gym.class));
+    when(post.getGym().getRegionId()).thenReturn(123L);
+    when(post.getAuthor()).thenReturn(mock(Member.class));
+    
+    // Mock RegionService 동작 설정
+    RegionResponseDto region = mock(RegionResponseDto.class);
+    when(this.regionService.findById(any())).thenReturn(region);
+    
+    // Mock ChatRoom 객체 생성 및 동작 설정
+    ChatRoom chatRoom = mock(ChatRoom.class);
+    when(chatRoom.getPost()).thenReturn(post);
+    when(this.chatRoomRepository.findById(chatRoomId)).thenReturn(Optional.of(chatRoom));
+    
+    // Mock PostQueryService 동작 설정
+    when(this.postQueryService.isWished(post, memberId)).thenReturn(true);
+    
+    // Mock 권한 확인 메서드 설정
+    when(this.chatRoomQueryService.isMemberInChatRoom(chatRoomId, memberId)).thenReturn(true);
+    
+    // Mock Redis 메시지 설정
+    String redisMessageJson = 
+        "{\"content\":\"Redis메시지입니다.\","
+        + "\"senderId\":123,"
+        + "\"messageType\":\"TEXT_ONLY\","
+        + "\"createdAt\":\"2024-12-03T12:00:00\"}";
     when(this.chatRedisService.getMessages(chatRoomId)).thenReturn(List.of(redisMessageJson));
     
+    // Mock DB 메시지 설정
     ChatMessage dbMessage = mock(ChatMessage.class);
     when(dbMessage.getContent()).thenReturn("DB메시지입니다.");
     when(dbMessage.getSenderId()).thenReturn(2L);
     when(dbMessage.getMessageType()).thenReturn(MessageType.TEXT_ONLY);
     when(dbMessage.getCreatedAt()).thenReturn(LocalDateTime.of(2024, 12, 25, 12, 0));
     Page<ChatMessage> dbMessages = new PageImpl<>(List.of(dbMessage));
-    when(this.chatMessageRepository.findByChatRoomIdOrderByCreatedAtDesc(chatRoomId, Pageable.unpaged())).thenReturn(dbMessages);
-    
-    when(this.chatRoomQueryService.isMemberInChatRoom(chatRoomId, memberId)).thenReturn(true);
-    when(this.chatRoomRepository.findPostIdByChatRoomId(chatRoomId)).thenReturn(Optional.of(postId));
-    when(this.postService.getPostStatus(postId)).thenReturn(PostStatus.PENDING);
+    when(this.chatMessageRepository.findByChatRoomIdOrderByCreatedAtDesc(
+        chatRoomId,
+        Pageable.unpaged())).thenReturn(dbMessages);
     
     // When
-    ChatRoomMessagesResponse response = this.chatMessageService.getMessagesWithPostStatus(memberId, chatRoomId, this.pageable);
+    ChatRoomMessagesResponse response = this.chatMessageService.getChatRoomMessagesAndPostInfo(memberId, chatRoomId, this.pageable);
     
     // Then
     assertNotNull(response);
     assertEquals(2, response.messages().getContent().size());
     assertEquals("DB메시지입니다.", response.messages().getContent().get(0).content());
-    assertEquals(MessageType.TEXT_ONLY, response.messages().getContent().get(0).messageType());
     assertEquals("Redis메시지입니다.", response.messages().getContent().get(1).content());
-    assertEquals(MessageType.TEXT_ONLY, response.messages().getContent().get(1).messageType());
-    assertEquals(PostStatus.PENDING, response.postStatus());
     
+    verify(this.chatRoomQueryService).isMemberInChatRoom(chatRoomId, memberId);
     verify(this.chatRedisService).getMessages(chatRoomId);
-    verify(this.chatMessageRepository).findByChatRoomIdOrderByCreatedAtDesc(chatRoomId, Pageable.unpaged());
-    verify(this.chatRoomRepository).findPostIdByChatRoomId(chatRoomId);
-    verify(this.postService).getPostStatus(postId);
-  }
-  
-  @Test
-  void 채팅방_없음_예외() {
-    // Given
-    Long memberId = 1L;
-    Long chatRoomId = 1L;
-    
-    when(this.chatRoomQueryService.isMemberInChatRoom(chatRoomId, memberId)).thenReturn(true);
-    
-    when(this.chatRoomRepository.findPostIdByChatRoomId(chatRoomId)).thenReturn(Optional.empty());
-    when(this.chatMessageRepository.findByChatRoomIdOrderByCreatedAtDesc(chatRoomId, Pageable.unpaged())).thenReturn(Page.empty());
-    
-    // When
-    Throwable thrown = catchThrowable(
-        () -> this.chatMessageService.getMessagesWithPostStatus(memberId, chatRoomId, this.pageable)
-    );
-    
-    // Then
-    assertNotNull(thrown);
-    assertTrue(thrown instanceof CustomException);
-    assertEquals(ErrorCode.POST_NOT_FOUND, ((CustomException) thrown).getErrorCode());
-    
-    verify(this.chatRoomRepository).findPostIdByChatRoomId(chatRoomId);
+    verify(this.chatMessageRepository).findByChatRoomIdOrderByCreatedAtDesc(eq(chatRoomId), any(Pageable.class));
+    verify(this.postQueryService).isWished(any(), any());
+    verify(this.regionService).findById(any());
   }
 
+
   @Test
-  void 게시물_상태_조회_실패_예외() {
-    // Given
-    Long memberId = 1L;
-    Long chatRoomId = 1L;
-    Long postId = 1L;
-    
-    when(this.chatRoomQueryService.isMemberInChatRoom(chatRoomId, memberId)).thenReturn(true);
-    
-    when(this.chatRoomRepository.findPostIdByChatRoomId(chatRoomId)).thenReturn(Optional.of(postId));
-    when(this.chatMessageRepository.findByChatRoomIdOrderByCreatedAtDesc(chatRoomId, Pageable.unpaged())).thenReturn(Page.empty());
-    when(this.postService.getPostStatus(postId)).thenThrow(new CustomException(ErrorCode.POST_NOT_FOUND));
-    
-    // When
-    Throwable thrown = catchThrowable(
-        () -> this.chatMessageService.getMessagesWithPostStatus(memberId, chatRoomId, this.pageable)
-    );
-    
-    // Then
-    assertNotNull(thrown);
-    assertTrue(thrown instanceof CustomException);
-    assertEquals(ErrorCode.POST_NOT_FOUND, ((CustomException) thrown).getErrorCode());
-    
-    verify(this.chatRoomRepository).findPostIdByChatRoomId(chatRoomId);
-    verify(this.postService).getPostStatus(postId);
-  }
-  
-  @Test
-  void 브로드캐스팅_테스트_일반_메시지_케이스() {
+  void 이벤트_기반_메시지_전송_성공() {
     // Given
     Long chatRoomId = 1L;
     Long senderId = 1L;
-    String content = "안녕하세요!";
+    String content = "이벤트메시지입니다.";
+    MessageType messageType = MessageType.SYSTEM_SAFE_PAYMENT_REQUEST;
     
-    ChatMessageRequest messageRequest = new ChatMessageRequest(
-        chatRoomId,
-        content
-    );
-    ChatMessageResponse savedMessage = new ChatMessageResponse(
-        chatRoomId,
-        senderId,
-        content,
-        MessageType.TEXT_ONLY,
-        LocalDateTime.now()
-    );
+    SendMessageEvent event = new SendMessageEvent(chatRoomId, senderId, content, messageType);
+    ChatMessageResponse savedMessage = new ChatMessageResponse(chatRoomId, senderId, content, messageType, LocalDateTime.now());
     
-    when(this.chatRedisService.saveMessageToRedis(messageRequest, senderId, MessageType.TEXT_ONLY)).thenReturn(savedMessage);
+    when(this.chatRedisService.saveMessageToRedis(
+        any(ChatMessageRequest.class),
+        eq(senderId),
+        eq(messageType))).thenReturn(savedMessage);
+    
+    // When
+    this.chatMessageService.handleChatMessageEvent(event);
+    
+    // Then
+    verify(this.chatRedisService).saveMessageToRedis(any(ChatMessageRequest.class), eq(senderId), eq(messageType));
+    verify(this.messagingTemplate).convertAndSend(eq("/topic/chatroom/" + chatRoomId), any(SendMessageEvent.class));
+  }
+
+  @Test
+  void 일반_메시지_전송_성공() {
+    // Given
+    Long chatRoomId = 1L;
+    Long senderId = 2L;
+    String content = "일반메시지입니다.";
+    MessageType messageType = MessageType.TEXT_ONLY;
+    
+    ChatMessageRequest messageRequest = new ChatMessageRequest(chatRoomId, content);
+    ChatMessageResponse savedMessage = new ChatMessageResponse(chatRoomId, senderId, content, messageType, LocalDateTime.now());
+    
+    when(this.chatRedisService.saveMessageToRedis(messageRequest, senderId, messageType)).thenReturn(savedMessage);
     
     // When
     this.chatMessageService.sendMessage(messageRequest, senderId);
     
     // Then
-    verify(this.chatRedisService).saveMessageToRedis(messageRequest, senderId, MessageType.TEXT_ONLY);
+    verify(this.chatRedisService).saveMessageToRedis(messageRequest, senderId, messageType);
     verify(this.messagingTemplate).convertAndSend("/topic/chatroom/" + chatRoomId, savedMessage);
   }
 
   @Test
-  void 브로드캐스팅_테스트_메시지_타입_포함_케이스() {
+  void 채팅방_참여하지_않은_사용자_예외_발생() {
     // Given
+    Long memberId = 1L;
     Long chatRoomId = 1L;
-    Long senderId = 100L;
-    String content = "결제 요청 메시지";
-    MessageType messageType = MessageType.SYSTEM_SAFE_PAYMENT_REQUEST;
     
-    SendMessageEvent sendMessageEvent = new SendMessageEvent(
-        chatRoomId,
-        senderId,
-        content,
-        messageType
-    );
-    ChatMessageResponse savedMessage = new ChatMessageResponse(
-        chatRoomId,
-        senderId,
-        content,
-        messageType,
-        LocalDateTime.now()
-    );
-    
-    when(this.chatRedisService.saveMessageToRedis(
-        argThat(request -> request.chatRoomId().equals(chatRoomId) && request.content().equals(content)),
-        eq(senderId),
-        eq(messageType))
-    ).thenReturn(savedMessage);
+    when(this.chatRoomQueryService.isMemberInChatRoom(chatRoomId, memberId)).thenReturn(false);
     
     // When
-    this.chatMessageService.sendMessage(sendMessageEvent, senderId);
+    Throwable thrown = catchThrowable(
+        () -> this.chatMessageService.getChatRoomMessagesAndPostInfo(memberId, chatRoomId, this.pageable));
     
     // Then
-    verify(this.chatRedisService).saveMessageToRedis(argThat(
-        request -> request.chatRoomId().equals(chatRoomId) && request.content().equals(content)),
-        eq(senderId),
-        eq(messageType));
-    verify(this.messagingTemplate).convertAndSend(eq("/topic/chatroom/" + chatRoomId),
-        (Object) argThat(argument -> {
-          if (argument instanceof SendMessageEvent event) {
-            return event.chatRoomId().equals(chatRoomId) && event.senderId().equals(senderId)
-                && event.content().equals(content) && event.messageType().equals(messageType);
-          }
-          return false;
-        }));
+    assertTrue(thrown instanceof CustomException);
+    assertEquals(ErrorCode.FORBIDDEN, ((CustomException) thrown).getErrorCode());
   }
   
 }
