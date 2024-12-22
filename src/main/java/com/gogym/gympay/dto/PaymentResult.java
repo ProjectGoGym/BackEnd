@@ -205,12 +205,16 @@ public record PaymentResult(
             .cancelledTaxFree(this.amount.cancelledTaxFree) // 취소된 면세 금액
             .build())
         .failedAt(convertToKST(this.failedAt))
-        .failureReason(this.failure.reason)
+        .failureReason(this.failure != null ? this.failure.reason : null)
         .member(member)
         .build();
   }
 
   private LocalDateTime convertToKST(String utcDateTime) {
+    if (utcDateTime == null) {
+      return null;
+    }
+
     OffsetDateTime offsetDateTime = OffsetDateTime.parse(utcDateTime, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
     return offsetDateTime.atZoneSameInstant(ZoneOffset.ofHours(9)).toLocalDateTime();
   }

@@ -13,13 +13,16 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @Entity
+@Builder
 @Table(name = "safe_payments")
+@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class SafePayment extends BaseEntity {
 
@@ -44,14 +47,15 @@ public class SafePayment extends BaseEntity {
   @Column(name = "requester_role")
   private RequesterRole requesterRole;
 
-  @Builder
-  public SafePayment(Transaction transaction, Member requester, Member responder, int amount, RequesterRole requesterRole) {
-    this.transaction = transaction;
-    this.amount = amount;
-    this.status = SafePaymentStatus.PENDING_APPROVAL;
-    this.requester = requester;
-    this.responder = responder;
-    this.requesterRole = requesterRole;
+  public static SafePayment of(Transaction transaction, Member requester, Member responder, int amount, RequesterRole requesterRole) {
+    return SafePayment.builder()
+        .transaction(transaction)
+        .requester(requester)
+        .responder(responder)
+        .amount(amount)
+        .requesterRole(requesterRole)
+        .status(SafePaymentStatus.PENDING_APPROVAL)
+        .build();
   }
 
   public void approve() {
