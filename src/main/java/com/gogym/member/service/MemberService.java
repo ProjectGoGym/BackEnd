@@ -36,10 +36,12 @@ public class MemberService {
   // 마이페이지 조회
   public MemberProfileResponse getMyProfileById(Long memberId) {
     Member member = findById(memberId);
+    Long gymPayId = (member.getGymPay() != null) ? member.getGymPay().getId() : null;
     long gymPayBalance = (member.getGymPay() != null) ? member.getGymPay().getBalance() : 0L;
 
     return new MemberProfileResponse(member.getId(), member.getEmail(), member.getName(),
-        member.getNickname(), member.getPhone(), member.getProfileImageUrl(), gymPayBalance);
+        member.getNickname(), member.getPhone(), member.getProfileImageUrl(), gymPayBalance,
+        gymPayId);
   }
 
   // 마이페이지 수정
@@ -55,16 +57,18 @@ public class MemberService {
   public void deactivateMyAccountById(Long memberId) {
     Member member = findById(memberId);
     member.setMemberStatus(MemberStatus.DEACTIVATED); // 상태 변경
-    clearSensitiveInfo(member); // 민감 정보 초기화
 
-    // 이름과 닉네임 마스킹
+    // 이름, 닉네임, 이메일 마스킹 및 민감 정보 초기화(엔티티에서 수정)
     String maskedName = maskString(member.getName());
     String maskedNickname = maskString(member.getNickname());
     String maskedEmail = maskEmail(member.getEmail());
+    member.maskSensitiveInfo(maskedName, maskedNickname, maskedEmail);
 
     // BanNickname 저장
     BanNickname banNickname = new BanNickname(maskedNickname);
     banNicknameRepository.save(banNickname);
+
+    memberRepository.save(member);
   }
 
   // 문자열 마스킹 (짝수 인덱스 문자만 '*')
@@ -92,13 +96,6 @@ public class MemberService {
     }
     parts[0] = maskString(parts[0]);
     return String.join("@", parts);
-  }
-
-  // 민감 정보 초기화
-  @Transactional
-  public void clearSensitiveInfo(Member member) {
-    member.setPhone("010-****-****");
-    member.setProfileImageUrl(null);
   }
 }
 
