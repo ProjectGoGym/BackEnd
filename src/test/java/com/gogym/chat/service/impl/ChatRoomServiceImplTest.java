@@ -36,7 +36,7 @@ import com.gogym.exception.ErrorCode;
 import com.gogym.member.entity.Member;
 import com.gogym.member.service.MemberService;
 import com.gogym.post.entity.Post;
-import com.gogym.post.service.PostService;
+import com.gogym.post.service.PostQueryService;
 import com.gogym.post.type.PostStatus;
 
 @ExtendWith(MockitoExtension.class)
@@ -50,10 +50,10 @@ class ChatRoomServiceImplTest {
 
   @Mock
   private MemberService memberService;
-
+  
   @Mock
-  private PostService postService;
-
+  private PostQueryService postQueryService;
+  
   @Mock
   private ChatRedisServiceImpl chatRedisService;
 
@@ -97,8 +97,8 @@ class ChatRoomServiceImplTest {
         .author(this.postAuthor)
         .build();
 
-    when(this.postService.getPostAuthor(postId)).thenReturn(this.postAuthor);
-    when(this.postService.findById(postId)).thenReturn(mockPost);
+    when(this.postQueryService.getPostAuthor(postId)).thenReturn(this.postAuthor);
+    when(this.postQueryService.findById(postId)).thenReturn(mockPost);
 
     // 이미 존재하는 채팅방 여부 확인
     when(this.chatRoomRepository.existsByPostIdAndRequestorId(postId, this.postAuthor.getId())).thenReturn(false);
@@ -156,7 +156,11 @@ class ChatRoomServiceImplTest {
         any(Pageable.class))).thenReturn(mockPage);
 
     // Redis 메시지 Mock 설정
-    String redisMessageJson = "{\"content\":\"안녕하세요!\",\"senderId\":123,\"createdAt\":\"2024-12-03T12:00:00\"}";
+    String redisMessageJson = 
+        "{\"content\":\"안녕하세요!\","
+        + "\"senderId\":123,"
+        + "\"messageType\":\"TEXT_ONLY\","
+        + "\"createdAt\":\"2024-12-03T12:00:00\"}";
     when(this.chatRedisService.getMessages(chatRoomId)).thenReturn(List.of(redisMessageJson));
 
     // leaveAt 설정
@@ -186,7 +190,11 @@ class ChatRoomServiceImplTest {
     when(this.chatRoomService.isMemberInChatRoom(chatRoomId, memberId)).thenReturn(true);
     
     // Redis 메시지 Mock 설정
-    String redisMessageJson = "{\"content\":\"test message\",\"senderId\":1,\"createdAt\":\"2024-12-10T12:00:00\"}";
+    String redisMessageJson = 
+        "{\"content\":\"안녕하세요!\","
+        + "\"senderId\":123,"
+        + "\"messageType\":\"TEXT_ONLY\","
+        + "\"createdAt\":\"2024-12-03T12:00:00\"}";
     when(this.chatRedisService.getMessages(chatRoomId)).thenReturn(List.of(redisMessageJson));
     
     // When
@@ -235,7 +243,11 @@ class ChatRoomServiceImplTest {
     when(this.chatRoomService.isMemberInChatRoom(chatRoomId, this.postAuthor.getId())).thenReturn(true);
     when(this.chatRoomService.isMemberInChatRoom(chatRoomId, this.requestor.getId())).thenReturn(true);
     
-    String redisMessageJson = "{\"content\":\"test message\",\"senderId\":1,\"createdAt\":\"2024-12-10T12:00:00\"}";
+    String redisMessageJson = 
+        "{\"content\":\"안녕하세요!\","
+        + "\"senderId\":123,"
+        + "\"messageType\":\"TEXT_ONLY\","
+        + "\"createdAt\":\"2024-12-03T12:00:00\"}";
     when(this.chatRoomRepository.findById(chatRoomId)).thenReturn(Optional.of(testChatRoom));
     when(this.chatRedisService.getMessages(chatRoomId))
         .thenReturn(List.of(redisMessageJson)) // 첫 번째 호출에서는 Redis에 메시지 존재

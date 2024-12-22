@@ -21,7 +21,7 @@ import com.gogym.exception.ErrorCode;
 import com.gogym.member.entity.Member;
 import com.gogym.member.service.MemberService;
 import com.gogym.post.entity.Post;
-import com.gogym.post.service.PostService;
+import com.gogym.post.service.PostQueryService;
 import com.gogym.post.type.PostStatus;
 import com.gogym.util.JsonUtil;
 import jakarta.transaction.Transactional;
@@ -36,13 +36,13 @@ public class ChatRoomServiceImpl implements ChatRoomQueryService, ChatRoomServic
   private final ChatMessageRepository chatMessageRepository;
   
   private final ChatRedisService chatRedisService;
+  private final PostQueryService postQueryService;
   private final MemberService memberService;
-  private final PostService postService;
   
   @Override
   public ChatRoomResponse createChatRoom(Long memberId, Long postId) {
     // 게시글 작성자 존재 여부 확인
-    Member postAuthor = this.postService.getPostAuthor(postId);
+    Member postAuthor = this.postQueryService.getPostAuthor(postId);
     
     // 이미 존재하는 채팅방 여부 확인
     if (this.chatRoomRepository.existsByPostIdAndRequestorId(postId, memberId)) {
@@ -50,7 +50,7 @@ public class ChatRoomServiceImpl implements ChatRoomQueryService, ChatRoomServic
     }
     
     // 게시물 상태 검증
-    Post post = this.postService.findById(postId);
+    Post post = this.postQueryService.findById(postId);
     if (PostStatus.COMPLETED.equals(post.getStatus())
         || PostStatus.HIDDEN.equals(post.getStatus())) {
       throw new CustomException(ErrorCode.REQUEST_VALIDATION_FAIL);
@@ -58,7 +58,7 @@ public class ChatRoomServiceImpl implements ChatRoomQueryService, ChatRoomServic
     
     // 채팅방 생성 및 저장
     ChatRoom newChatRoom = ChatRoom.builder()
-        .post(this.postService.findById(postId))
+        .post(this.postQueryService.findById(postId))
         .requestor(this.memberService.findById(memberId))
         .isDeleted(false)
         .build();
@@ -70,6 +70,7 @@ public class ChatRoomServiceImpl implements ChatRoomQueryService, ChatRoomServic
         postId, // postId
         postAuthor.getId(), // counterpartyId
         postAuthor.getNickname(), // counterpartyNickname
+        postAuthor.getProfileImageUrl(), // counterpartyProfileImageUrl
         0, // unreadMessageCount
         null, // lastMessage
         null,// lastMessageAt
@@ -145,6 +146,7 @@ public class ChatRoomServiceImpl implements ChatRoomQueryService, ChatRoomServic
           chatRoom.getPost().getId(), // postId
           counterparty.getId(), // counterpartyId
           counterparty.getNickname(), // counterpartyNickname
+          counterparty.getProfileImageUrl(), // counterpartyProfileImageUrl
           unreadMessageCount, // unreadMessageCount
           lastMessage != null ? lastMessage.getContent() : null, // lastMessage
           lastMessageAt, // lastMessageAt
