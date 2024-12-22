@@ -271,7 +271,6 @@ class AuthServiceTest {
 
     verify(memberRepository).save(any(Member.class));
   }
-
  /*
   void 카카오회원가입이_성공한다() {
     when(passwordEncoder.encode(signUpRequest.getPassword())).thenReturn("encodedPassword");
