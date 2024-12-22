@@ -80,7 +80,8 @@ public class NotificationService {
         try {
           emitter.send(SseEmitter.event()
               .name("dummy")
-              .data("connecting..."));
+              .data("connecting...")
+              .reconnectTime(3000L));
           log.info("✅ 더미 이벤트 발송 완료!: {}", memberId);
         } catch (IOException e) {
           log.error("🚨 더미 이벤트 발송 중 예외 발생!: {}", e.getMessage());
@@ -113,7 +114,8 @@ public class NotificationService {
         NotificationDto notificationDto = NotificationDto.fromEntity(notification);
         emitter.send(SseEmitter.event()
             .name("notification")
-            .data(notificationDto));
+            .data(notificationDto)
+            .reconnectTime(3000L));
         log.info("✅ 알림 이벤트 발송 완료!: {}", memberId);
       } catch (IOException e) {
         log.error("🚨 알림 이벤트 발송 중 예외 발생!: {}", e.getMessage());
