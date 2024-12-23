@@ -20,7 +20,9 @@ import org.springframework.web.client.RestTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.gogym.exception.CustomException;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -28,7 +30,6 @@ public class KakaoService {
 
   private final MemberRepository memberRepository;
   private final JwtTokenProvider jwtTokenProvider;
-  private static final Logger log = LoggerFactory.getLogger(KakaoService.class);
   private final MemberService memberService;
   
   @Value("${kakao.rest-api-key}")
@@ -37,8 +38,6 @@ public class KakaoService {
   // Redirect URI 생성 메서드
   private String generateRedirectUri() {
     return "https://gogym-eight.vercel.app/kakaoLogin";
-    // return "http://go-gym.site/api/kakao/sign-in";
-    // return "http://localhost:8080/api/kakao/sign-in";
   }
 
   @Transactional
@@ -47,7 +46,7 @@ public class KakaoService {
     KakaoTokenResponse tokenResponse = requestAccessTokenFromKakao(code);
     KakaoProfileResponse profileResponse = getProfile(tokenResponse.accessToken());
 
-    // 2. 이메일로 회원 정보 조회 (MemberService 활용)
+    // 2. 이메일로 회원 정보 조회
     String email = profileResponse.kakaoAccount().email();
     log.info("카카오 사용자 이메일: {}", email);
 
@@ -71,7 +70,6 @@ public class KakaoService {
       return new KakaoLoginResponse(false, null); // 신규 유저
     }
   }
-
 
   // 카카오 인증 URL 생성 메서드
   public String getKakaoAuthUrl(String currentDomain) {
