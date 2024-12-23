@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -18,9 +19,11 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -29,6 +32,7 @@ import com.gogym.chat.dto.ChatMessageDto.RedisChatMessage;
 import com.gogym.chat.dto.ChatRoomDto.ChatRoomResponse;
 import com.gogym.chat.dto.ChatRoomDto.LeaveRequest;
 import com.gogym.chat.entity.ChatRoom;
+import com.gogym.chat.event.ChatRoomEvent;
 import com.gogym.chat.repository.ChatMessageRepository;
 import com.gogym.chat.repository.ChatRoomRepository;
 import com.gogym.chat.type.MessageType;
@@ -59,6 +63,9 @@ class ChatRoomServiceImplTest {
   
   @Mock
   private ChatRedisServiceImpl chatRedisService;
+  
+  @Mock
+  private ApplicationEventPublisher eventPublisher;
 
   @InjectMocks
   private ChatRoomServiceImpl chatRoomService;
@@ -92,9 +99,12 @@ class ChatRoomServiceImplTest {
   }
 
   @Test
-  void 채팅방_생성_성공() {
+  void 채팅방_생성_성공() throws Exception {
     // Given
     Long postId = 1L;
+    Long requestorId = this.requestor.getId();
+    String requestorNickname = this.requestor.getNickname();
+    
     Post mockPost = Post.builder()
         .status(PostStatus.PENDING)
         .author(this.postAuthor)
@@ -109,11 +119,19 @@ class ChatRoomServiceImplTest {
     // ChatRoom 생성 후 저장된 상태로 반환
     when(this.chatRoomRepository.save(any(ChatRoom.class))).thenAnswer(invocation -> {
       ChatRoom savedChatRoom = invocation.getArgument(0);
+      
+      Field requestorField = ChatRoom.class.getDeclaredField("requestor");
+      requestorField.setAccessible(true);
+      requestorField.set(savedChatRoom, this.requestor);
+      
       Field idField = ChatRoom.class.getSuperclass().getDeclaredField("id");
       idField.setAccessible(true);
       idField.set(savedChatRoom, 1L);
+      
       return savedChatRoom;
     });
+    
+    doNothing().when(this.eventPublisher).publishEvent(any(ChatRoomEvent.class));
 
     // When
     ChatRoomResponse response = this.chatRoomService.createChatRoom(this.postAuthor.getId(), postId);
@@ -122,6 +140,14 @@ class ChatRoomServiceImplTest {
     assertNotNull(response);
     assertEquals(1L, response.chatRoomId());
     verify(this.chatRoomRepository).save(any(ChatRoom.class));
+    
+    ArgumentCaptor<ChatRoomEvent> eventCaptor = ArgumentCaptor.forClass(ChatRoomEvent.class);
+    verify(this.eventPublisher).publishEvent(eventCaptor.capture());
+    
+    ChatRoomEvent capturedEvent = eventCaptor.getValue();
+    assertEquals(1L, capturedEvent.getChatRoomId());
+    assertEquals(requestorId, capturedEvent.getRequestorId());
+    assertEquals(requestorNickname, capturedEvent.getRequestorNickname());
   }
 
   @Test
