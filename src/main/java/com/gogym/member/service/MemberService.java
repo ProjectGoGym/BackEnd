@@ -41,7 +41,8 @@ public class MemberService {
 
     return new MemberProfileResponse(member.getId(), member.getEmail(), member.getName(),
         member.getNickname(), member.getPhone(), member.getProfileImageUrl(), gymPayBalance,
-        gymPayId);
+        gymPayId,member.getRegionId1(),member.getRegionId2()
+        );
   }
 
   // 마이페이지 수정
