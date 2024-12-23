@@ -9,6 +9,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -20,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
+import com.gogym.chat.dto.ChatMessageDto.RedisChatMessage;
 import com.gogym.chat.entity.ChatMessage;
 import com.gogym.chat.entity.ChatRoom;
 import com.gogym.chat.repository.ChatMessageRepository;
@@ -27,6 +29,7 @@ import com.gogym.chat.repository.ChatRoomRepository;
 import com.gogym.chat.schedule.ChatMessageBatchScheduler;
 import com.gogym.chat.type.MessageType;
 import com.gogym.exception.CustomException;
+import com.gogym.util.JsonUtil;
 import com.gogym.util.RedisService;
 
 @ExtendWith(MockitoExtension.class)
@@ -55,15 +58,21 @@ class ChatMessageBatchSchedulerTest {
     // Given
     Long chatroomId = 1L;
     String redisKey = "chatroom:messages:1";
-    String mockMessageJson = "{\"content\":\"안녕하세요\",\"senderId\":123,\"messageType\":\"TEXT_ONLY\",\"createdAt\":\"2024-12-03T12:00:00\"}";
-
+    RedisChatMessage chatMessage = new RedisChatMessage(
+        "안녕하세요!",
+        123L,
+        MessageType.TEXT_ONLY,
+        LocalDateTime.of(2024, 12, 25, 12, 0)
+    );
+    String redisChatMessageJson = JsonUtil.serialize(chatMessage);
+    
     ChatRoom mockChatRoom = mock(ChatRoom.class);
 
     // RedisTemplate Mock 설정
     when(this.redisTemplate.keys("chatroom:messages:*")).thenReturn(Set.of(redisKey));
 
     // RedisService Mock 설정
-    when(this.redisService.lrange(redisKey, 0, -1)).thenReturn(List.of(mockMessageJson));
+    when(this.redisService.lrange(redisKey, 0, -1)).thenReturn(List.of(redisChatMessageJson));
 
     // ChatRoomRepository Mock 설정
     when(this.chatRoomRepository.findById(chatroomId)).thenReturn(Optional.of(mockChatRoom));
@@ -76,7 +85,7 @@ class ChatMessageBatchSchedulerTest {
     verify(this.chatMessageRepository, times(1)).save(chatMessageCaptor.capture());
 
     ChatMessage savedMessage = chatMessageCaptor.getValue();
-    assertEquals("안녕하세요", savedMessage.getContent());
+    assertEquals("안녕하세요!", savedMessage.getContent());
     assertEquals(123L, savedMessage.getSenderId());
     assertEquals(mockChatRoom, savedMessage.getChatRoom());
     assertEquals(MessageType.TEXT_ONLY, savedMessage.getMessageType());
