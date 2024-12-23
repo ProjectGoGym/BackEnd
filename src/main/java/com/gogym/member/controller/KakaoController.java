@@ -11,6 +11,7 @@ import com.gogym.member.service.KakaoService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 
 @RestController
 @RequiredArgsConstructor
@@ -20,16 +21,15 @@ public class KakaoController {
   private final KakaoService kakaoService;
 
   @GetMapping("/sign-in")
-  public ResponseEntity<Boolean> handleKakaoLogin(@RequestParam("code") String code) {
+  public ResponseEntity<Object> handleKakaoLogin(@RequestParam("code") String code) {
     KakaoLoginResponse response = kakaoService.processKakaoLogin(code);
 
     HttpHeaders headers = new HttpHeaders();
-    if (response.getToken() != null) { // 토큰이 존재하는 경우에만 헤더 추가하고
+    if (response.getToken() != null) {
       headers.add("Authorization", "Bearer " + response.getToken());
     }
 
-    // 신규/기존 여부만 본문으로 반환
-    return ResponseEntity.ok().headers(headers).body(response.isExistingUser());
+    return ResponseEntity.status(HttpStatus.OK).headers(headers).body(response.isExistingUser());
   }
-  
+
 }
