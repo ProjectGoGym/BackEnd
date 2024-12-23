@@ -42,18 +42,17 @@ public class MemberService {
     Long gymPayId = (member.getGymPay() != null) ? member.getGymPay().getId() : null;
     long gymPayBalance = (member.getGymPay() != null) ? member.getGymPay().getBalance() : 0L;
 
-    // 관심지역 정보 가져오기
     String regionName1 = null;
     String regionName2 = null;
 
     if (member.getRegionId1() != null) {
       RegionResponseDto region1 = regionService.findById(member.getRegionId1());
-      regionName1 = region1.city() + " - " + region1.district();
+      regionName1 = (region1.city() != null ? region1.city() + " - " : "") + region1.district();
     }
 
     if (member.getRegionId2() != null) {
       RegionResponseDto region2 = regionService.findById(member.getRegionId2());
-      regionName2 = region2.city() + " - " + region2.district();
+      regionName2 = (region2.city() != null ? region2 + " - " : "") + region2.district();
     }
 
     return new MemberProfileResponse(member.getId(), member.getEmail(), member.getName(),
@@ -66,7 +65,7 @@ public class MemberService {
   public void updateMyProfileById(Long memberId, UpdateMemberRequest request) {
     Member member = findById(memberId);
     member.updateProfile(request.name(), request.nickname(), request.phone(),
-        request.profileImageUrl());
+        request.profileImageUrl(), request.regionId1(), request.regionId2());
   }
 
   // 회원 탈퇴 (소프트)

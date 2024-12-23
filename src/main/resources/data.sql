@@ -116,7 +116,7 @@ VALUES (78, '남구', 77, 1),
        (82, '중구', 77, 1);
 
 -- 세종특별자치시 (하위지역 없음)
-INSERT INTO regions (id, name, parent_id, depth) VALUE (83, '세종특별자치시', NULL, 0);
+INSERT INTO regions (id, name, parent_id, depth) VALUE (83, '세종특별자치시', NULL, 2);
 
 -- 경기도
 INSERT INTO regions (id, name, parent_id, depth) VALUE (84, '경기도', NULL, 0);

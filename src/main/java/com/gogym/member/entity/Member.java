@@ -87,11 +87,14 @@ public class Member extends BaseEntity {
   }
 
   // 프로필 업데이트 메서드
-  public void updateProfile(String name, String nickname, String phone, String profileImageUrl) {
+  public void updateProfile(String name, String nickname, String phone, String profileImageUrl,
+      Long regionId1, Long regionId2) {
     this.name = name;
     this.nickname = nickname;
     this.phone = phone;
     this.profileImageUrl = profileImageUrl;
+    this.regionId1 = regionId1;
+    this.regionId2 = regionId2;
   }
 
   // 정보 마스킹 메서드
