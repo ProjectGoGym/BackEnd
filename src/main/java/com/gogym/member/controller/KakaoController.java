@@ -23,7 +23,7 @@ public class KakaoController {
   private final KakaoService kakaoService;
 
   @GetMapping("/sign-in")
-  public ResponseEntity<Map<String, Object>> handleKakaoLogin(@RequestParam("code") String code) {
+  public ResponseEntity<KakaoLoginResponse> handleKakaoLogin(@RequestParam("code") String code) {
     KakaoLoginResponse response = kakaoService.processKakaoLogin(code);
 
     HttpHeaders headers = new HttpHeaders();
@@ -31,10 +31,6 @@ public class KakaoController {
       headers.add("Authorization", "Bearer " + response.getToken());
     }
 
-    // 명확한 응답 구조 생성
-    Map<String, Object> responseBody = new HashMap<>();
-    responseBody.put("isExistingUser", response.isExistingUser());
-
-    return ResponseEntity.ok().headers(headers).body(responseBody);
+    return ResponseEntity.ok().headers(headers).body(response);
   }
 }
