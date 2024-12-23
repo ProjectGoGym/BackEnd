@@ -23,8 +23,8 @@ public class RegionService {
   // 회원가입 시 관심지역 설정으로 사용, 반환값은 부모노드의 하위 자식 노드들 이며 저장은 자식노드의 ID 값을 저장하면 될 것 같습니다.
   public List<RegionDto> getRegions(String name) {
 
-    Region region = regionRepository.findByName(name)
-        .orElseThrow(() -> new CustomException(CITY_NOT_FOUND));
+    Region region =
+        regionRepository.findByName(name).orElseThrow(() -> new CustomException(CITY_NOT_FOUND));
 
     // 하위지역이 없는경우(예 : 세종특별자치시) 부모노드의 아이디와 이름이 내려갑니다.
     if (region.getChildren() == null || region.getChildren().isEmpty()) {
@@ -37,8 +37,8 @@ public class RegionService {
   // 지도 API 에서 추출한 상위 노드와 하위 노드를 DB 와 비교하여 지역 ID 값을 추출합니다.
   public Long getChildRegionId(String city, String district) {
 
-    Region parent = regionRepository.findByName(city)
-        .orElseThrow(() -> new CustomException(CITY_NOT_FOUND));
+    Region parent =
+        regionRepository.findByName(city).orElseThrow(() -> new CustomException(CITY_NOT_FOUND));
 
     Region child = regionRepository.findByNameAndParentId(district, parent.getId())
         .orElseThrow(() -> new CustomException(DISTRICT_NOT_FOUND));
@@ -49,8 +49,12 @@ public class RegionService {
   // 지역 ID 값으로 부모 노드의 이름과 자식 노드의 이름을 추출합니다.
   public RegionResponseDto findById(Long regionId) {
 
-    Region region = regionRepository.findById(regionId)
-        .orElseThrow(() -> new CustomException(CITY_NOT_FOUND));
+    Region region =
+        regionRepository.findById(regionId).orElseThrow(() -> new CustomException(CITY_NOT_FOUND));
+
+    if (region.getDepth() == 2) {
+      return new RegionResponseDto(null, region.getName());
+    }
 
     return new RegionResponseDto(region.getParent().getName(), region.getName());
   }
