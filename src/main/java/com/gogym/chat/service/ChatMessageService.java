@@ -1,6 +1,6 @@
 package com.gogym.chat.service;
 
-import com.gogym.chat.dto.MessageRequest;
+import com.gogym.chat.dto.base.MessageRequest;
 
 public interface ChatMessageService {
   

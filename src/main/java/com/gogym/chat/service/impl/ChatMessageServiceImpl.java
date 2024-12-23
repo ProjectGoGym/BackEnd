@@ -16,7 +16,11 @@ import com.gogym.chat.dto.ChatMessageDto.ChatMessageRequest;
 import com.gogym.chat.dto.ChatMessageDto.ChatMessageResponse;
 import com.gogym.chat.dto.ChatMessageDto.ChatRoomMessagesResponse;
 import com.gogym.chat.dto.ChatMessageDto.RedisChatMessage;
-import com.gogym.chat.dto.MessageRequest;
+import com.gogym.chat.dto.ChatMessageDto.SafePaymentMessageResponse;
+import com.gogym.chat.dto.ChatMessageDto.SafePaymentRedisMessage;
+import com.gogym.chat.dto.base.MessageRequest;
+import com.gogym.chat.dto.base.MessageResponse;
+import com.gogym.chat.dto.base.RedisMessage;
 import com.gogym.chat.repository.ChatMessageRepository;
 import com.gogym.chat.repository.ChatRoomRepository;
 import com.gogym.chat.service.ChatMessageQueryService;
@@ -26,6 +30,7 @@ import com.gogym.chat.service.ChatRoomQueryService;
 import com.gogym.chat.type.MessageType;
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
+import com.gogym.gympay.entity.constant.SafePaymentStatus;
 import com.gogym.gympay.event.SendMessageEvent;
 import com.gogym.post.dto.PostSummaryDto;
 import com.gogym.post.entity.Post;
@@ -55,7 +60,7 @@ public class ChatMessageServiceImpl implements ChatMessageQueryService, ChatMess
     }
     
     // Redis와 DB에서 메시지를 조회 및 변환
-    Page<ChatMessageResponse> messagePage = this.getCombinedMessages(chatRoomId, pageable);
+    Page<MessageResponse> messagePage = this.getCombinedMessages(chatRoomId, pageable);
 
     // 채팅방에 연결된 게시물의 요약 정보 조회
     PostSummaryDto postSummaryDto = this.getConnectedPost(chatRoomId);
@@ -74,20 +79,20 @@ public class ChatMessageServiceImpl implements ChatMessageQueryService, ChatMess
    * 
    * @param chatRoomId 채팅방 ID
    * @param pageable 페이징 정보
-   * @return 병합된 {@link ChatMessageResponse} 리스트
+   * @return 병합된 {@link MessageResponse} 리스트
    */
-  private Page<ChatMessageResponse> getCombinedMessages(Long chatRoomId, Pageable pageable) {
+  private Page<MessageResponse> getCombinedMessages(Long chatRoomId, Pageable pageable) {
     // Redis에서 메시지 조회 및 정렬
-    List<ChatMessageResponse> redisMessages = this.getRedisMessages(chatRoomId).stream()
-        .sorted(Comparator.comparing(ChatMessageResponse::createdAt).reversed())
+    List<MessageResponse> redisMessages = this.getRedisMessages(chatRoomId).stream()
+        .sorted(Comparator.comparing(MessageResponse::createdAt).reversed())
         .toList();
     
     // DB에서 페이징된 메시지 조회
-    List<ChatMessageResponse> dbMessages = this.getDbMessages(chatRoomId, Pageable.unpaged());
+    List<MessageResponse> dbMessages = this.getDbMessages(chatRoomId, Pageable.unpaged());
     
     // DB 메시지와 Redis 메시지를 병합한 후 내림차순으로 정렬
-    List<ChatMessageResponse> combinedMessages = Stream.concat(dbMessages.stream(), redisMessages.stream())
-        .sorted(Comparator.comparing(ChatMessageResponse::createdAt).reversed())
+    List<MessageResponse> combinedMessages = Stream.concat(dbMessages.stream(), redisMessages.stream())
+        .sorted(Comparator.comparing(MessageResponse::createdAt).reversed())
         .toList();
     
     // Pageable 조건에 맞게 페이징 처리
@@ -104,37 +109,64 @@ public class ChatMessageServiceImpl implements ChatMessageQueryService, ChatMess
    * Redis에서 메시지를 조회 후 변환.
    * 
    * @param chatRoomId 채팅방 ID
-   * @return {@link ChatMessageResponse} 리스트
+   * @return {@link MessageResponse} 리스트
    */
-  private List<ChatMessageResponse> getRedisMessages(Long chatRoomId) {
+  private List<MessageResponse> getRedisMessages(Long chatRoomId) {
     return this.chatRedisService.getMessages(chatRoomId).stream()
-        .map(messageJson -> JsonUtil.deserialize(messageJson, RedisChatMessage.class))
+        .map(messageJson -> JsonUtil.deserialize(messageJson, RedisMessage.class))
         .filter(Objects::nonNull)
-        .map(redisMessage -> new ChatMessageResponse(
-            chatRoomId,
-            redisMessage.senderId(),
-            redisMessage.content(),
-            redisMessage.messageType(),
-            redisMessage.createdAt()
-        )).toList();
+        .map(redisMessage -> {
+          if (redisMessage instanceof SafePaymentRedisMessage safePaymentMessage) {
+            return (MessageResponse) new SafePaymentMessageResponse(
+                chatRoomId,
+                safePaymentMessage.senderId(),
+                safePaymentMessage.content(),
+                safePaymentMessage.messageType(),
+                safePaymentMessage.createdAt(),
+                safePaymentMessage.safePaymentId(),
+                safePaymentMessage.safePaymentStatus());
+          } else if (redisMessage instanceof RedisChatMessage chatMessage) {
+            return (MessageResponse) new ChatMessageResponse(
+                chatRoomId,
+                chatMessage.senderId(),
+                chatMessage.content(),
+                chatMessage.messageType(),
+                chatMessage.createdAt());
+          } else {
+            throw new CustomException(ErrorCode.REQUEST_VALIDATION_FAIL);
+          }
+        }).toList();
   }
+
   
   /**
    * DB에서 메시지를 조회 후 변환.
    * 
    * @param chatRoomId 채팅방 ID
    * @param pageable 페이징 정보
-   * @return {@link ChatMessageResponse} 리스트
+   * @return {@link MessageResponse} 리스트
    */
-  private List<ChatMessageResponse> getDbMessages(Long chatRoomId, Pageable pageable) {
+  private List<MessageResponse> getDbMessages(Long chatRoomId, Pageable pageable) {
     return this.chatMessageRepository.findByChatRoomIdOrderByCreatedAtDesc(chatRoomId, pageable).stream()
-        .map(dbMessage -> new ChatMessageResponse(
-            chatRoomId,
-            dbMessage.getSenderId(),
-            dbMessage.getContent(),
-            dbMessage.getMessageType(),
-            dbMessage.getCreatedAt()
-        )).toList();
+        .map(dbMessage -> {
+          if (dbMessage.getMessageType().toString().startsWith("SYSTEM_SAFE_PAYMENT")) {
+            return (MessageResponse) new SafePaymentMessageResponse(
+                chatRoomId,
+                dbMessage.getSenderId(),
+                dbMessage.getContent(),
+                dbMessage.getMessageType(),
+                dbMessage.getCreatedAt(),
+                dbMessage.getSafePaymentId(),
+                dbMessage.getSafePaymentStatus());
+          } else {
+            return (MessageResponse) new ChatMessageResponse(
+                chatRoomId,
+                dbMessage.getSenderId(),
+                dbMessage.getContent(),
+                dbMessage.getMessageType(),
+                dbMessage.getCreatedAt());
+          }
+        }).toList();
   }
   
   /**
@@ -164,42 +196,65 @@ public class ChatMessageServiceImpl implements ChatMessageQueryService, ChatMess
   @Override
   public void sendMessage(MessageRequest messageRequest, Long memberId) {
     // Redis에 저장 및 브로드캐스팅에 필요한 객체 선언
-    ChatMessageResponse savedMessage;
+    MessageResponse savedMessage;
     
     if (messageRequest instanceof SendMessageEvent event) {
       // SendMessageEvent일 경우의 처리
       savedMessage = this.chatRedisService.saveMessageToRedis(
           new ChatMessageRequest(event.chatRoomId(), event.content()),
           event.senderId(),
-          event.messageType()
+          event.messageType(),
+          event.safePaymentId(),
+          event.safePaymentstatus()
       );
-      this.broadcastMessage(event.chatRoomId(), savedMessage, event.messageType());
+      this.broadcastMessage(
+          event.chatRoomId(),
+          savedMessage,
+          event.messageType(),
+          event.safePaymentId(),
+          event.safePaymentstatus()
+      );
     } else {
       // ChatMessageRequest일 경우의 처리
       savedMessage = this.chatRedisService.saveMessageToRedis(
           new ChatMessageRequest(messageRequest.chatRoomId(), messageRequest.content()),
           memberId,
-          MessageType.TEXT_ONLY
+          MessageType.TEXT_ONLY,
+          null,
+          null
       );
-      this.broadcastMessage(messageRequest.chatRoomId(), savedMessage);
+      this.broadcastMessage(
+          messageRequest.chatRoomId(),
+          savedMessage
+      );
     }
   }
 
-  private void broadcastMessage(Long chatRoomId, ChatMessageResponse message) {
+  private void broadcastMessage(
+      Long chatRoomId,
+      MessageResponse message) {
     this.messagingTemplate.convertAndSend(
         TOPIC_CHATROOM_PREFIX + chatRoomId,
         message
     );
   }
   
-  private void broadcastMessage(Long chatRoomId, ChatMessageResponse message, MessageType messageType) {
+  private void broadcastMessage(
+      Long chatRoomId,
+      MessageResponse message,
+      MessageType messageType,
+      Long safePaymentId,
+      SafePaymentStatus safePaymentStatus) {
     this.messagingTemplate.convertAndSend(
         TOPIC_CHATROOM_PREFIX + chatRoomId,
         new SendMessageEvent(
             message.chatRoomId(),
             message.senderId(),
             message.content(),
-            messageType)
+            messageType,
+            safePaymentId,
+            safePaymentStatus
+        )
     );
   }
   

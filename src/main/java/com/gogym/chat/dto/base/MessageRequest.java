@@ -1,4 +1,4 @@
-package com.gogym.chat.dto;
+package com.gogym.chat.dto.base;
 
 public interface MessageRequest {
   Long chatRoomId();
