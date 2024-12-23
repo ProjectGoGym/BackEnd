@@ -12,10 +12,10 @@ import org.springframework.data.repository.query.Param;
 
 public interface PostRepository extends JpaRepository<Post, Long>, PostRepositoryCustom {
 
-  Page<Post> findAllByStatusOrderByCreatedAtDesc(Pageable pageable, PostStatus postStatus);
+  Page<Post> findAllByStatusInOrderByCreatedAtDesc(List<PostStatus> postStatuses, Pageable pageable);
 
-  @Query("SELECT p FROM Post p WHERE p.status = :status AND p.gym.regionId IN :regionIds ORDER BY p.createdAt DESC")
-  Page<Post> findAllByStatusAndRegionIds(@Param("status") PostStatus status,
+  @Query("SELECT p FROM Post p WHERE p.status IN :statuses AND p.gym.regionId IN :regionIds ORDER BY p.createdAt DESC")
+  Page<Post> findAllByStatusInAndRegionIds(@Param("statuses") List<PostStatus> postStatuses,
       Pageable sortedByDate, @Param("regionIds") List<Long> regionIds);
 
   Page<Post> findByAuthorIdOrderByCreatedAtDesc(Long authorId, Pageable pageable);

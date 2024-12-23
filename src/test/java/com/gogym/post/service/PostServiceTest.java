@@ -113,6 +113,7 @@ class PostServiceTest {
   private Member seller;
   private Member buyer;
   private PostStatus status;
+  private List<PostStatus> statuses;
 
   @BeforeEach
   void setUp() {
@@ -158,6 +159,8 @@ class PostServiceTest {
 
     postDeleteRequestDto = new PostUpdateRequestDto("제목", "내용", SELL, HIDDEN, MEMBERSHIP_ONLY,
         LocalDate.now().plusMonths(1), null, 1000L, null, null, null);
+
+    statuses = List.of(PENDING, IN_PROGRESS);
   }
 
   @Test
@@ -177,7 +180,7 @@ class PostServiceTest {
     // given
     posts = new PageImpl<>(List.of(post), pageable, 1);
 
-    when(postRepository.findAllByStatusOrderByCreatedAtDesc(pageable, PENDING)).thenReturn(posts);
+    when(postRepository.findAllByStatusInOrderByCreatedAtDesc(statuses, pageable)).thenReturn(posts);
     // when
     Page<PostPageResponseDto> result = postService.getAllPosts(null, pageable);
     // then
@@ -192,7 +195,7 @@ class PostServiceTest {
     posts = new PageImpl<>(List.of(post), pageable, 1);
 
     when(memberService.findById(member.getId())).thenReturn(member);
-    when(postRepository.findAllByStatusAndRegionIds(PENDING, pageable, regionIds)).thenReturn(
+    when(postRepository.findAllByStatusInAndRegionIds(statuses, pageable, regionIds)).thenReturn(
         posts);
     // when
     Page<PostPageResponseDto> result = postService.getAllPosts(member.getId(), pageable);
