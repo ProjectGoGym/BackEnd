@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import com.gogym.member.dto.KakaoLoginResponse;
 import com.gogym.member.service.KakaoService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -19,17 +20,16 @@ public class KakaoController {
   private final KakaoService kakaoService;
 
   @GetMapping("/sign-in")
-  public ResponseEntity<Object> handleKakaoLogin(@RequestParam("code") String code,
-      HttpServletRequest request) {
-    String currentDomain = request.getRequestURL().toString().replace(request.getRequestURI(), "");
-    String token = kakaoService.processKakaoLogin(code);
-
-    if (token == null) {
-      return ResponseEntity.ok(false);
-    }
+  public ResponseEntity<Boolean> handleKakaoLogin(@RequestParam("code") String code) {
+    KakaoLoginResponse response = kakaoService.processKakaoLogin(code);
 
     HttpHeaders headers = new HttpHeaders();
-    headers.add("Authorization", "Bearer " + token);
-    return ResponseEntity.ok().headers(headers).body(true);
+    if (response.getToken() != null) { // 토큰이 존재하는 경우에만 헤더 추가하고
+      headers.add("Authorization", "Bearer " + response.getToken());
+    }
+
+    // 신규/기존 여부만 본문으로 반환
+    return ResponseEntity.ok().headers(headers).body(response.isExistingUser());
   }
+  
 }

@@ -1,5 +1,6 @@
 package com.gogym.member.service;
 
+import com.gogym.member.dto.KakaoLoginResponse;
 import com.gogym.member.dto.KakaoProfileResponse;
 import com.gogym.member.dto.KakaoTokenResponse;
 import com.gogym.member.entity.Member;
@@ -18,28 +19,28 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.gogym.exception.CustomException;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+@Transactional
 public class KakaoService {
 
   private final MemberRepository memberRepository;
   private final JwtTokenProvider jwtTokenProvider;
-  private static final Logger log = LoggerFactory.getLogger(KakaoService.class);
-
+  private final MemberService memberService;
+  
   @Value("${kakao.rest-api-key}")
   private String kakaoClientId;
 
   // Redirect URI 생성 메서드
   private String generateRedirectUri() {
     return "https://gogym-eight.vercel.app/kakaoLogin";
-    //return "http://go-gym.site/api/kakao/sign-in";
-    //return "http://localhost:8080/api/kakao/sign-in";
   }
 
-  @Transactional
-  public String processKakaoLogin(String code) {
+  public KakaoLoginResponse processKakaoLogin(String code) {
     // 1. Access Token 및 프로필 정보 획득
     KakaoTokenResponse tokenResponse = requestAccessTokenFromKakao(code);
     KakaoProfileResponse profileResponse = getProfile(tokenResponse.accessToken());
@@ -48,27 +49,25 @@ public class KakaoService {
     String email = profileResponse.kakaoAccount().email();
     log.info("카카오 사용자 이메일: {}", email);
 
-    Optional<Member> optionalMember = memberRepository.findByEmail(email);
+    try {
+      Member member = memberService.findByEmail(email);
 
-    if (optionalMember.isEmpty()) {
+      // 3. isKakao 여부 확인
+      if (!member.isKakao()) {
+        log.warn("회원이 카카오 사용자가 아님 - 이메일: {}", email);
+        return new KakaoLoginResponse(false, null); // 신규 유저
+      }
+
+      // 4. 로그인 진행: JWT 토큰 발행
+      String token = jwtTokenProvider.createToken(member.getEmail(), member.getId(),
+          List.of(member.getRole().name()));
+      log.info("JWT 토큰 생성 완료 - 이메일: {}", email);
+
+      return new KakaoLoginResponse(true, token); // 기존 유저
+    } catch (CustomException e) {
       log.warn("회원 정보 없음 - 이메일: {}", email);
-      return null; // 회원 정보가 없는 경우 클라이언트에 false 반환
+      return new KakaoLoginResponse(false, null); // 신규 유저
     }
-
-    Member member = optionalMember.get();
-
-    // 3. isKakao 여부 확인
-    if (!member.isKakao()) {
-      log.warn("회원이 카카오 사용자가 아님 - 이메일: {}", email);
-      return null; // 일반 회원가입 진행 필요
-    }
-
-    // 4. 로그인 진행: JWT 토큰 발행
-    String token = jwtTokenProvider.createToken(member.getEmail(), member.getId(),
-        List.of(member.getRole().name()));
-    log.info("JWT 토큰 생성 완료 - 이메일: {}", email);
-
-    return token; // JWT 토큰 반환
   }
 
   // 카카오 인증 URL 생성 메서드
