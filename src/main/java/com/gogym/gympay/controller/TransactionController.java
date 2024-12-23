@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/transactions/")
+@RequestMapping("/api/transactions")
 @RequiredArgsConstructor
 public class TransactionController {
 
@@ -21,8 +21,8 @@ public class TransactionController {
   @PutMapping("/{chat-room-id}/date")
   public ResponseEntity<Void> updateDate(@LoginMemberId Long memberId,
       @PathVariable("chat-room-id") Long chatRoomId,
-      @RequestBody UpdateDateRequest dateTime) {
-    transactionService.patchDate(memberId, chatRoomId, dateTime);
+      @RequestBody UpdateDateRequest request) {
+    transactionService.patchDate(memberId, chatRoomId, request);
 
     return ResponseEntity.noContent().build();
   }

@@ -2,6 +2,7 @@ package com.gogym.post.dto;
 
 import com.gogym.post.entity.Post;
 import com.gogym.post.type.PostStatus;
+import com.querydsl.core.annotations.QueryProjection;
 import java.time.LocalDateTime;
 import lombok.Builder;
 
@@ -21,6 +22,10 @@ public record PostPageResponseDto(
     String authorNickname
 
 ) {
+
+  @QueryProjection
+  public PostPageResponseDto {
+  }
 
   public static PostPageResponseDto fromEntity(Post post) {
 

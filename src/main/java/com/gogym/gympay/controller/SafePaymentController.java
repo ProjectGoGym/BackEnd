@@ -14,48 +14,27 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/safe-payments")
+@RequestMapping("/api/chatrooms")
 public class SafePaymentController {
 
   private final SafePaymentService safePaymentService;
 
-  @PostMapping("/{chat-room-id}")
+  @PostMapping("/{chatroom-id}/safe-payments")
   public ResponseEntity<Long> create(@LoginMemberId Long requesterId,
-      @PathVariable("chat-room-id") Long chatRoomId,
+      @PathVariable("chatroom-id") Long chatRoomId,
       @RequestBody SafePaymentRequest request) {
-    Long safePaymentId = safePaymentService.save(requesterId, chatRoomId, request);
+
+    Long safePaymentId = safePaymentService.save(requesterId, chatRoomId, request.amount());
 
     return ResponseEntity.ok(safePaymentId);
   }
 
-  @PutMapping("/{safe-payment-id}/approve")
-  public ResponseEntity<Void> approve(@PathVariable("safe-payment-id") Long safePaymentId,
+  @PutMapping("/{chatroom-id}/safe-payments/{safe-payment-id}/{status}")
+  public ResponseEntity<Void> changeStatus(@PathVariable("chatroom-id") Long chatRoomId,
+      @PathVariable("safe-payment-id") Long safePaymentId,
+      @PathVariable String status,
       @LoginMemberId Long requesterId) {
-    safePaymentService.approve(safePaymentId, requesterId);
-
-    return ResponseEntity.noContent().build();
-  }
-
-  @PutMapping("/{safe-payment-id}/reject")
-  public ResponseEntity<Void> reject(@PathVariable("safe-payment-id") Long safePaymentId,
-      @LoginMemberId Long requesterId) {
-    safePaymentService.reject(safePaymentId, requesterId);
-
-    return ResponseEntity.noContent().build();
-  }
-
-  @PutMapping("/{safe-payment-id}/complete")
-  public ResponseEntity<Void> complete(@PathVariable("safe-payment-id") Long safePaymentId,
-      @LoginMemberId Long requesterId) {
-    safePaymentService.complete(safePaymentId, requesterId);
-
-    return ResponseEntity.noContent().build();
-  }
-
-  @PutMapping("/{safe-payment-id}/cancel")
-  public ResponseEntity<Void> cancel(@PathVariable("safe-payment-id") Long safePaymentId,
-      @LoginMemberId Long requesterId) {
-    safePaymentService.cancel(safePaymentId, requesterId);
+    safePaymentService.changeStatus(chatRoomId, safePaymentId, status, requesterId);
 
     return ResponseEntity.noContent().build();
   }

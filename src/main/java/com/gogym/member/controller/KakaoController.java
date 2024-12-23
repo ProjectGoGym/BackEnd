@@ -21,10 +21,10 @@ public class KakaoController {
   public ResponseEntity<Object> handleKakaoLogin(@RequestParam("code") String code,
       HttpServletRequest request) {
     String currentDomain = request.getRequestURL().toString().replace(request.getRequestURI(), "");
-    String token = kakaoService.processKakaoLogin(code, currentDomain); //카카오 로그인 처리
+    String token = kakaoService.processKakaoLogin(code, currentDomain);
 
     if (token == null) {
-      return ResponseEntity.ok(false); // 회원 정보가 없거나 isKakao == false: 클라이언트에 false 반환
+      return ResponseEntity.ok(false);
     }
 
     HttpHeaders headers = new HttpHeaders();
