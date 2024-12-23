@@ -52,7 +52,7 @@ public class AuthController {
     Member member = authService.getMemberByEmail(request.getEmail());
     LoginResponse loginResponse = new LoginResponse(member.getId(), member.getEmail(),
         member.getName(), member.getNickname(), member.getPhone());
-
+ 
     // HttpHeaders를 사용하여 헤더에 Authorization 추가
     HttpHeaders headers = new HttpHeaders();
     headers.add("Authorization", "Bearer " + accessToken);
