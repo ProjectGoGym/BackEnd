@@ -22,7 +22,7 @@ public class KakaoController {
   public ResponseEntity<Object> handleKakaoLogin(@RequestParam("code") String code,
       HttpServletRequest request) {
     String currentDomain = request.getRequestURL().toString().replace(request.getRequestURI(), "");
-    String token = kakaoService.processKakaoLogin(code, currentDomain);
+    String token = kakaoService.processKakaoLogin(code);
 
     if (token == null) {
       return ResponseEntity.ok(false);

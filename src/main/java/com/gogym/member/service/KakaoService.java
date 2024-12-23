@@ -32,16 +32,15 @@ public class KakaoService {
   private String kakaoClientId;
 
   // Redirect URI 생성 메서드
-  private String generateRedirectUri(String currentDomain) {
-    return currentDomain + "/api/kakao/sign-in";
+  private String generateRedirectUri() {
+    return "http://go-gym.site/api/kakao/sign-in";
+    //return "http://localhost:8080/api/kakao/sign-in";
   }
 
   @Transactional
-  public String processKakaoLogin(String code, String currentDomain) {
-    log.info("카카오 로그인 처리 시작 - 인증 코드: {}, 도메인: {}", code, currentDomain);
-
+  public String processKakaoLogin(String code) {
     // 1. Access Token 및 프로필 정보 획득
-    KakaoTokenResponse tokenResponse = getAccessToken(code, currentDomain);
+    KakaoTokenResponse tokenResponse = requestAccessTokenFromKakao(code);
     KakaoProfileResponse profileResponse = getProfile(tokenResponse.accessToken());
 
     // 2. 이메일로 회원 정보 조회
@@ -52,7 +51,7 @@ public class KakaoService {
 
     if (optionalMember.isEmpty()) {
       log.warn("회원 정보 없음 - 이메일: {}", email);
-      return null; // 회원 정보가 없는 경우는 클라이언트에 false 반환
+      return null; // 회원 정보가 없는 경우 클라이언트에 false 반환
     }
 
     Member member = optionalMember.get();
@@ -67,24 +66,25 @@ public class KakaoService {
     String token = jwtTokenProvider.createToken(member.getEmail(), member.getId(),
         List.of(member.getRole().name()));
     log.info("JWT 토큰 생성 완료 - 이메일: {}", email);
-    return token;
+
+    return token; // JWT 토큰 반환
   }
 
   // 카카오 인증 URL 생성 메서드
   public String getKakaoAuthUrl(String currentDomain) {
-    String redirectUri = generateRedirectUri(currentDomain);
+    String redirectUri = generateRedirectUri();
     return String.format(
         "https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=%s&redirect_uri=%s",
         kakaoClientId, redirectUri);
   }
 
   // Access Token 요청 메서드
-  private KakaoTokenResponse getAccessToken(String code, String currentDomain) {
+  private KakaoTokenResponse requestAccessTokenFromKakao(String code) {
     RestTemplate restTemplate = new RestTemplate();
     HttpHeaders headers = new HttpHeaders();
     headers.set("Content-Type", "application/x-www-form-urlencoded;charset=utf-8");
 
-    String redirectUri = generateRedirectUri(currentDomain);
+    String redirectUri = generateRedirectUri();
     String body =
         String.format("grant_type=authorization_code&client_id=%s&redirect_uri=%s&code=%s",
             kakaoClientId, redirectUri, code);
@@ -99,7 +99,6 @@ public class KakaoService {
     log.info("카카오 액세스 토큰 응답: {}", response.getBody());
     return response.getBody();
   }
-
 
   private KakaoProfileResponse getProfile(String accessToken) {
     RestTemplate restTemplate = new RestTemplate();
