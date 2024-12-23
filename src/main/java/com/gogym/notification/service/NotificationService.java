@@ -51,8 +51,10 @@ public class NotificationService {
 
     // 클라이언트 연결 종료, 만료, 에러 처리
     emitter.onCompletion(() -> {
-      log.info("👍SSE 구독 정상 해제 (memberId : {}),", memberId);
-      removeEmitter(memberId);
+      if (emitters.containsKey(memberId)) {
+        log.info("👍SSE 구독 정상 해제 (memberId : {}),", memberId);
+        removeEmitter(memberId);
+      }
     });
     emitter.onTimeout(() -> {
       log.warn("🕰️SSE 구독 타임 아웃 (memberId : {}),", memberId);
