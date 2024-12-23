@@ -7,6 +7,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import com.gogym.chat.dto.ChatMessageDto.RedisChatMessage;
+import com.gogym.chat.dto.ChatMessageDto.SafePaymentRedisMessage;
+import com.gogym.chat.dto.base.RedisMessage;
 import com.gogym.chat.entity.ChatMessage;
 import com.gogym.chat.entity.ChatRoom;
 import com.gogym.chat.repository.ChatMessageRepository;
@@ -54,26 +56,69 @@ public class ChatMessageBatchScheduler {
       ChatRoom chatRoom = this.chatRoomRepository.findById(chatroomId)
           .orElseThrow(() -> new CustomException(ErrorCode.CHATROOM_NOT_FOUND));
 
-      // 메시지를 하나씩 처리
-      messagesJson.forEach(messageJson -> {
-        // JSON 문자열을 RedisChatMessage 객체로 역직렬화
-        RedisChatMessage redisMessageData = JsonUtil.deserialize(messageJson, RedisChatMessage.class);
-
-        // ChatMessage 엔티티로 변환
-        ChatMessage chatMessage = ChatMessage.builder()
-            .chatRoom(chatRoom)
-            .content(redisMessageData.content())
-            .senderId(redisMessageData.senderId())
-            .messageType(redisMessageData.messageType())
-            .build();
-
-        // DB에 저장
-        this.chatMessageRepository.save(chatMessage);
-      });
+      // 메시지 처리 및 저장
+      this.processMessages(chatRoom, messagesJson);
 
       // Redis에서 해당 채팅방 메시지 삭제
       this.redisService.delete(redisKey);
     });
   }
-
+  
+  /**
+   * Redis 메시지를 처리.
+   * 
+   * @param chatRoom 채팅방 엔티티
+   * @param messagesJson Redis에서 가져온 메시지 JSON 리스트
+   */
+  private void processMessages(ChatRoom chatRoom, List<String> messagesJson) {
+    messagesJson.forEach(messageJson -> {
+      // JSON 문자열을 RedisMessage 객체로 역직렬화
+      RedisMessage redisMessage = JsonUtil.deserialize(messageJson, RedisMessage.class);
+      
+      if (redisMessage instanceof RedisChatMessage chatMessage) {
+        // 일반 메시지일 경우
+        this.saveMessage(chatRoom, chatMessage);
+      } else if (redisMessage instanceof SafePaymentRedisMessage safePaymentMessage) {
+        // 안전결제 메시지일 경우
+        this.saveMessage(chatRoom, safePaymentMessage);
+      } else {
+        throw new CustomException(ErrorCode.REQUEST_VALIDATION_FAIL);
+      }
+    });
+  }
+  
+  /**
+   * 일반 메시지를 DB에 저장.
+   * 
+   * @param chatRoom 채팅방 엔티티
+   * @param chatMessage 일반 메시지
+   */
+  private void saveMessage(ChatRoom chatRoom, RedisChatMessage chatMessage) {
+    ChatMessage message = ChatMessage.builder()
+        .chatRoom(chatRoom)
+        .content(chatMessage.content())
+        .senderId(chatMessage.senderId())
+        .messageType(chatMessage.messageType())
+        .build();
+    this.chatMessageRepository.save(message);
+  }
+  
+  /**
+   * 안전결제 메시지를 DB에 저장.
+   * 
+   * @param chatRoom 채팅방 엔티티
+   * @param safePaymentMessage 안전결제 메시지
+   */
+  private void saveMessage(ChatRoom chatRoom, SafePaymentRedisMessage safePaymentMessage) {
+    ChatMessage chatMessage = ChatMessage.builder()
+        .chatRoom(chatRoom)
+        .content(safePaymentMessage.content())
+        .senderId(safePaymentMessage.senderId())
+        .messageType(safePaymentMessage.messageType())
+        .safePaymentId(safePaymentMessage.safePaymentId())
+        .safePaymentStatus(safePaymentMessage.safePaymentStatus())
+        .build();
+    this.chatMessageRepository.save(chatMessage);
+  }
+  
 }
