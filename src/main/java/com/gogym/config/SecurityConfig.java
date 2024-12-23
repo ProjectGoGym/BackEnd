@@ -71,7 +71,7 @@ public class SecurityConfig {
   private List<String> exemptUrls() {
     return List.of("/api/auth/sign-up", "/api/auth/sign-in", "/api/auth/check-email",
         "/api/auth/check-nickname", "/api/auth/verify-email", "/api/auth/reset-password",
-        "/api/auth/send-verification-email", "/api/regions", "/api/kakao/sign-in",
+        "/api/auth/send-verification-email", "/api/regions", "/api/kakao/sign-in/**",
         "/api/posts/views", "/api/posts/filters", "/api/posts/details/**", "/api/payments/webhook",
         "/api/payments/sse/subscribe/**", "/api/images/presigned-url", "/ws/**",
         "/api/notifications/subscribe/**");
