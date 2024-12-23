@@ -72,17 +72,18 @@ public class ChatMessageBatchScheduler {
    */
   private void processMessages(ChatRoom chatRoom, List<String> messagesJson) {
     messagesJson.forEach(messageJson -> {
-      // JSON 문자열을 RedisMessage 객체로 역직렬화
-      RedisMessage redisMessage = JsonUtil.deserialize(messageJson, RedisMessage.class);
+      // JSON에서 messageType 필드 추출
+      String messageType = JsonUtil.extractField(messageJson, "messageType");
       
-      if (redisMessage instanceof RedisChatMessage chatMessage) {
-        // 일반 메시지일 경우
-        this.saveMessage(chatRoom, chatMessage);
-      } else if (redisMessage instanceof SafePaymentRedisMessage safePaymentMessage) {
-        // 안전결제 메시지일 경우
-        this.saveMessage(chatRoom, safePaymentMessage);
+      RedisMessage redisMessage;
+      if (messageType.startsWith("SYSTEM_SAFE_PAYMENT")) {
+        // 안전거래 메시지일 경우
+        redisMessage = JsonUtil.deserialize(messageJson, SafePaymentRedisMessage.class);
+        this.saveMessage(chatRoom, (SafePaymentRedisMessage) redisMessage);
       } else {
-        throw new CustomException(ErrorCode.REQUEST_VALIDATION_FAIL);
+        // 일반 메시지일 경우
+        redisMessage = JsonUtil.deserialize(messageJson, RedisChatMessage.class);
+        this.saveMessage(chatRoom, (RedisChatMessage) redisMessage);
       }
     });
   }

@@ -25,11 +25,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import com.gogym.chat.dto.ChatMessageDto.RedisChatMessage;
 import com.gogym.chat.dto.ChatRoomDto.ChatRoomResponse;
 import com.gogym.chat.dto.ChatRoomDto.LeaveRequest;
 import com.gogym.chat.entity.ChatRoom;
 import com.gogym.chat.repository.ChatMessageRepository;
 import com.gogym.chat.repository.ChatRoomRepository;
+import com.gogym.chat.type.MessageType;
 import com.gogym.common.entity.BaseEntity;
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
@@ -38,6 +40,7 @@ import com.gogym.member.service.MemberService;
 import com.gogym.post.entity.Post;
 import com.gogym.post.service.PostQueryService;
 import com.gogym.post.type.PostStatus;
+import com.gogym.util.JsonUtil;
 
 @ExtendWith(MockitoExtension.class)
 class ChatRoomServiceImplTest {
@@ -156,12 +159,14 @@ class ChatRoomServiceImplTest {
         any(Pageable.class))).thenReturn(mockPage);
 
     // Redis 메시지 Mock 설정
-    String redisMessageJson = 
-        "{\"content\":\"안녕하세요!\","
-        + "\"senderId\":123,"
-        + "\"messageType\":\"TEXT_ONLY\","
-        + "\"createdAt\":\"2024-12-03T12:00:00\"}";
-    when(this.chatRedisService.getMessages(chatRoomId)).thenReturn(List.of(redisMessageJson));
+    RedisChatMessage chatMessage = new RedisChatMessage(
+        "안녕하세요!",
+        123L,
+        MessageType.TEXT_ONLY,
+        LocalDateTime.of(2024, 12, 25, 12, 0)
+    );
+    String redisChatMessageJson = JsonUtil.serialize(chatMessage);
+    when(this.chatRedisService.getMessages(chatRoomId)).thenReturn(List.of(redisChatMessageJson));
 
     // leaveAt 설정
     LocalDateTime leaveAt = LocalDateTime.now().minusHours(1);
@@ -190,12 +195,14 @@ class ChatRoomServiceImplTest {
     when(this.chatRoomService.isMemberInChatRoom(chatRoomId, memberId)).thenReturn(true);
     
     // Redis 메시지 Mock 설정
-    String redisMessageJson = 
-        "{\"content\":\"안녕하세요!\","
-        + "\"senderId\":123,"
-        + "\"messageType\":\"TEXT_ONLY\","
-        + "\"createdAt\":\"2024-12-03T12:00:00\"}";
-    when(this.chatRedisService.getMessages(chatRoomId)).thenReturn(List.of(redisMessageJson));
+    RedisChatMessage chatMessage = new RedisChatMessage(
+        "안녕하세요!",
+        123L,
+        MessageType.TEXT_ONLY,
+        LocalDateTime.of(2024, 12, 25, 12, 0)
+    );
+    String redisChatMessageJson = JsonUtil.serialize(chatMessage);
+    when(this.chatRedisService.getMessages(chatRoomId)).thenReturn(List.of(redisChatMessageJson));
     
     // When
     assertDoesNotThrow(() -> this.chatRoomService.leaveChatRoom(memberId, chatRoomId, request));
@@ -243,14 +250,16 @@ class ChatRoomServiceImplTest {
     when(this.chatRoomService.isMemberInChatRoom(chatRoomId, this.postAuthor.getId())).thenReturn(true);
     when(this.chatRoomService.isMemberInChatRoom(chatRoomId, this.requestor.getId())).thenReturn(true);
     
-    String redisMessageJson = 
-        "{\"content\":\"안녕하세요!\","
-        + "\"senderId\":123,"
-        + "\"messageType\":\"TEXT_ONLY\","
-        + "\"createdAt\":\"2024-12-03T12:00:00\"}";
+    RedisChatMessage chatMessage = new RedisChatMessage(
+        "안녕하세요!",
+        123L,
+        MessageType.TEXT_ONLY,
+        LocalDateTime.of(2024, 12, 25, 12, 0)
+    );
+    String redisChatMessageJson = JsonUtil.serialize(chatMessage);
     when(this.chatRoomRepository.findById(chatRoomId)).thenReturn(Optional.of(testChatRoom));
     when(this.chatRedisService.getMessages(chatRoomId))
-        .thenReturn(List.of(redisMessageJson)) // 첫 번째 호출에서는 Redis에 메시지 존재
+        .thenReturn(List.of(redisChatMessageJson)) // 첫 번째 호출에서는 Redis에 메시지 존재
         .thenReturn(List.of()); // 두 번째 호출에서는 Redis에 메시지 없음
 
     // When
@@ -283,7 +292,13 @@ class ChatRoomServiceImplTest {
     
     when(this.chatRoomService.isMemberInChatRoom(chatRoomId, memberId)).thenReturn(true);
     
-    String redisMessageJson = "{\"content\":\"test message\",\"senderId\":1,\"createdAt\":\"2024-12-10T12:00:00\"}";
+    RedisChatMessage chatMessage = new RedisChatMessage(
+        "테스트메세지입니다.",
+        123L,
+        MessageType.TEXT_ONLY,
+        LocalDateTime.of(2024, 12, 25, 12, 0)
+    );
+    String redisMessageJson = JsonUtil.serialize(chatMessage);
     when(this.chatRoomRepository.findById(chatRoomId)).thenReturn(Optional.of(testChatRoom));
     when(this.chatRedisService.getMessages(chatRoomId)).thenReturn(List.of(redisMessageJson));
 
