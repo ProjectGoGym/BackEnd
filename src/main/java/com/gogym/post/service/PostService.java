@@ -62,7 +62,7 @@ public class PostService {
   
   private final PostQueryService postQueryService;
 
-  private static final List<PostStatus> postStatuses = List.of(HIDDEN, IN_PROGRESS);
+  private static final List<PostStatus> postStatuses = List.of(PENDING, IN_PROGRESS);
 
   @Transactional
   public PostResponseDto createPost(Long memberId, PostRequestDto postRequestDto) {
