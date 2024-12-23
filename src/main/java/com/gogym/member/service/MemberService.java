@@ -41,7 +41,8 @@ public class MemberService {
 
     return new MemberProfileResponse(member.getId(), member.getEmail(), member.getName(),
         member.getNickname(), member.getPhone(), member.getProfileImageUrl(), gymPayBalance,
-        gymPayId);
+        gymPayId,member.getRegionId1(),member.getRegionId2()
+        );
   }
 
   // 마이페이지 수정
@@ -56,17 +57,18 @@ public class MemberService {
   @Transactional
   public void deactivateMyAccountById(Long memberId) {
     Member member = findById(memberId);
+
+    // BanNickname 저장을 위한 원본 닉네임 저장
+    String originalNickname = member.getNickname();
+    banNicknameRepository.save(new BanNickname(originalNickname));
+    
     member.setMemberStatus(MemberStatus.DEACTIVATED); // 상태 변경
 
     // 이름, 닉네임, 이메일 마스킹 및 민감 정보 초기화(엔티티에서 수정)
     String maskedName = maskString(member.getName());
-    String maskedNickname = maskString(member.getNickname());
+    String maskedNickname = maskString(member.getName());
     String maskedEmail = maskEmail(member.getEmail());
     member.maskSensitiveInfo(maskedName, maskedNickname, maskedEmail);
-
-    // BanNickname 저장
-    BanNickname banNickname = new BanNickname(maskedNickname);
-    banNicknameRepository.save(banNickname);
 
     memberRepository.save(member);
   }

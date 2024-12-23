@@ -8,7 +8,9 @@ public record MemberProfileResponse(
     String phone,
     String profileImageUrl,
     long gymPayBalance,
-    Long gymPayId
+    Long gymPayId,
+    Long regionId1,
+    Long regionId2
     ) {
 }
 
