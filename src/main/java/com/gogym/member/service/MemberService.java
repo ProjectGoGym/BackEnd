@@ -52,7 +52,7 @@ public class MemberService {
 
     if (member.getRegionId2() != null) {
       RegionResponseDto region2 = regionService.findById(member.getRegionId2());
-      regionName2 = (region2.city() != null ? region2 + " - " : "") + region2.district();
+      regionName2 = (region2.city() != null ? region2.city() + " - " : "") + region2.district();
     }
 
     return new MemberProfileResponse(member.getId(), member.getEmail(), member.getName(),
