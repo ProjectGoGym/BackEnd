@@ -62,6 +62,8 @@ public class PostService {
   
   private final PostQueryService postQueryService;
 
+  private static final List<PostStatus> postStatuses = List.of(HIDDEN, IN_PROGRESS);
+
   @Transactional
   public PostResponseDto createPost(Long memberId, PostRequestDto postRequestDto) {
 
@@ -103,8 +105,8 @@ public class PostService {
     if (postFilterRequestDto == null) {
       posts =
           regionIds == null ?
-              postRepository.findAllByStatusOrderByCreatedAtDesc(pageable, PENDING)
-              : postRepository.findAllByStatusAndRegionIds(PENDING, pageable, regionIds);
+              postRepository.findAllByStatusInOrderByCreatedAtDesc(postStatuses, pageable)
+              : postRepository.findAllByStatusInAndRegionIds(postStatuses, pageable, regionIds);
     } else {
 
       posts = postRepositoryCustom.findAllWithFilter(regionIds, postFilterRequestDto, pageable);

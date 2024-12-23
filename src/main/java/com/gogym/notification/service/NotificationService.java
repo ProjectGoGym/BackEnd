@@ -47,11 +47,14 @@ public class NotificationService {
 
     SseEmitter emitter = new SseEmitter(SSE_TIME_OUT);
     emitters.put(memberId, emitter);
+    log.info("⭐️SSE 구독을 신청한 회원 (memberId : {})", memberId);
 
     // 클라이언트 연결 종료, 만료, 에러 처리
     emitter.onCompletion(() -> {
-      log.info("👍SSE 구독 정상 해제 (memberId : {}),", memberId);
-      removeEmitter(memberId);
+      if (emitters.containsKey(memberId)) {
+        log.info("👍SSE 구독 정상 해제 (memberId : {}),", memberId);
+        removeEmitter(memberId);
+      }
     });
     emitter.onTimeout(() -> {
       log.warn("🕰️SSE 구독 타임 아웃 (memberId : {}),", memberId);
@@ -62,6 +65,7 @@ public class NotificationService {
       removeEmitter(memberId);
     });
 
+    log.info("🫡SSE 구독회원에게 Dummy Data 전송을 시작합니다. \n📍memberId : {}, \n📍emitter : {})", memberId, emitter);
     sendDummyData(memberId, emitter);
 
     return emitter;
@@ -76,6 +80,7 @@ public class NotificationService {
     // 연결이 되었으면 더미(뻥) 데이터 전송(클라이언트에서 확인용으로 사용하면 될 것 같습니다.)
     if (emitter != null) {
 
+      log.info("🎤구독한 회원에게 보내는 세레나데 (memberId : {})", memberId);
       scheduler.schedule(() -> {
         try {
           emitter.send(SseEmitter.event()
