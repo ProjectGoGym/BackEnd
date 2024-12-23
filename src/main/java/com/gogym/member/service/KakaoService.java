@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+@Transactional
 public class KakaoService {
 
   private final MemberRepository memberRepository;
@@ -40,7 +40,6 @@ public class KakaoService {
     return "https://gogym-eight.vercel.app/kakaoLogin";
   }
 
-  @Transactional
   public KakaoLoginResponse processKakaoLogin(String code) {
     // 1. Access Token 및 프로필 정보 획득
     KakaoTokenResponse tokenResponse = requestAccessTokenFromKakao(code);
