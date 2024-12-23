@@ -36,11 +36,8 @@ import com.gogym.chat.type.MessageType;
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
 import com.gogym.gympay.event.SendMessageEvent;
-import com.gogym.member.entity.Member;
-import com.gogym.post.entity.Gym;
 import com.gogym.post.entity.Post;
 import com.gogym.post.service.PostQueryService;
-import com.gogym.region.dto.RegionResponseDto;
 import com.gogym.region.service.RegionService;
 
 @ExtendWith(MockitoExtension.class)
@@ -83,23 +80,13 @@ class ChatMessageServiceImplTest {
     Long memberId = 1L;
     Long chatRoomId = 1L;
     
-    // Mock Post 객체 생성 및 동작 설정
+    // Mock Post 객체 생성
     Post post = mock(Post.class);
-    when(post.getGym()).thenReturn(mock(Gym.class));
-    when(post.getGym().getRegionId()).thenReturn(123L);
-    when(post.getAuthor()).thenReturn(mock(Member.class));
-    
-    // Mock RegionService 동작 설정
-    RegionResponseDto region = mock(RegionResponseDto.class);
-    when(this.regionService.findById(any())).thenReturn(region);
     
     // Mock ChatRoom 객체 생성 및 동작 설정
     ChatRoom chatRoom = mock(ChatRoom.class);
     when(chatRoom.getPost()).thenReturn(post);
     when(this.chatRoomRepository.findById(chatRoomId)).thenReturn(Optional.of(chatRoom));
-    
-    // Mock PostQueryService 동작 설정
-    when(this.postQueryService.isWished(post, memberId)).thenReturn(true);
     
     // Mock 권한 확인 메서드 설정
     when(this.chatRoomQueryService.isMemberInChatRoom(chatRoomId, memberId)).thenReturn(true);
@@ -135,8 +122,6 @@ class ChatMessageServiceImplTest {
     verify(this.chatRoomQueryService).isMemberInChatRoom(chatRoomId, memberId);
     verify(this.chatRedisService).getMessages(chatRoomId);
     verify(this.chatMessageRepository).findByChatRoomIdOrderByCreatedAtDesc(eq(chatRoomId), any(Pageable.class));
-    verify(this.postQueryService).isWished(any(), any());
-    verify(this.regionService).findById(any());
   }
 
 
