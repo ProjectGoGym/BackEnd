@@ -82,7 +82,7 @@ public class KakaoService {
   private KakaoTokenResponse getAccessToken(String code, String currentDomain) {
     RestTemplate restTemplate = new RestTemplate();
     HttpHeaders headers = new HttpHeaders();
-    headers.set("Content-Type", "application/x-www-form-urlencoded");
+    headers.set("Content-Type", "application/x-www-form-urlencoded;charset=utf-8");
 
     String redirectUri = generateRedirectUri(currentDomain);
     String body =
