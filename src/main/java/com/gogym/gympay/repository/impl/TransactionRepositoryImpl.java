@@ -51,7 +51,8 @@ public class TransactionRepositoryImpl implements TransactionRepositoryCustom {
             gym.gymName,
             post.createdAt,
             post.wishCount,
-            post.author.nickname
+            post.author.nickname,
+            post.postType
         ))
         .from(post)
         .leftJoin(post.gym, gym)

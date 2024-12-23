@@ -2,6 +2,7 @@ package com.gogym.post.dto;
 
 import com.gogym.post.entity.Post;
 import com.gogym.post.type.PostStatus;
+import com.gogym.post.type.PostType;
 import com.querydsl.core.annotations.QueryProjection;
 import java.time.LocalDateTime;
 import lombok.Builder;
@@ -19,7 +20,8 @@ public record PostPageResponseDto(
     String gymName,
     LocalDateTime createdAt,
     Long wishCount,
-    String authorNickname
+    String authorNickname,
+    PostType postType
 
 ) {
 
@@ -41,6 +43,7 @@ public record PostPageResponseDto(
         .createdAt(post.getCreatedAt())
         .wishCount(post.getWishCount())
         .authorNickname(post.getAuthor().getNickname())
+        .postType(post.getPostType())
         .build();
   }
 }
