@@ -21,7 +21,7 @@ public class KakaoController {
   private final KakaoService kakaoService;
 
   @GetMapping("/sign-in")
-  public ResponseEntity<Object> handleKakaoLogin(@RequestParam("code") String code) {
+  public ResponseEntity<Boolean> handleKakaoLogin(@RequestParam("code") String code) {
     KakaoLoginResponse response = kakaoService.processKakaoLogin(code);
 
     HttpHeaders headers = new HttpHeaders();
@@ -29,7 +29,7 @@ public class KakaoController {
       headers.add("Authorization", "Bearer " + response.getToken());
     }
 
-    return ResponseEntity.status(HttpStatus.OK).headers(headers).body(response.isExistingUser());
+    return ResponseEntity.ok().headers(headers).body(response.isExistingUser());
   }
 
 }
