@@ -31,4 +31,5 @@ public class KakaoController {
     // 신규/기존 여부만 본문으로 반환
     return ResponseEntity.ok().headers(headers).body(response.isExistingUser());
   }
+  
 }

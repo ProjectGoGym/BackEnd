@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.gogym.exception.CustomException;
 
 @Service
 @RequiredArgsConstructor
@@ -28,7 +29,8 @@ public class KakaoService {
   private final MemberRepository memberRepository;
   private final JwtTokenProvider jwtTokenProvider;
   private static final Logger log = LoggerFactory.getLogger(KakaoService.class);
-
+  private final MemberService memberService;
+  
   @Value("${kakao.rest-api-key}")
   private String kakaoClientId;
 
@@ -45,31 +47,29 @@ public class KakaoService {
     KakaoTokenResponse tokenResponse = requestAccessTokenFromKakao(code);
     KakaoProfileResponse profileResponse = getProfile(tokenResponse.accessToken());
 
-    // 2. 이메일로 회원 정보 조회
+    // 2. 이메일로 회원 정보 조회 (MemberService 활용)
     String email = profileResponse.kakaoAccount().email();
     log.info("카카오 사용자 이메일: {}", email);
 
-    Optional<Member> optionalMember = memberRepository.findByEmail(email);
+    try {
+      Member member = memberService.findByEmail(email);
 
-    if (optionalMember.isEmpty()) {
+      // 3. isKakao 여부 확인
+      if (!member.isKakao()) {
+        log.warn("회원이 카카오 사용자가 아님 - 이메일: {}", email);
+        return new KakaoLoginResponse(false, null); // 신규 유저
+      }
+
+      // 4. 로그인 진행: JWT 토큰 발행
+      String token = jwtTokenProvider.createToken(member.getEmail(), member.getId(),
+          List.of(member.getRole().name()));
+      log.info("JWT 토큰 생성 완료 - 이메일: {}", email);
+
+      return new KakaoLoginResponse(true, token); // 기존 유저
+    } catch (CustomException e) {
       log.warn("회원 정보 없음 - 이메일: {}", email);
       return new KakaoLoginResponse(false, null); // 신규 유저
     }
-
-    Member member = optionalMember.get();
-
-    // 3. isKakao 여부 확인
-    if (!member.isKakao()) {
-      log.warn("회원이 카카오 사용자가 아님 - 이메일: {}", email);
-      return new KakaoLoginResponse(false, null); // 신규 유저
-    }
-
-    // 4. 로그인 진행: JWT 토큰 발행
-    String token = jwtTokenProvider.createToken(member.getEmail(), member.getId(),
-        List.of(member.getRole().name()));
-    log.info("JWT 토큰 생성 완료 - 이메일: {}", email);
-
-    return new KakaoLoginResponse(true, token); // 기존 유저
   }
 
 
