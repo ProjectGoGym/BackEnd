@@ -18,7 +18,7 @@ public class KakaoController {
 
   private final KakaoService kakaoService;
 
-  @PostMapping("/sign-in")
+  @GetMapping("/sign-in")
   public ResponseEntity<Object> handleKakaoLogin(@RequestParam("code") String code,
       HttpServletRequest request) {
     String currentDomain = request.getRequestURL().toString().replace(request.getRequestURI(), "");
