@@ -14,7 +14,8 @@ import com.gogym.chat.type.MessageType;
 )
 @JsonSubTypes({
     @JsonSubTypes.Type(value = SafePaymentRedisMessage.class, name = "SafePaymentRedisMessage"),
-    @JsonSubTypes.Type(value = RedisChatMessage.class, name = "RedisChatMessage")})
+    @JsonSubTypes.Type(value = RedisChatMessage.class, name = "RedisChatMessage")}
+)
 public interface RedisMessage {
   String content();
   Long senderId();
