@@ -10,6 +10,8 @@ import com.gogym.member.dto.KakaoLoginResponse;
 import com.gogym.member.service.KakaoService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import java.util.HashMap;
+import java.util.Map;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 
@@ -21,7 +23,7 @@ public class KakaoController {
   private final KakaoService kakaoService;
 
   @GetMapping("/sign-in")
-  public ResponseEntity<Boolean> handleKakaoLogin(@RequestParam("code") String code) {
+  public ResponseEntity<Map<String, Object>> handleKakaoLogin(@RequestParam("code") String code) {
     KakaoLoginResponse response = kakaoService.processKakaoLogin(code);
 
     HttpHeaders headers = new HttpHeaders();
@@ -29,7 +31,10 @@ public class KakaoController {
       headers.add("Authorization", "Bearer " + response.getToken());
     }
 
-    return ResponseEntity.ok().headers(headers).body(response.isExistingUser());
-  }
+    // 명확한 응답 구조 생성
+    Map<String, Object> responseBody = new HashMap<>();
+    responseBody.put("isExistingUser", response.isExistingUser());
 
+    return ResponseEntity.ok().headers(headers).body(responseBody);
+  }
 }
