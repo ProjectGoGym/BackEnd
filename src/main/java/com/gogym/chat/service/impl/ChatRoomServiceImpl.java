@@ -3,6 +3,7 @@ package com.gogym.chat.service.impl;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,7 @@ import com.gogym.chat.dto.ChatRoomDto.LeaveRequest;
 import com.gogym.chat.dto.base.RedisMessage;
 import com.gogym.chat.entity.ChatMessage;
 import com.gogym.chat.entity.ChatRoom;
+import com.gogym.chat.event.ChatRoomEvent;
 import com.gogym.chat.repository.ChatMessageRepository;
 import com.gogym.chat.repository.ChatRoomRepository;
 import com.gogym.chat.service.ChatRedisService;
@@ -40,6 +42,8 @@ public class ChatRoomServiceImpl implements ChatRoomQueryService, ChatRoomServic
   private final PostQueryService postQueryService;
   private final MemberService memberService;
   
+  private final ApplicationEventPublisher eventPublisher;
+  
   @Override
   public ChatRoomResponse createChatRoom(Long memberId, Long postId) {
     // 게시글 작성자 존재 여부 확인
@@ -64,6 +68,16 @@ public class ChatRoomServiceImpl implements ChatRoomQueryService, ChatRoomServic
         .isDeleted(false)
         .build();
     this.chatRoomRepository.save(newChatRoom);
+    
+    // 채팅방 생성 이벤트 발행
+    this.eventPublisher.publishEvent(
+        new ChatRoomEvent(
+            this,
+            newChatRoom.getId(),
+            newChatRoom.getRequestor().getId(),
+            newChatRoom.getRequestor().getNickname()
+        )
+    );
     
     return new ChatRoomResponse(
         newChatRoom.getId(), // chatRoomId
