@@ -33,7 +33,8 @@ public class KakaoService {
 
   // Redirect URI 생성 메서드
   private String generateRedirectUri() {
-    return "http://go-gym.site/api/kakao/sign-in";
+    return "https://gogym-eight.vercel.app/kakaoLogin";
+    //return "http://go-gym.site/api/kakao/sign-in";
     //return "http://localhost:8080/api/kakao/sign-in";
   }
 
