@@ -28,8 +28,6 @@ public class TransactionService {
   private final ChatRoomQueryService chatRoomQueryService;
 
   private final TransactionRepository transactionRepository;
-  
-  private final ChatRoomQueryService chatRoomQueryService;
 
   @Transactional
   public void start(ChatRoom chatRoom, Member seller, Member buyer) {
@@ -63,7 +61,6 @@ public class TransactionService {
 
     Transaction transaction = getById(chatRoom.getTransactionId());
     transaction.setMeetingAt(request.dateTime());
-    ChatRoom chatRoom = chatRoomQueryService.getChatRoomById(chatRoomId);
   }
 
   private void canCancel(Transaction transaction) {
