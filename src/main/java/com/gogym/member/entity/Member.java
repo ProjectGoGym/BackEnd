@@ -75,6 +75,7 @@ public class Member extends BaseEntity {
 
   @Setter
   @Column(name = "is_kakao")
+  @Builder.Default
   private boolean isKakao = false; // 카카오 로그인 여부
 
   @Setter
