@@ -1,10 +1,8 @@
 package com.gogym.member.service;
 
-import com.gogym.exception.CustomException;
-import com.gogym.exception.ErrorCode;
-import com.gogym.member.entity.Member;
 import com.gogym.post.dto.PostPageResponseDto;
 import com.gogym.post.service.PostService;
+import com.gogym.post.service.RecentViewService;
 import com.gogym.post.service.WishService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -20,6 +18,7 @@ public class ActivityService {
   private final PostService postService;
   private final WishService wishService;
   private final MemberService memberService;
+  private final RecentViewService recentViewService;
 
   // 내가 작성한 게시글 조회
   public Page<PostPageResponseDto> getMyPosts(Long memberId, Pageable pageable) {
@@ -36,7 +35,7 @@ public class ActivityService {
   // 최근 본 게시글 조회
   public Page<PostPageResponseDto> getRecentViews(Long memberId, Pageable pageable) {
     memberService.findById(memberId);
-    return postService.getAuthorPosts(memberId, pageable);
+    return recentViewService.getRecentViews(memberId, pageable);
   }
 
 }

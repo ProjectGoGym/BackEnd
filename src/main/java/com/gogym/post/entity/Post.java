@@ -87,9 +87,11 @@ public class Post extends BaseEntity {
   private Long remainingSessions;
 
   @OneToMany(mappedBy = "post", cascade = CascadeType.PERSIST)
+  @Builder.Default
   private List<Wish> wishes = new ArrayList<>();
 
   @OneToMany(mappedBy = "post", cascade = CascadeType.PERSIST)
+  @Builder.Default
   private List<ChatRoom> chatRoom = new ArrayList<>();
 
   public static Post of (Member member, Gym gym, PostRequestDto postRequestDto) {

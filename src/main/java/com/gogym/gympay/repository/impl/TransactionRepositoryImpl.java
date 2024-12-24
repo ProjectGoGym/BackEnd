@@ -52,6 +52,7 @@ public class TransactionRepositoryImpl implements TransactionRepositoryCustom {
             post.createdAt,
             post.wishCount,
             post.author.nickname,
+            post.author.profileImageUrl,
             post.postType
         ))
         .from(post)
