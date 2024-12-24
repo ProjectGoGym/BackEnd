@@ -30,13 +30,14 @@ public class KakaoService {
   private final MemberRepository memberRepository;
   private final JwtTokenProvider jwtTokenProvider;
   private final MemberService memberService;
-  
+
   @Value("${kakao.rest-api-key}")
   private String kakaoClientId;
 
   // Redirect URI 생성 메서드
   private String generateRedirectUri() {
-    return "https://gogym-eight.vercel.app/kakaoLogin";
+    // return "https://gogym-eight.vercel.app/kakaoLogin";
+    return "http://localhost:8080/api/kakao/sign-in";
   }
 
   public KakaoLoginResponse processKakaoLogin(String code) {
@@ -47,26 +48,18 @@ public class KakaoService {
     // 2. 이메일로 회원 정보 조회
     String email = profileResponse.kakaoAccount().email();
     log.info("카카오 사용자 이메일: {}", email);
-
-    try {
-      Member member = memberService.findByEmail(email);
-
-      // 3. isKakao 여부 확인
-      if (!member.isKakao()) {
-        log.warn("회원이 카카오 사용자가 아님 - 이메일: {}", email);
-        return new KakaoLoginResponse(false, null); // 신규 유저
-      }
-
-      // 4. 로그인 진행: JWT 토큰 발행
-      String token = jwtTokenProvider.createToken(member.getEmail(), member.getId(),
-          List.of(member.getRole().name()));
-      log.info("JWT 토큰 생성 완료 - 이메일: {}", email);
-
-      return new KakaoLoginResponse(true, token); // 기존 유저
-    } catch (CustomException e) {
-      log.warn("회원 정보 없음 - 이메일: {}", email);
-      return new KakaoLoginResponse(false, null); // 신규 유저
+    
+    Member member = memberService.findByEmail(email);
+    // 카카오 사용자가 아니라면 로그인 불가
+    if (!member.isKakao()) {
+      log.warn("회원이 카카오 사용자가 아님 - 이메일: {}", email);
+      return new KakaoLoginResponse(false, null, email);
     }
+
+    // JWT 토큰 발행
+    String token = jwtTokenProvider.createToken(member.getEmail(), member.getId(),
+        List.of(member.getRole().name()));
+    return new KakaoLoginResponse(true, token, email);
   }
 
   // 카카오 인증 URL 생성 메서드

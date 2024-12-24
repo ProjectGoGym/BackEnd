@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-public class AuthController { 
+public class AuthController {
 
   private final AuthService authService;
   private final EmailService emailService;
@@ -38,6 +38,14 @@ public class AuthController {
   public ResponseEntity<Void> signUp(@RequestBody @Valid SignUpRequest request) {
     authService.signUp(request);
     return ResponseEntity.status(HttpStatus.OK).build();
+  }
+
+  // 카카오로 회원가입
+  @PostMapping("/sign-up/kakao")
+  public ResponseEntity<Void> kakaoSignUp(@RequestBody @Valid SignUpRequest request) {
+    authService.signUp(request);
+    authService.completeKakaoSignUp(request.getEmail());
+    return ResponseEntity.ok().build();
   }
 
   // 로그인
@@ -52,7 +60,7 @@ public class AuthController {
     Member member = authService.getMemberByEmail(request.getEmail());
     LoginResponse loginResponse = new LoginResponse(member.getId(), member.getEmail(),
         member.getName(), member.getNickname(), member.getPhone());
- 
+
     // HttpHeaders를 사용하여 헤더에 Authorization 추가
     HttpHeaders headers = new HttpHeaders();
     headers.add("Authorization", "Bearer " + accessToken);
@@ -61,6 +69,7 @@ public class AuthController {
     // ResponseEntity에 헤더와 바디를 추가
     return ResponseEntity.ok().headers(headers).body(loginResponse);
   }
+
 
   // 로그아웃
   @PostMapping("/sign-out")

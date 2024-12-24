@@ -23,7 +23,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class AuthService { 
+public class AuthService {
 
   private final MemberService memberService;
 
@@ -178,14 +178,12 @@ public class AuthService {
     }
   }
 
-  // 카카오 회원가입 업데이트 로직
   @Transactional
   public void completeKakaoSignUp(String email) {
     Member member = memberRepository.findByEmail(email)
         .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
 
-    // isKakao 값을 true로 업데이트
-    member.setKakao(true);
+    member.setKakao(true); // isKakao 값을 true로 설정
   }
 
 }

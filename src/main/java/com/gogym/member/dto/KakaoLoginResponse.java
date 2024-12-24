@@ -8,5 +8,6 @@ import lombok.Getter;
 public class KakaoLoginResponse {
   private final boolean isExistingUser;
   private final String token;
+  private String email;
 }
 
