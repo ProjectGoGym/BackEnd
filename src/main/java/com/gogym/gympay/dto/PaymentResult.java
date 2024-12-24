@@ -1,5 +1,6 @@
 package com.gogym.gympay.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.gogym.gympay.entity.Payment;
 import com.gogym.gympay.entity.constant.PaymentStatus;
@@ -11,6 +12,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public record PaymentResult(
     String status, // 결제 상태 (예: PAID, FAILED)
     String id, // 결제 고유 ID
@@ -38,12 +40,16 @@ public record PaymentResult(
     Failure failure // 결제 실패 사유
 ) {
 
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  @JsonIgnoreProperties(ignoreUnknown = true)
   public record PaymentMethod(
       String type, // 결제 유형 (예: PaymentMethodEasyPay)
       String provider, // 결제 제공사 (예: NAVERPAY)
       EasyPayMethod easyPayMethod // EasyPay 결제 방식
   ) {
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public record EasyPayMethod(
         String type, // EasyPay 결제 유형 (예: PaymentMethodCard)
         Card card, // 카드 정보
@@ -52,6 +58,8 @@ public record PaymentResult(
         boolean pointUsed // 포인트 사용 여부
     ) {
 
+      @JsonInclude(JsonInclude.Include.NON_NULL)
+      @JsonIgnoreProperties(ignoreUnknown = true)
       public record Card(
           String publisher, // 카드 발급사
           String issuer, // 카드 발행사
@@ -65,6 +73,8 @@ public record PaymentResult(
 
       }
 
+      @JsonInclude(JsonInclude.Include.NON_NULL)
+      @JsonIgnoreProperties(ignoreUnknown = true)
       public record Installment(
           int month, // 할부 개월 수
           boolean isInterestFree // 무이자 여부
@@ -74,6 +84,8 @@ public record PaymentResult(
     }
   }
 
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  @JsonIgnoreProperties(ignoreUnknown = true)
   public record PaymentChannel(
       String type, // 결제 채널 유형 (예: TEST)
       String id, // 채널 ID
@@ -85,6 +97,8 @@ public record PaymentResult(
 
   }
 
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  @JsonIgnoreProperties(ignoreUnknown = true)
   public record Webhook(
       String paymentStatus, // 결제 상태 (예: FAILED)
       String id, // 웹훅 고유 ID
@@ -97,6 +111,8 @@ public record PaymentResult(
       String triggeredAt // 웹훅 트리거 시간
   ) {
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public record Request(
         String header, // 요청 헤더
         String body, // 요청 본문
@@ -105,6 +121,8 @@ public record PaymentResult(
 
     }
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public record Response(
         String code, // 응답 코드
         String header, // 응답 헤더
@@ -115,6 +133,8 @@ public record PaymentResult(
     }
   }
 
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  @JsonIgnoreProperties(ignoreUnknown = true)
   public record Amount(
       int total, // 총 금액
       int taxFree, // 면세 금액
@@ -128,6 +148,8 @@ public record PaymentResult(
 
   }
 
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  @JsonIgnoreProperties(ignoreUnknown = true)
   public record Customer(
       String id, // 고객 ID
       String name, // 고객 이름
@@ -137,8 +159,12 @@ public record PaymentResult(
 
   }
 
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  @JsonIgnoreProperties(ignoreUnknown = true)
   public record Failure(
-      String reason // 실패 사유
+      String reason, // 실패 사유
+      String pgCode, // PG사 실패코드
+      String pgMessage // PG사 실패 메세지
   ) {
 
   }
