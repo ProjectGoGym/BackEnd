@@ -21,6 +21,7 @@ public record PostPageResponseDto(
     LocalDateTime createdAt,
     Long wishCount,
     String authorNickname,
+    String authorProfileImageUrl,
     PostType postType
 
 ) {
@@ -43,6 +44,7 @@ public record PostPageResponseDto(
         .createdAt(post.getCreatedAt())
         .wishCount(post.getWishCount())
         .authorNickname(post.getAuthor().getNickname())
+        .authorProfileImageUrl(post.getAuthor().getProfileImageUrl())
         .postType(post.getPostType())
         .build();
   }

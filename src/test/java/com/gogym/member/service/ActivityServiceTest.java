@@ -1,22 +1,25 @@
 package com.gogym.member.service;
 
-import static org.mockito.Mockito.*;
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.gogym.member.entity.Member;
 import com.gogym.member.type.MemberStatus;
 import com.gogym.post.dto.PostPageResponseDto;
 import com.gogym.post.service.PostService;
+import com.gogym.post.service.RecentViewService;
 import com.gogym.post.service.WishService;
-import org.junit.jupiter.api.Test;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-
-import java.util.List;
 
 class ActivityServiceTest {
 
@@ -28,6 +31,9 @@ class ActivityServiceTest {
 
   @Mock
   private MemberService memberService;
+
+  @Mock
+  private RecentViewService recentViewService;
 
   @InjectMocks
   private ActivityService activityService;
@@ -93,14 +99,14 @@ class ActivityServiceTest {
     when(mockMember.getMemberStatus()).thenReturn(MemberStatus.ACTIVE);
     when(memberService.findById(memberId)).thenReturn(mockMember);
 
-    when(postService.getAuthorPosts(memberId, pageable)).thenReturn(recentViewPage);
+    when(recentViewService.getRecentViews(memberId, pageable)).thenReturn(recentViewPage);
 
     // When
     Page<PostPageResponseDto> result = activityService.getRecentViews(memberId, pageable);
 
     // Then
     assertThat(result.getContent()).isNotEmpty();
-    verify(postService).getAuthorPosts(memberId, pageable);
+    verify(recentViewService).getRecentViews(memberId, pageable);
   }
 }
 

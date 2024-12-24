@@ -1,6 +1,7 @@
 package com.gogym.chat.service.impl;
 
 import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.assertj.core.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -26,6 +27,9 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import com.gogym.chat.dto.ChatMessageDto.ChatMessageRequest;
 import com.gogym.chat.dto.ChatMessageDto.ChatMessageResponse;
 import com.gogym.chat.dto.ChatMessageDto.ChatRoomMessagesResponse;
+import com.gogym.chat.dto.ChatMessageDto.RedisChatMessage;
+import com.gogym.chat.dto.ChatMessageDto.SafePaymentRedisMessage;
+import com.gogym.chat.dto.base.RedisMessage;
 import com.gogym.chat.entity.ChatMessage;
 import com.gogym.chat.entity.ChatRoom;
 import com.gogym.chat.repository.ChatMessageRepository;
@@ -35,10 +39,12 @@ import com.gogym.chat.service.ChatRoomQueryService;
 import com.gogym.chat.type.MessageType;
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
+import com.gogym.gympay.entity.constant.SafePaymentStatus;
 import com.gogym.gympay.event.SendMessageEvent;
 import com.gogym.post.entity.Post;
 import com.gogym.post.service.PostQueryService;
 import com.gogym.region.service.RegionService;
+import com.gogym.util.JsonUtil;
 
 @ExtendWith(MockitoExtension.class)
 class ChatMessageServiceImplTest {
@@ -91,13 +97,24 @@ class ChatMessageServiceImplTest {
     // Mock 권한 확인 메서드 설정
     when(this.chatRoomQueryService.isMemberInChatRoom(chatRoomId, memberId)).thenReturn(true);
     
-    // Mock Redis 메시지 설정
-    String redisMessageJson = 
-        "{\"content\":\"Redis메시지입니다.\","
-        + "\"senderId\":123,"
-        + "\"messageType\":\"TEXT_ONLY\","
-        + "\"createdAt\":\"2024-12-03T12:00:00\"}";
-    when(this.chatRedisService.getMessages(chatRoomId)).thenReturn(List.of(redisMessageJson));
+    // Mock Redis 메시지 JSON 데이터 설정
+    SafePaymentRedisMessage safePaymentMessage = new SafePaymentRedisMessage(
+        "안전결제 메시지입니다.",
+        456L,
+        MessageType.SYSTEM_SAFE_PAYMENT_REQUEST,
+        LocalDateTime.of(2024, 12, 25, 12, 0),
+        789L,
+        SafePaymentStatus.IN_PROGRESS
+    );
+    RedisChatMessage chatMessage = new RedisChatMessage(
+        "일반 메시지입니다.",
+        123L,
+        MessageType.TEXT_ONLY,
+        LocalDateTime.of(2024, 12, 25, 12, 0)
+    );
+    String redisSafePaymentMessageJson = JsonUtil.serialize(safePaymentMessage);
+    String redisChatMessageJson = JsonUtil.serialize(chatMessage);
+    when(this.chatRedisService.getMessages(chatRoomId)).thenReturn(List.of(redisSafePaymentMessageJson, redisChatMessageJson));
     
     // Mock DB 메시지 설정
     ChatMessage dbMessage = mock(ChatMessage.class);
@@ -108,22 +125,23 @@ class ChatMessageServiceImplTest {
     Page<ChatMessage> dbMessages = new PageImpl<>(List.of(dbMessage));
     when(this.chatMessageRepository.findByChatRoomIdOrderByCreatedAtDesc(
         chatRoomId,
-        Pageable.unpaged())).thenReturn(dbMessages);
+        Pageable.unpaged()
+    )).thenReturn(dbMessages);
     
     // When
     ChatRoomMessagesResponse response = this.chatMessageService.getChatRoomMessagesAndPostInfo(memberId, chatRoomId, this.pageable);
     
     // Then
     assertNotNull(response);
-    assertEquals(2, response.messages().getContent().size());
+    assertEquals(3, response.messages().getContent().size());
     assertEquals("DB메시지입니다.", response.messages().getContent().get(0).content());
-    assertEquals("Redis메시지입니다.", response.messages().getContent().get(1).content());
+    assertEquals("안전결제 메시지입니다.", response.messages().getContent().get(1).content());
+    assertEquals("일반 메시지입니다.", response.messages().getContent().get(2).content());
     
     verify(this.chatRoomQueryService).isMemberInChatRoom(chatRoomId, memberId);
     verify(this.chatRedisService).getMessages(chatRoomId);
     verify(this.chatMessageRepository).findByChatRoomIdOrderByCreatedAtDesc(eq(chatRoomId), any(Pageable.class));
   }
-
 
   @Test
   void 이벤트_기반_메시지_전송_성공() {
@@ -132,20 +150,29 @@ class ChatMessageServiceImplTest {
     Long senderId = 1L;
     String content = "이벤트메시지입니다.";
     MessageType messageType = MessageType.SYSTEM_SAFE_PAYMENT_REQUEST;
+    Long safePaymentId = 1L;
+    SafePaymentStatus safePaymentStatus = SafePaymentStatus.PENDING_APPROVAL;
     
-    SendMessageEvent event = new SendMessageEvent(chatRoomId, senderId, content, messageType);
+    SendMessageEvent event = new SendMessageEvent(chatRoomId, senderId, content, messageType, safePaymentId, safePaymentStatus);
     ChatMessageResponse savedMessage = new ChatMessageResponse(chatRoomId, senderId, content, messageType, LocalDateTime.now());
     
     when(this.chatRedisService.saveMessageToRedis(
         any(ChatMessageRequest.class),
         eq(senderId),
-        eq(messageType))).thenReturn(savedMessage);
+        eq(messageType),
+        eq(safePaymentId),
+        eq(safePaymentStatus))).thenReturn(savedMessage);
     
     // When
     this.chatMessageService.handleChatMessageEvent(event);
     
     // Then
-    verify(this.chatRedisService).saveMessageToRedis(any(ChatMessageRequest.class), eq(senderId), eq(messageType));
+    verify(this.chatRedisService).saveMessageToRedis(
+        any(ChatMessageRequest.class),
+        eq(senderId),
+        eq(messageType),
+        eq(safePaymentId),
+        eq(safePaymentStatus));
     verify(this.messagingTemplate).convertAndSend(eq("/topic/chatroom/" + chatRoomId), any(SendMessageEvent.class));
   }
 
@@ -160,13 +187,13 @@ class ChatMessageServiceImplTest {
     ChatMessageRequest messageRequest = new ChatMessageRequest(chatRoomId, content);
     ChatMessageResponse savedMessage = new ChatMessageResponse(chatRoomId, senderId, content, messageType, LocalDateTime.now());
     
-    when(this.chatRedisService.saveMessageToRedis(messageRequest, senderId, messageType)).thenReturn(savedMessage);
+    when(this.chatRedisService.saveMessageToRedis(messageRequest, senderId, messageType, null, null)).thenReturn(savedMessage);
     
     // When
     this.chatMessageService.sendMessage(messageRequest, senderId);
     
     // Then
-    verify(this.chatRedisService).saveMessageToRedis(messageRequest, senderId, messageType);
+    verify(this.chatRedisService).saveMessageToRedis(messageRequest, senderId, messageType, null, null);
     verify(this.messagingTemplate).convertAndSend("/topic/chatroom/" + chatRoomId, savedMessage);
   }
 
@@ -185,6 +212,45 @@ class ChatMessageServiceImplTest {
     // Then
     assertTrue(thrown instanceof CustomException);
     assertEquals(ErrorCode.FORBIDDEN, ((CustomException) thrown).getErrorCode());
+  }
+  
+  @Test
+  void redisMessage_역직렬화_테스트() {
+      // Given: SafePaymentRedisMessage 데이터 생성
+      SafePaymentRedisMessage safePaymentMessage = new SafePaymentRedisMessage(
+          "안전결제 메시지입니다.",
+          456L,
+          MessageType.SYSTEM_SAFE_PAYMENT_REQUEST,
+          LocalDateTime.of(2024, 12, 25, 12, 0),
+          789L,
+          SafePaymentStatus.IN_PROGRESS
+      );
+
+      // Given: RedisChatMessage 데이터 생성
+      RedisChatMessage chatMessage = new RedisChatMessage(
+          "일반 메시지입니다.",
+          123L,
+          MessageType.TEXT_ONLY,
+          LocalDateTime.of(2024, 12, 25, 12, 0)
+      );
+
+      // When: JSON 직렬화
+      String safePaymentJson = JsonUtil.serialize(safePaymentMessage);
+      String chatMessageJson = JsonUtil.serialize(chatMessage);
+
+      // Then: 역직렬화 및 검증
+      try {
+          RedisMessage deserializedSafePayment = JsonUtil.deserialize(safePaymentJson, RedisMessage.class);
+          RedisMessage deserializedChatMessage = JsonUtil.deserialize(chatMessageJson, RedisMessage.class);
+
+          assertNotNull(deserializedSafePayment);
+          assertTrue(deserializedSafePayment instanceof SafePaymentRedisMessage);
+
+          assertNotNull(deserializedChatMessage);
+          assertTrue(deserializedChatMessage instanceof RedisChatMessage);
+      } catch (Exception e) {
+          fail("역직렬화 실패: " + e.getMessage());
+      }
   }
   
 }

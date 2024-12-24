@@ -1,6 +1,8 @@
 package com.gogym.member.service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -14,13 +16,14 @@ import com.gogym.member.entity.Member;
 import com.gogym.member.jwt.JwtTokenProvider;
 import com.gogym.member.repository.BanNicknameRepository;
 import com.gogym.member.repository.MemberRepository;
+import com.gogym.util.RedisService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class AuthService {
+public class AuthService { 
 
   private final MemberService memberService;
 
@@ -29,6 +32,7 @@ public class AuthService {
   private final JwtTokenProvider jwtTokenProvider;
   private final EmailService emailService;
   private final BanNicknameRepository banNicknameRepository;
+  private final RedisService redisService;
 
   // 회원가입 처리
   @Transactional
@@ -44,28 +48,28 @@ public class AuthService {
   }
 
   // 로그인 처리
-  public String login(SignInRequest request) {
-    // 사용자의 이메일로 회원 정보 조회
+  public Map<String, String> login(SignInRequest request) {
+    // 사용자 인증 로직
     Member member = memberService.findByEmail(request.getEmail());
-
-    // 이메일 인증 여부 확인
-    if (!member.isVerified()) {
-      throw new CustomException(ErrorCode.EMAIL_NOT_VERIFIED);
-    }
-
-    // 비밀번호 검증
     if (!passwordEncoder.matches(request.getPassword(), member.getPassword())) {
       throw new CustomException(ErrorCode.UNAUTHORIZED);
     }
 
-    // JWT 토큰 생성 (토큰 생성 부분)
-    String token = jwtTokenProvider.createToken(member.getEmail(), member.getId(),
-        List.of(member.getRole().name()) // 사용자의 역할을 기반으로 토큰 생성
-    );
+    // Access Token 및 Refresh Token 생성
+    String accessToken = jwtTokenProvider.createToken(member.getEmail(), member.getId(),
+        List.of(member.getRole().name()));
+    String refreshToken = jwtTokenProvider.createRefreshToken(member.getEmail(), member.getId());
 
-    // 생성된 JWT 토큰 반환
-    return token;
+    // Redis에 Refresh Token 저장
+    String redisKey = "refresh:" + member.getId();
+    redisService.save(redisKey, refreshToken, jwtTokenProvider.getRefreshTokenValidityInSeconds());
 
+    // 토큰 맵 생성
+    Map<String, String> tokens = new HashMap<>();
+    tokens.put("accessToken", accessToken);
+    tokens.put("refreshToken", refreshToken);
+
+    return tokens;
   }
 
   // 비밀번호 재설정 처리

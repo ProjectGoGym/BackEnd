@@ -42,7 +42,10 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
       LEFT JOIN cr.post p
       LEFT JOIN p.author a
       LEFT JOIN ChatMessage cm ON cm.chatRoom.id = cr.id
-      WHERE (a.id = :postAuthorId OR cr.requestor.id = :requestorId)
+      WHERE 
+        (a.id = :postAuthorId AND cr.postAuthorActive = true) 
+        OR 
+        (cr.requestor.id = :requestorId AND cr.requestorActive = true)
         AND cr.isDeleted = false
       GROUP BY cr.id, p.id, a.id, cr.requestor.id, cr.isDeleted
       ORDER BY MAX(cm.createdAt) DESC

@@ -1,6 +1,6 @@
 package com.gogym.gympay.event;
 
-import com.gogym.chat.dto.MessageRequest;
+import com.gogym.chat.dto.base.MessageRequest;
 import com.gogym.chat.type.MessageType;
 import com.gogym.gympay.entity.constant.SafePaymentStatus;
 
