@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.TimeZone;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -34,6 +35,7 @@ public class JacksonConfig {
     objectMapper.registerModule(javaTimeModule);
     objectMapper.registerModule(jdk8Module);
 
+    objectMapper.setTimeZone(TimeZone.getTimeZone("Asia/Seoul"));
     objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
     return objectMapper;
