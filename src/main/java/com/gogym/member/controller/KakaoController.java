@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import com.gogym.member.dto.KakaoLoginResponse;
 
 @RestController
 @RequiredArgsConstructor
@@ -27,10 +28,14 @@ public class KakaoController {
     KakaoLoginResponse response = kakaoService.processKakaoLogin(code);
 
     HttpHeaders headers = new HttpHeaders();
-    if (response.getToken() != null) {
-      headers.add("Authorization", "Bearer " + response.getToken());
+    String token = kakaoService.generateJwtToken(response.getEmail());
+    if (token != null) {
+      headers.add("Authorization", "Bearer " + token);
     }
 
+    // 응답 본문은 email과 existingUser 정보만 반환
     return ResponseEntity.ok().headers(headers).body(response);
   }
+
+
 }

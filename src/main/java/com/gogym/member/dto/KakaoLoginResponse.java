@@ -7,6 +7,6 @@ import lombok.Getter;
 @AllArgsConstructor
 public class KakaoLoginResponse {
   private final boolean isExistingUser;
-  private final String token;
+  private final String email;
 }
 

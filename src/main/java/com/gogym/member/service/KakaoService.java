@@ -30,7 +30,7 @@ public class KakaoService {
   private final MemberRepository memberRepository;
   private final JwtTokenProvider jwtTokenProvider;
   private final MemberService memberService;
-  
+
   @Value("${kakao.rest-api-key}")
   private String kakaoClientId;
 
@@ -48,25 +48,17 @@ public class KakaoService {
     String email = profileResponse.kakaoAccount().email();
     log.info("카카오 사용자 이메일: {}", email);
 
-    try {
-      Member member = memberService.findByEmail(email);
-
-      // 3. isKakao 여부 확인
-      if (!member.isKakao()) {
-        log.warn("회원이 카카오 사용자가 아님 - 이메일: {}", email);
-        return new KakaoLoginResponse(false, null); // 신규 유저
-      }
-
-      // 4. 로그인 진행: JWT 토큰 발행
-      String token = jwtTokenProvider.createToken(member.getEmail(), member.getId(),
-          List.of(member.getRole().name()));
-      log.info("JWT 토큰 생성 완료 - 이메일: {}", email);
-
-      return new KakaoLoginResponse(true, token); // 기존 유저
-    } catch (CustomException e) {
-      log.warn("회원 정보 없음 - 이메일: {}", email);
-      return new KakaoLoginResponse(false, null); // 신규 유저
+    Member member = memberService.findByEmail(email);
+    // 카카오 사용자가 아니라면 로그인 불가
+    if (!member.isKakao()) {
+      log.warn("회원이 카카오 사용자가 아님 - 이메일: {}", email);
+      return new KakaoLoginResponse(false, email);
     }
+
+    // JWT 토큰 발행
+    String token = jwtTokenProvider.createToken(member.getEmail(), member.getId(),
+        List.of(member.getRole().name()));
+    return new KakaoLoginResponse(true, email);
   }
 
   // 카카오 인증 URL 생성 메서드
@@ -113,5 +105,12 @@ public class KakaoService {
     log.info("카카오 사용자 정보 응답: {}", response.getBody());
     return response.getBody();
   }
+
+  public String generateJwtToken(String email) {
+    Member member = memberService.findByEmail(email);
+    return jwtTokenProvider.createToken(member.getEmail(), member.getId(),
+        List.of(member.getRole().name()));
+  }
+
 
 }
