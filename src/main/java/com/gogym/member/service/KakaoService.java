@@ -20,6 +20,7 @@ import org.springframework.web.client.RestTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.gogym.exception.CustomException;
+import com.gogym.exception.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -36,7 +37,8 @@ public class KakaoService {
 
   // Redirect URI 생성 메서드
   private String generateRedirectUri() {
-    return "https://gogym-eight.vercel.app/kakaoLogin";
+    // return "https://gogym-eight.vercel.app/kakaoLogin";
+    return "http://localhost:8080/api/kakao/sign-in";
   }
 
   public KakaoLoginResponse processKakaoLogin(String code) {
@@ -44,22 +46,42 @@ public class KakaoService {
     KakaoTokenResponse tokenResponse = requestAccessTokenFromKakao(code);
     KakaoProfileResponse profileResponse = getProfile(tokenResponse.accessToken());
 
-    // 2. 이메일로 회원 정보 조회
+    // 2. 이메일 추출
     String email = profileResponse.kakaoAccount().email();
     log.info("카카오 사용자 이메일: {}", email);
 
-    Member member = memberService.findByEmail(email);
-    // 카카오 사용자가 아니라면 로그인 불가
-    if (!member.isKakao()) {
-      log.warn("회원이 카카오 사용자가 아님 - 이메일: {}", email);
-      return new KakaoLoginResponse(false, email);
+    // 3. 이메일 존재 여부 확인
+    if (!memberRepository.existsByEmail(email)) {
+      log.warn("회원 정보를 찾을 수 없음: {}", email);
+      return new KakaoLoginResponse(false, email); // 신규 유저
     }
 
-    // JWT 토큰 발행
+    // 4. Optional을 사용한 안전한 회원 정보 조회
+    Optional<Member> optionalMember = memberRepository.findByEmail(email);
+
+    if (optionalMember.isEmpty()) {
+      log.warn("회원 정보를 찾을 수 없음: {}", email);
+      return new KakaoLoginResponse(false, email); // 신규 유저
+    }
+
+    Member member = optionalMember.get();
+
+    // 5. 카카오 사용자인지 확인
+    if (!member.isKakao()) {
+      log.warn("회원이 카카오 사용자가 아님 - 이메일: {}", email);
+      return new KakaoLoginResponse(false, email); // 신규 유저
+    }
+
+    // 6. JWT 토큰 발행
     String token = jwtTokenProvider.createToken(member.getEmail(), member.getId(),
         List.of(member.getRole().name()));
-    return new KakaoLoginResponse(true, email);
+
+    // 7. 기존 유저로 처리
+    log.info("기존 유저 로그인 성공: {}", email);
+    return new KakaoLoginResponse(true, email); // 기존 유저
   }
+
+
 
   // 카카오 인증 URL 생성 메서드
   public String getKakaoAuthUrl(String currentDomain) {
@@ -107,7 +129,15 @@ public class KakaoService {
   }
 
   public String generateJwtToken(String email) {
-    Member member = memberService.findByEmail(email);
+    Optional<Member> optionalMember = memberRepository.findByEmail(email);
+
+    if (optionalMember.isEmpty()) {
+      log.warn("회원 정보를 찾을 수 없음 - 이메일: {}", email);
+      return null; // 신규 유저 처리
+    }
+
+    Member member = optionalMember.get();
+
     return jwtTokenProvider.createToken(member.getEmail(), member.getId(),
         List.of(member.getRole().name()));
   }
