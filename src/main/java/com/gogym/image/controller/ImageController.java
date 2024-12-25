@@ -1,5 +1,6 @@
-package com.gogym.image.service;
+package com.gogym.image.controller;
 
+import com.gogym.image.service.ImageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
