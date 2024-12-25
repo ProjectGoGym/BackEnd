@@ -2,18 +2,21 @@ package com.gogym.gympay.service;
 
 import com.gogym.chat.entity.ChatRoom;
 import com.gogym.chat.service.ChatRoomQueryService;
+import com.gogym.chat.type.MessageType;
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
 import com.gogym.gympay.dto.request.UpdateDateRequest;
 import com.gogym.gympay.entity.SafePayment;
 import com.gogym.gympay.entity.Transaction;
 import com.gogym.gympay.entity.constant.SafePaymentStatus;
+import com.gogym.gympay.event.SendMessageEvent;
 import com.gogym.gympay.repository.TransactionRepository;
 import com.gogym.member.entity.Member;
 import com.gogym.post.dto.PostPageResponseDto;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -24,6 +27,8 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class TransactionService {
+
+  private final ApplicationEventPublisher eventPublisher;
 
   private final ChatRoomQueryService chatRoomQueryService;
 
@@ -61,6 +66,8 @@ public class TransactionService {
 
     Transaction transaction = getById(chatRoom.getTransactionId());
     transaction.setMeetingAt(request.dateTime());
+
+    eventPublisher.publishEvent(new SendMessageEvent(chatRoomId, memberId, "거래 날짜가 등록되었습니다.", MessageType.SYSTEM_TRANSACTION_DATE_CHANGED, null, null));
   }
 
   private void canCancel(Transaction transaction) {
