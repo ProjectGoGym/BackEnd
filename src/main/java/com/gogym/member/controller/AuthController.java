@@ -43,8 +43,8 @@ public class AuthController {
   // 카카오로 회원가입
   @PostMapping("/sign-up/kakao")
   public ResponseEntity<Void> kakaoSignUp(@RequestBody @Valid SignUpRequest request) {
+    request.setKakao(true);
     authService.signUp(request);
-    authService.completeKakaoSignUp(request.getEmail());
     return ResponseEntity.ok().build();
   }
 

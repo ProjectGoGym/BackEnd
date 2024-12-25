@@ -37,5 +37,4 @@ public class KakaoController {
     return ResponseEntity.ok().headers(headers).body(response);
   }
 
-
 }
