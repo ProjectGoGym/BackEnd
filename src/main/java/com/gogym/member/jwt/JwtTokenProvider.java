@@ -46,6 +46,20 @@ public class JwtTokenProvider {
 
   }
 
+  // Refresh Token 생성
+  public String createRefreshToken(String email, Long memberId) {
+    Claims claims = Jwts.claims().setSubject(email); // 사용자 이메일 설정
+    claims.put("id", memberId); // 사용자 ID 추가
+
+    Date now = new Date();
+    Date expiration = new Date(now.getTime() + validityInMilliseconds * 6); // Access Token 6배 (1시간)
+    return Jwts.builder().setClaims(claims) // 클레임 설정
+        .setIssuedAt(now) // 발급 시간
+        .setExpiration(expiration) // 만료 시간
+        .signWith(secretKey, SignatureAlgorithm.HS256) // 서명 알고리즘 및 비밀 키
+        .compact();
+  }
+
   // id 추출
   public Long extractMemberId(String token) {
     Claims claims = getClaims(token);
@@ -68,7 +82,7 @@ public class JwtTokenProvider {
   }
 
   // 토큰에서 클레임 추출
-  private Claims getClaims(String token) {
+  public Claims getClaims(String token) {
     return Jwts.parserBuilder().setSigningKey(secretKey) // 서명 키 설정
         .build().parseClaimsJws(token) // 토큰 파싱
         .getBody();
@@ -93,6 +107,10 @@ public class JwtTokenProvider {
     }
     return null; // 헤더가 없거나 잘못된 형식인 경우 null 반환
 
+  }
+
+  public long getRefreshTokenValidityInSeconds() {
+    return validityInMilliseconds * 6 / 1000; // 1시간
   }
 
 }

@@ -32,11 +32,12 @@ public record PostResponseDto(
     String gymKakaoUrl,
     String city,
     String district,
-    LocalDateTime createdAt
+    LocalDateTime createdAt,
+    boolean isWished
 
 ) {
 
-  public static PostResponseDto fromEntity(Post post, RegionResponseDto regionResponseDto) {
+  public static PostResponseDto fromEntity(Post post, RegionResponseDto regionResponseDto, boolean isWished) {
 
     return PostResponseDto.builder()
         .postId(post.getId())
@@ -60,6 +61,7 @@ public record PostResponseDto(
         .city(regionResponseDto.city())
         .district(regionResponseDto.district())
         .createdAt(post.getCreatedAt())
+        .isWished(isWished)
         .build();
   }
 }

@@ -18,5 +18,8 @@ public class ResetPasswordRequest {
   private String email;
 
   @NotBlank
+  private String currentPassword;
+
+  @NotBlank
   private String newPassword;
 }

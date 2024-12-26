@@ -5,25 +5,35 @@ import static lombok.AccessLevel.PROTECTED;
 import com.gogym.common.entity.BaseEntity;
 import com.gogym.member.entity.Member;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @Entity
 @Table(name = "gym_pays")
-@AllArgsConstructor
 @NoArgsConstructor(access = PROTECTED)
 public class GymPay extends BaseEntity {
 
-  private long balance;
+  private int balance;
 
-  @OneToOne(mappedBy = "gymPay")
+  @OneToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "member_id", nullable = false)
   private Member member;
 
-  public void charge(long amount) {
+  public GymPay(int balance, Member member) {
+    this.balance = balance;
+    this.member = member;
+  }
+
+  public void deposit(int amount) {
     this.balance += amount;
+  }
+
+  public void withdraw(int amount) {
+    this.balance -= amount;
   }
 }

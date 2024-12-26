@@ -4,7 +4,7 @@ import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
 import com.gogym.member.entity.Member;
 import com.gogym.member.repository.MemberRepository;
-import com.gogym.util.RedisUtil;
+import com.gogym.util.RedisService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -26,12 +26,13 @@ public class EmailService {
   private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
 
   // 변경해야할 부분
-  // private static final String SERVER_URL = "http://3.36.198.162:8080/";
-  private static final String SERVER_URL = "http://localhost:8080/";
+  private static final String SERVER_URL = "http://3.36.198.162:8080/";
+  //private static final String SERVER_URL = "http://localhost:8080/";
+  //private static final String SERVER_URL = "https://253e-119-196-107-204.ngrok-free.app";
   private final MemberService memberService;
   private final MemberRepository memberRepository;
   private final JavaMailSender mailSender;
-  private final RedisUtil redisUtil;
+  private final RedisService redisService;
 
   // 이메일 중복 확인
   public void validateEmail(String email) {
@@ -46,7 +47,7 @@ public class EmailService {
     String token = UUID.randomUUID().toString();
 
     // Redis에 토큰 저장
-    redisUtil.save(EMAIL_VERIFICATION_PREFIX + token, email, TOKEN_EXPIRATION_TIME);
+    redisService.save(EMAIL_VERIFICATION_PREFIX + token, email, TOKEN_EXPIRATION_TIME);
 
     logger.info("Redis에 저장된 토큰: {}, 이메일: {}", token, email);
 
@@ -65,9 +66,9 @@ public class EmailService {
       // HTML 본문 작성
       String htmlContent =
           "<html>" + "<body>" + "<p style='margin-bottom: 20px;'>다음을 클릭하여 이메일을 인증을 완료하세요</p>"
-              + "<a href='" + verificationUrl + "' style='padding: 10px 15px; color: white; "
-              + "background-color: skyblue; text-decoration: none; border-radius: 5px; "
-              + "display: inline-block;'> 인증 완료하기 </a>" + "</body>" + "</html>";
+          + "<a href='" + verificationUrl + "' style='padding: 10px 15px; color: white; "
+          + "background-color: skyblue; text-decoration: none; border-radius: 5px; "
+          + "display: inline-block;'> 인증 완료하기 </a>" + "</body>" + "</html>";
       // 인증 성공시 https://gogym-eight.vercel.app 로 이동 됩니다. AuthControll verifyEmail 참조해주세요
       // HTML 포맷 설정
       helper.setText(htmlContent, true);
@@ -82,7 +83,7 @@ public class EmailService {
   // 이메일 인증 확인
   @Transactional
   public void verifyEmailToken(String token) {
-    String email = redisUtil.get(EMAIL_VERIFICATION_PREFIX + token);
+    String email = redisService.get(EMAIL_VERIFICATION_PREFIX + token);
 
     if (email == null) {
       logger.error("Redis에서 토큰 조회 실패: {}", token);
@@ -102,6 +103,6 @@ public class EmailService {
 
     member.setVerifiedAt(LocalDateTime.now());
 
-    redisUtil.delete(EMAIL_VERIFICATION_PREFIX + token);
+    redisService.delete(EMAIL_VERIFICATION_PREFIX + token);
   }
 }

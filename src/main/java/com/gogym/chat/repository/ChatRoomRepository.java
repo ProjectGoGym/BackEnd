@@ -42,7 +42,10 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
       LEFT JOIN cr.post p
       LEFT JOIN p.author a
       LEFT JOIN ChatMessage cm ON cm.chatRoom.id = cr.id
-      WHERE (a.id = :postAuthorId OR cr.requestor.id = :requestorId)
+      WHERE 
+        (a.id = :postAuthorId AND cr.postAuthorActive = true) 
+        OR 
+        (cr.requestor.id = :requestorId AND cr.requestorActive = true)
         AND cr.isDeleted = false
       GROUP BY cr.id, p.id, a.id, cr.requestor.id, cr.isDeleted
       ORDER BY MAX(cm.createdAt) DESC
@@ -94,4 +97,53 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
       @Param("memberId") Long memberId
   );
   
+  /**
+   * 특정 채팅방에 연결된 게시물 ID를 조회.
+   *
+   * @param chatRoomId 채팅방 ID
+   * @return 게시물 ID
+   */
+  @Query("""
+      SELECT c.post.id
+      FROM ChatRoom c
+      WHERE c.id = :chatRoomId
+  """)
+  Optional<Long> findPostIdByChatRoomId(@Param("chatRoomId") Long chatRoomId);
+  
+  /**
+   * 특정 채팅방에서 사용자별 마지막 나간 시간을 명시적으로 조회.
+   * 
+   * @param chatRoomId 채팅방 ID
+   * @return 해당 채팅방 엔티티 (leaveAtMap 포함)
+   */
+  @Query("""
+      SELECT c
+      FROM ChatRoom c
+      LEFT JOIN FETCH c.leaveAtMap
+      WHERE c.id = :chatRoomId
+  """)
+  Optional<ChatRoom> findWithLeaveAtById(@Param("chatRoomId") Long chatRoomId);
+  
+  /**
+   * 특정 채팅방에서 두 사용자가 참여 중인지 확인하여 해당 채팅방 정보를 조회.
+   * 
+   * @param chatRoomId 확인할 채팅방 ID
+   * @param memberId1 첫 번째 사용자 ID
+   * @param memberId2 두 번째 사용자 ID
+   * @return 두 사용자가 참여하는 채팅방
+   */
+  @Query("""
+      SELECT cr
+      FROM ChatRoom cr
+      WHERE cr.id = :chatRoomId
+        AND (
+            (cr.post.author.id = :memberId1 AND cr.requestor.id = :memberId2) OR
+            (cr.post.author.id = :memberId2 AND cr.requestor.id = :memberId1)
+        )
+  """)
+  Optional<ChatRoom> findByChatRoomIdAndParticipants(
+      @Param("chatRoomId") Long chatRoomId,
+      @Param("memberId1") Long memberId1,
+      @Param("memberId2") Long memberId2
+  );
 }

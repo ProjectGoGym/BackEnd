@@ -2,7 +2,9 @@ package com.gogym.chat.service;
 
 import java.util.List;
 import com.gogym.chat.dto.ChatMessageDto.ChatMessageRequest;
-import com.gogym.chat.dto.ChatMessageDto.ChatMessageResponse;
+import com.gogym.chat.dto.base.MessageResponse;
+import com.gogym.chat.type.MessageType;
+import com.gogym.gympay.entity.constant.SafePaymentStatus;
 
 public interface ChatRedisService {
   
@@ -11,9 +13,17 @@ public interface ChatRedisService {
    * 
    * @param messageRequest 요청 메시지
    * @param memberId 메시지를 보낸 사용자 ID
+   * @param messageType 메시지 유형
+   * @param safePaymentId 안전거래 ID (일반 메시지의 경우 null)
+   * @param safePaymentStatus 안전거래 상태값 (일반 메시지의 경우 null)
    * @return 저장된 메시지 응답
    */
-  ChatMessageResponse saveMessageToRedis(ChatMessageRequest messageRequest, Long memberId);
+  MessageResponse saveMessageToRedis(
+      ChatMessageRequest messageRequest,
+      Long memberId,
+      MessageType messageType,
+      Long safePaymentId,
+      SafePaymentStatus safePaymentStatus);
   
   /**
    * Redis에서 특정 채팅방의 메시지 목록을 조회

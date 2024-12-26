@@ -1,6 +1,7 @@
 package com.gogym.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.gogym.exception.CustomException;
@@ -43,6 +44,23 @@ public class JsonUtil {
       } catch (JsonProcessingException e) {
           throw new CustomException(ErrorCode.JSON_MAPPING_FAILURE);
       }
+  }
+  
+  /**
+   * JSON 문자열에서 특정 필드의 값을 추출합니다.
+   * 
+   * @param json JSON 형식의 문자열
+   * @param fieldName 추출하려는 필드의 이름
+   * @return 추출된 필드 값 (문자열 형태)
+   */
+  public static String extractField(String json, String fieldName) {
+    try {
+      ObjectMapper mapper = new ObjectMapper();
+      JsonNode node = mapper.readTree(json);
+      return node.get(fieldName).asText();
+    } catch (Exception e) {
+      throw new CustomException(ErrorCode.JSON_MAPPING_FAILURE);
+    }
   }
   
 }

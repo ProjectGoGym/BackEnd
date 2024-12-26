@@ -7,8 +7,7 @@ spring:
 
   jpa:
     hibernate:
-      # 테이블 컬럼 변동 없을 때 none으로 변경
-      ddl-auto: create-drop
+      ddl-auto: update
       naming:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
     show-sql: false
