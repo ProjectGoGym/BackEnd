@@ -41,20 +41,24 @@ public class SecurityConfig {
   // SecurityFilterChain Bean 등록
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    http.csrf(csrf -> csrf.disable()).cors(Customizer.withDefaults())
-        .authorizeHttpRequests(
-            auth -> auth
-                .requestMatchers(HttpMethod.POST, "/api/auth/sign-up", "/api/auth/sign-in",
-                    "/api/auth/send-verification-email", "/api/payments/webhook", "/ws/**")
-                .permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/auth/check-email",
-                    "/api/auth/check-nickname", "/api/auth/verify-email", "/api/regions",
-                    "/api/kakao/sign-in/**", "/api/posts/views", "/api/posts/filters",
-                    "/api/posts/details/**", "/api/payments/**", "/api/images/presigned-url",
-                    "/api/notifications/subscribe/**")
-                .permitAll().requestMatchers(HttpMethod.PUT, "/api/auth/reset-password").permitAll()
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll().anyRequest()
-                .authenticated())
+    http.csrf().disable().cors(Customizer.withDefaults()).authorizeHttpRequests(auth -> auth
+        // 인증 없이 접근을 허용할 엔드포인트
+        .requestMatchers(HttpMethod.POST, "/api/auth/sign-up", "/api/auth/sign-in",
+            "/api/auth/send-verification-email", "/api/payments/webhook", "/ws/**")
+        .permitAll()
+
+        .requestMatchers(HttpMethod.GET, "/api/auth/check-email", "/api/auth/check-nickname",
+            "/api/auth/verify-email", "/api/regions", "/api/kakao/sign-in/**", "/api/posts/views",
+            "/api/posts/filters", "/api/posts/details/**", "/api/payments/**",
+            "/api/images/presigned-url", "/api/notifications/subscribe/**")
+        .permitAll()
+
+        .requestMatchers(HttpMethod.PUT, "/api/auth/reset-password").permitAll()
+
+        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+        // 그 외의 모든 요청은 인증 필요
+        .anyRequest().authenticated())
+        // JWT 인증 필터를 AuthenticationFilter 전에 추가
         .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
