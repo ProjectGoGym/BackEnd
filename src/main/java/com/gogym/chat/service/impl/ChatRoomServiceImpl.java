@@ -3,25 +3,29 @@ package com.gogym.chat.service.impl;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import com.gogym.chat.dto.ChatMessageDto.ChatMessageHistory;
+import com.gogym.chat.dto.ChatMessageDto.RedisChatMessage;
 import com.gogym.chat.dto.ChatRoomDto.ChatRoomResponse;
 import com.gogym.chat.dto.ChatRoomDto.LeaveRequest;
+import com.gogym.chat.dto.base.RedisMessage;
 import com.gogym.chat.entity.ChatMessage;
-import com.gogym.chat.entity.ChatMessageRead;
 import com.gogym.chat.entity.ChatRoom;
-import com.gogym.chat.repository.ChatMessageReadRepository;
+import com.gogym.chat.event.ChatRoomEvent;
 import com.gogym.chat.repository.ChatMessageRepository;
 import com.gogym.chat.repository.ChatRoomRepository;
 import com.gogym.chat.service.ChatRedisService;
+import com.gogym.chat.service.ChatRoomQueryService;
 import com.gogym.chat.service.ChatRoomService;
 import com.gogym.exception.CustomException;
 import com.gogym.exception.ErrorCode;
 import com.gogym.member.entity.Member;
 import com.gogym.member.service.MemberService;
-import com.gogym.post.service.PostService;
+import com.gogym.post.entity.Post;
+import com.gogym.post.service.PostQueryService;
+import com.gogym.post.type.PostStatus;
 import com.gogym.util.JsonUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -29,33 +33,51 @@ import lombok.RequiredArgsConstructor;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class ChatRoomServiceImpl implements ChatRoomService {
+public class ChatRoomServiceImpl implements ChatRoomQueryService, ChatRoomService {
   
   private final ChatRoomRepository chatRoomRepository;
   private final ChatMessageRepository chatMessageRepository;
-  private final ChatMessageReadRepository chatMessageReadRepository;
   
   private final ChatRedisService chatRedisService;
+  private final PostQueryService postQueryService;
   private final MemberService memberService;
-  private final PostService postService;
+  
+  private final ApplicationEventPublisher eventPublisher;
   
   @Override
   public ChatRoomResponse createChatRoom(Long memberId, Long postId) {
     // 게시글 작성자 존재 여부 확인
-    Member postAuthor = this.postService.getPostAuthor(postId);
+    Member postAuthor = this.postQueryService.getPostAuthor(postId);
     
     // 이미 존재하는 채팅방 여부 확인
     if (this.chatRoomRepository.existsByPostIdAndRequestorId(postId, memberId)) {
       throw new CustomException(ErrorCode.CHATROOM_ALREADY_EXISTS);
     }
     
+    // 게시물 상태 검증
+    Post post = this.postQueryService.findById(postId);
+    if (PostStatus.COMPLETED.equals(post.getStatus())
+        || PostStatus.HIDDEN.equals(post.getStatus())) {
+      throw new CustomException(ErrorCode.REQUEST_VALIDATION_FAIL);
+    }
+    
     // 채팅방 생성 및 저장
     ChatRoom newChatRoom = ChatRoom.builder()
-        .post(this.postService.findById(postId))
+        .post(this.postQueryService.findById(postId))
         .requestor(this.memberService.findById(memberId))
         .isDeleted(false)
         .build();
     this.chatRoomRepository.save(newChatRoom);
+    
+    // 채팅방 생성 이벤트 발행
+    this.eventPublisher.publishEvent(
+        new ChatRoomEvent(
+            this,
+            newChatRoom.getId(),
+            newChatRoom.getRequestor().getId(),
+            newChatRoom.getRequestor().getNickname()
+        )
+    );
     
     return new ChatRoomResponse(
         newChatRoom.getId(), // chatRoomId
@@ -63,6 +85,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         postId, // postId
         postAuthor.getId(), // counterpartyId
         postAuthor.getNickname(), // counterpartyNickname
+        postAuthor.getProfileImageUrl(), // counterpartyProfileImageUrl
         0, // unreadMessageCount
         null, // lastMessage
         null,// lastMessageAt
@@ -101,7 +124,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
       if (redisMessages != null && !redisMessages.isEmpty()) {
         // Redis에서 가장 마지막 메시지 가져오기
         String lastMessageJson = redisMessages.get(redisMessages.size() - 1);
-        ChatMessageHistory lastMessageHistory = JsonUtil.deserialize(lastMessageJson, ChatMessageHistory.class);
+        RedisMessage lastMessageHistory = JsonUtil.deserialize(lastMessageJson, RedisMessage.class);
         
         if (lastMessageHistory != null) {
           lastMessage = ChatMessage.builder()
@@ -126,18 +149,19 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         }
       }
       
-      // 읽지 않은 메시지 개수
-      int unreadMessageCount = this.chatMessageReadRepository.countUnreadMessages(
+      // 읽지 않은 메시지 수 계산
+      LocalDateTime leaveAt = chatRoom.getLeaveAt(memberId);
+      int unreadMessageCount = (int) this.chatMessageRepository.countUnreadMessages(
           chatRoom.getId(),
-          memberId);
+          leaveAt != null ? leaveAt : null);
       
-      // ChatRoomResponse 생성
       return new ChatRoomResponse(
           chatRoom.getId(), // chatRoomId
           chatRoom.getCreatedAt(), // createdAt
           chatRoom.getPost().getId(), // postId
           counterparty.getId(), // counterpartyId
           counterparty.getNickname(), // counterpartyNickname
+          counterparty.getProfileImageUrl(), // counterpartyProfileImageUrl
           unreadMessageCount, // unreadMessageCount
           lastMessage != null ? lastMessage.getContent() : null, // lastMessage
           lastMessageAt, // lastMessageAt
@@ -149,14 +173,13 @@ public class ChatRoomServiceImpl implements ChatRoomService {
   
   @Override
   public void leaveChatRoom(Long memberId, Long chatRoomId, LeaveRequest request) {
-    // 나가려는 채팅방 존재 여부 확인
+    // 채팅방 존재 여부 확인
     ChatRoom chatRoom = this.chatRoomRepository.findById(chatRoomId)
         .orElseThrow(() -> new CustomException(ErrorCode.CHATROOM_NOT_FOUND));
     
-    // 요청자가 채팅방에 속해 있는지 확인
-    if (!chatRoom.getPost().getAuthor().getId().equals(memberId)
-        && !chatRoom.getRequestor().getId().equals(memberId)) {
-      throw new CustomException(ErrorCode.FORBIDDEN);
+    // 회원이 해당 채팅방에 속해 있는지 확인
+    if (!this.isMemberInChatRoom(chatRoomId, memberId)) {
+        throw new CustomException(ErrorCode.FORBIDDEN);
     }
     
     // Redis에서 메시지 목록 조회
@@ -167,20 +190,8 @@ public class ChatRoomServiceImpl implements ChatRoomService {
       this.forceSaveMessages(chatRoomId, redisMessages);
     }
     
-    // DB에서 가장 최근 메시지 가져오기
-    ChatMessage lastMessage = this.chatMessageRepository.findFirstByChatRoomIdOrderByCreatedAtDesc(chatRoomId)
-        .orElseThrow(() -> new CustomException(ErrorCode.CHAT_MESSAGE_NOT_FOUND));
-    
-    // 마지막으로 읽은 메시지 업데이트
-    ChatMessageRead messageRead = this.chatMessageReadRepository.findByChatRoomAndMemberId(chatRoom, memberId)
-        .orElseGet(() -> ChatMessageRead.builder()
-            .chatRoom(chatRoom)
-            .memberId(memberId)
-            .build());
-    messageRead.setLastReadMessage(lastMessage);
-
-    // 변경된 엔티티 저장
-    this.chatMessageReadRepository.save(messageRead);
+    // 채팅방을 나간 시점 저장
+    chatRoom.setLeaveAt(memberId, request.leaveAt());
   }
   
   @Override
@@ -190,9 +201,8 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         .orElseThrow(() -> new CustomException(ErrorCode.CHATROOM_NOT_FOUND));
     
     // 회원이 해당 채팅방에 속해 있는지 확인
-    if (!chatRoom.getPost().getAuthor().getId().equals(memberId)
-        && !chatRoom.getRequestor().getId().equals(memberId)) {
-      throw new CustomException(ErrorCode.FORBIDDEN);
+    if (!this.isMemberInChatRoom(chatRoomId, memberId)) {
+        throw new CustomException(ErrorCode.FORBIDDEN);
     }
     
     // Redis에서 채팅 메시지 조회
@@ -217,11 +227,6 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     }
   }
   
-  @Override
-  public boolean isMemberInChatRoom(Long chatRoomId, Long memberId) {
-    return this.chatRoomRepository.existsByChatRoomIdAndMemberId(chatRoomId, memberId);
-  }
-  
   /**
    * Redis에 저장된 메시지들을 강제로 DB에 저장.
    * 
@@ -231,14 +236,14 @@ public class ChatRoomServiceImpl implements ChatRoomService {
   private void forceSaveMessages(Long chatRoomId, List<String> redisMessages) {
     List<ChatMessage> chatMessages = redisMessages.stream()
         .map(messageJson -> {
-          ChatMessageHistory messageHistory = JsonUtil.deserialize(messageJson, ChatMessageHistory.class);
+          RedisChatMessage messageHistory = JsonUtil.deserialize(messageJson, RedisChatMessage.class);
           
           if (messageHistory != null) {
-            // ChatMessageHistory -> ChatMessage 변환
+            // RedisChatMessage -> ChatMessage 변환
             return ChatMessage.builder()
+                .chatRoom(this.chatRoomRepository.getReferenceById(chatRoomId))
                 .content(messageHistory.content())
                 .senderId(messageHistory.senderId())
-                .chatRoom(this.chatRoomRepository.getReferenceById(chatRoomId))
                 .build();
             }
           return null;
@@ -248,6 +253,23 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
     // DB에 저장
     this.chatMessageRepository.saveAll(chatMessages);
+  }
+  
+  @Override
+  public ChatRoom getChatRoomById(Long chatRoomId) {
+    return this.chatRoomRepository.findById(chatRoomId)
+        .orElseThrow(() -> new CustomException(ErrorCode.CHATROOM_NOT_FOUND));
+  }
+  
+  @Override
+  public ChatRoom getChatRoomByParticipantsAndId(Long chatRoomId, Long memberId1, Long memberId2) {
+    return this.chatRoomRepository.findByChatRoomIdAndParticipants(chatRoomId, memberId1, memberId2)
+        .orElseThrow(() -> new CustomException(ErrorCode.CHATROOM_NOT_FOUND));
+  }
+  
+  @Override
+  public boolean isMemberInChatRoom(Long chatRoomId, Long memberId) {
+    return this.chatRoomRepository.existsByChatRoomIdAndMemberId(chatRoomId, memberId);
   }
 
 }

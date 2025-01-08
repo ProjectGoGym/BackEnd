@@ -12,6 +12,9 @@ import com.gogym.notification.repository.NotificationRepository;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +34,9 @@ public class NotificationService {
 
   private final MemberService memberService;
 
-  private static final Long sseTimeOut = 60000L;
+  private static final Long SSE_TIME_OUT = 60000L;
+
+  private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
   @Getter
   private final Map<Long, SseEmitter> emitters = new ConcurrentHashMap<>();
@@ -40,14 +45,27 @@ public class NotificationService {
 
     memberService.findById(memberId);
 
-    SseEmitter emitter = new SseEmitter(sseTimeOut);
+    SseEmitter emitter = new SseEmitter(SSE_TIME_OUT);
     emitters.put(memberId, emitter);
+    log.info("⭐️SSE 구독을 신청한 회원 (memberId : {})", memberId);
 
     // 클라이언트 연결 종료, 만료, 에러 처리
-    emitter.onCompletion(() -> removeEmitter(memberId));
-    emitter.onTimeout(() -> removeEmitter(memberId));
-    emitter.onError((e) -> removeEmitter(memberId));
+    emitter.onCompletion(() -> {
+      if (emitters.containsKey(memberId)) {
+        log.info("👍SSE 구독 정상 해제 (memberId : {}),", memberId);
+        removeEmitter(memberId);
+      }
+    });
+    emitter.onTimeout(() -> {
+      log.warn("🕰️SSE 구독 타임 아웃 (memberId : {}),", memberId);
+      removeEmitter(memberId);
+    });
+    emitter.onError((e) -> {
+      log.error("🚨SSE 구독 알수없는 에러 발생 \n📍memberId: {}, \n📍에러: {}", memberId, e.getMessage());
+      removeEmitter(memberId);
+    });
 
+    log.info("🫡SSE 구독회원에게 Dummy Data 전송을 시작합니다. \n📍memberId : {}, \n📍emitter : {})", memberId, emitter);
     sendDummyData(memberId, emitter);
 
     return emitter;
@@ -61,13 +79,20 @@ public class NotificationService {
 
     // 연결이 되었으면 더미(뻥) 데이터 전송(클라이언트에서 확인용으로 사용하면 될 것 같습니다.)
     if (emitter != null) {
-      try {
-        emitter.send(SseEmitter.event()
-            .name("dummy")
-            .data("connecting..."));
-      } catch (IOException e) {
-        removeEmitter(memberId);
-      }
+
+      log.info("🎤구독한 회원에게 보내는 세레나데 (memberId : {})", memberId);
+      scheduler.schedule(() -> {
+        try {
+          emitter.send(SseEmitter.event()
+              .name("dummy")
+              .data("connecting...")
+              .reconnectTime(3000L));
+          log.info("✅ 더미 이벤트 발송 완료!: {}", memberId);
+        } catch (IOException e) {
+          log.error("🚨 더미 이벤트 발송 중 예외 발생!: {}", e.getMessage());
+          removeEmitter(memberId);
+        }
+      }, 2, TimeUnit.SECONDS);
     }
   }
 
@@ -94,8 +119,11 @@ public class NotificationService {
         NotificationDto notificationDto = NotificationDto.fromEntity(notification);
         emitter.send(SseEmitter.event()
             .name("notification")
-            .data(notificationDto));
+            .data(notificationDto)
+            .reconnectTime(3000L));
+        log.info("✅ 알림 이벤트 발송 완료!: {}", memberId);
       } catch (IOException e) {
+        log.error("🚨 알림 이벤트 발송 중 예외 발생!: {}", e.getMessage());
         removeEmitter(memberId);
       }
     }

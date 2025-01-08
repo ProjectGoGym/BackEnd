@@ -11,12 +11,16 @@ public class ChatRoomDto {
       Long postId,
       Long counterpartyId,
       String counterpartyNickname,
+      String counterpartyProfileImageUrl,
       int unreadMessageCount,
       String lastMessage,
       LocalDateTime lastMessageAt,
       boolean postAuthorActive,
-      boolean requestorActive) {}
+      boolean requestorActive
+  ) {}
 
-  public record LeaveRequest(@NotNull Long lastReadMessageId) {}
+  public record LeaveRequest(
+      @NotNull LocalDateTime leaveAt
+  ) {}
 
 }
